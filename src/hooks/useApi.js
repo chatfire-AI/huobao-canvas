@@ -139,7 +139,7 @@ export const useImageGeneration = () => {
         model: params.model,
         prompt: params.prompt,
         size: params.size || modelConfig?.defaultParams?.size || '1024x1024',
-        n: params.n || 1
+        // n: params.n || 1
       }
 
       // Add reference image if provided | 添加参考图

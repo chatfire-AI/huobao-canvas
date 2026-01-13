@@ -11,7 +11,7 @@ const BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://api.chatfire.site
 // Create axios instance | 创建 axios 实例
 const instance = axios.create({
   baseURL: BASE_URL,
-  timeout: 3000000
+  timeout: 30000000
 })
 
 // Request interceptor | 请求拦截器

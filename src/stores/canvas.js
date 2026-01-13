@@ -91,8 +91,8 @@ const getDefaultNodeData = (type) => {
       return {
         prompt: '',
         model: 'doubao-seedream-4-5-251128',
-        size: '512x512',
-        ratio: '16:9',
+        size: '2048x2048',
+        ratio: '1:1',
         quality: '4张 | 高清',
         label: '文生图'
       }
