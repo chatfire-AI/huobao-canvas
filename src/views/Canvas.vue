@@ -596,16 +596,20 @@ const sendMessage = async () => {
       try {
         // Analyze user intent | 分析用户意图
         const result = await analyzeIntent(content)
-        const workflowType = result?.workflow_type || WORKFLOW_TYPES.TEXT_TO_IMAGE
         
-        // Get prompts from AI analysis or use original content
-        const imagePrompt = result?.image_prompt || content
-        const videoPrompt = result?.video_prompt || content
+        // Ensure we have valid workflow params | 确保有效的工作流参数
+        const workflowParams = {
+          workflow_type: result?.workflow_type || WORKFLOW_TYPES.TEXT_TO_IMAGE,
+          image_prompt: result?.image_prompt || content,
+          video_prompt: result?.video_prompt || content,
+          character: result?.character,
+          shots: result?.shots
+        }
         
         window.$message?.info(`执行工作流: ${result?.description || '文生图'}`)
         
         // Execute the workflow | 执行工作流
-        await executeWorkflow(workflowType, imagePrompt, videoPrompt, { x: baseX, y: baseY })
+        await executeWorkflow(workflowParams, { x: baseX, y: baseY })
         
         window.$message?.success('工作流已启动')
       } catch (err) {
