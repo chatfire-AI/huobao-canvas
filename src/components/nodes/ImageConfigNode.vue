@@ -83,7 +83,27 @@
         </div>
 
         <!-- Generate button | 生成按钮 -->
-        <button @click="handleGenerate" :disabled="loading || !isConfigured"
+        <div v-if="hasConnectedImageWithContent" class="flex gap-2">
+          <!-- Create new (primary) | 新建节点（主按钮） -->
+          <button @click="handleGenerate('new')" :disabled="loading || !isConfigured"
+            class="flex-1 flex items-center justify-center gap-1.5 py-2 px-3 rounded-lg bg-[var(--accent-color)] hover:bg-[var(--accent-hover)] text-white text-sm font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
+            <n-spin v-if="loading" :size="14" />
+            <template v-else>
+              <n-icon :size="14"><AddOutline /></n-icon>
+              新建生成
+            </template>
+          </button>
+          <!-- Replace existing (secondary) | 替换现有（次按钮） -->
+          <button @click="handleGenerate('replace')" :disabled="loading || !isConfigured"
+            class="flex-shrink-0 flex items-center justify-center gap-1 py-2 px-2.5 rounded-lg border border-[var(--border-color)] text-[var(--text-secondary)] hover:border-[var(--accent-color)] hover:text-[var(--accent-color)] text-sm transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
+            <n-spin v-if="loading" :size="14" />
+            <template v-else>
+              <n-icon :size="14"><RefreshOutline /></n-icon>
+              替换
+            </template>
+          </button>
+        </div>
+        <button v-else @click="handleGenerate('auto')" :disabled="loading || !isConfigured"
           class="w-full flex items-center justify-center gap-2 py-2 px-4 rounded-lg bg-[var(--accent-color)] hover:bg-[var(--accent-hover)] text-white text-sm font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
           <n-spin v-if="loading" :size="14" />
           <template v-else>
@@ -141,7 +161,7 @@
 import { ref, computed, watch, onMounted } from 'vue'
 import { Handle, Position, useVueFlow } from '@vue-flow/core'
 import { NIcon, NDropdown, NSpin } from 'naive-ui'
-import { ChevronDownOutline, ChevronForwardOutline, CopyOutline, TrashOutline } from '@vicons/ionicons5'
+import { ChevronDownOutline, ChevronForwardOutline, CopyOutline, TrashOutline, RefreshOutline, AddOutline } from '@vicons/ionicons5'
 import { useImageGeneration, useApiConfig } from '../../hooks'
 import { updateNode, addNode, addEdge, nodes, edges, duplicateNode, removeNode } from '../../stores/canvas'
 import { imageModelOptions, getModelSizeOptions, getModelQualityOptions, getModelConfig, DEFAULT_IMAGE_MODEL } from '../../stores/models'
@@ -310,23 +330,44 @@ const updateSize = () => {
 // Created image node ID | 创建的图片节点 ID
 const createdImageNodeId = ref(null)
 
-// Find connected output image node (empty image node) | 查找已连接的输出图片节点（空白图片节点）
-const findConnectedOutputImageNode = () => {
+// Find connected output image node | 查找已连接的输出图片节点
+const findConnectedOutputImageNode = (onlyEmpty = true) => {
   // Find edges where this node is the source | 查找以当前节点为源的边
   const outputEdges = edges.value.filter(e => e.source === props.id)
   
   for (const edge of outputEdges) {
     const targetNode = nodes.value.find(n => n.id === edge.target)
-    // Check if target is an image node with empty or no url | 检查目标是否为空白图片节点
-    if (targetNode?.type === 'image' && (!targetNode.data?.url || targetNode.data?.url === '')) {
-      return targetNode.id
+    if (targetNode?.type === 'image') {
+      if (onlyEmpty) {
+        // Check if target is an image node with empty or no url | 检查目标是否为空白图片节点
+        if (!targetNode.data?.url || targetNode.data?.url === '') {
+          return targetNode.id
+        }
+      } else {
+        // Return any connected image node | 返回任意连接的图片节点
+        return targetNode.id
+      }
     }
   }
   return null
 }
 
+// Check if there's a connected image node with content | 检查是否有已连接且有内容的图片节点
+const hasConnectedImageWithContent = computed(() => {
+  const outputEdges = edges.value.filter(e => e.source === props.id)
+  
+  for (const edge of outputEdges) {
+    const targetNode = nodes.value.find(n => n.id === edge.target)
+    if (targetNode?.type === 'image' && targetNode.data?.url && targetNode.data.url !== '') {
+      return true
+    }
+  }
+  return false
+})
+
 // Handle generate action | 处理生成操作
-const handleGenerate = async () => {
+// mode: 'auto' = 自动判断, 'replace' = 替换现有, 'new' = 新建节点
+const handleGenerate = async (mode = 'auto') => {
   const { prompt, prompts, refImages } = getConnectedInputs()
 
   if (!prompt && refImages.length === 0) {
@@ -344,20 +385,40 @@ const handleGenerate = async () => {
     return
   }
 
-  // Check for existing connected empty image node | 检查是否已有连接的空白图片节点
-  let imageNodeId = findConnectedOutputImageNode()
+  let imageNodeId = null
   
-  if (imageNodeId) {
-    // Use existing empty image node | 使用已有的空白图片节点
-    updateNode(imageNodeId, { loading: true })
+  if (mode === 'replace') {
+    // Replace mode: find any connected image node | 替换模式：查找任意连接的图片节点
+    imageNodeId = findConnectedOutputImageNode(false)
+    if (imageNodeId) {
+      updateNode(imageNodeId, { loading: true, url: '' })
+    }
+  } else if (mode === 'new') {
+    // New mode: always create new node | 新建模式：始终创建新节点
+    imageNodeId = null
   } else {
+    // Auto mode: check for empty connected node first | 自动模式：先检查空白连接节点
+    imageNodeId = findConnectedOutputImageNode(true)
+    if (imageNodeId) {
+      updateNode(imageNodeId, { loading: true })
+    }
+  }
+  
+  if (!imageNodeId) {
     // Get current node position | 获取当前节点位置
     const currentNode = nodes.value.find(n => n.id === props.id)
     const nodeX = currentNode?.position?.x || 0
     const nodeY = currentNode?.position?.y || 0
+    
+    // Calculate Y offset if creating new node alongside existing | 如果是新建节点，计算Y偏移
+    let yOffset = 0
+    if (mode === 'new') {
+      const outputEdges = edges.value.filter(e => e.source === props.id)
+      yOffset = outputEdges.length * 280 // Stack below existing outputs | 在现有输出下方堆叠
+    }
 
     // Create image node with loading state | 创建带加载状态的图片节点
-    imageNodeId = addNode('image', { x: nodeX + 400, y: nodeY }, {
+    imageNodeId = addNode('image', { x: nodeX + 400, y: nodeY + yOffset }, {
       url: '',
       loading: true,
       label: '图像生成结果'

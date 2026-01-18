@@ -5,6 +5,9 @@
 import product01 from '@/assets/product01.jpg'
 import workflowCover1 from '@/assets/workflow01.jpeg'
 import workflowCover2 from '@/assets/workflow02.jpeg'
+import scene01 from '@/assets/scene01.jpeg'
+import shot01 from '@/assets/shot01.jpeg'
+
 // Multi-angle prompts | 多角度提示词模板
 export const MULTI_ANGLE_PROMPTS = {
   front: {
@@ -429,7 +432,590 @@ export const WORKFLOW_TEMPLATES = [
       
       return { nodes, edges }
     }
-  }
+  },
+  // ========== 短剧生图工作流 ==========
+  {
+    id: 'drama-character-design',
+    name: '短剧角色设计',
+    description: '根据角色描述生成一致性角色形象，后续多角度图依赖正面图保持一致性',
+    icon: 'PersonOutline',
+    category: 'drama',
+    cover: shot01,
+    createNodes: (startPosition) => {
+      const colSpacing = 400
+      const rowSpacing = 280
+      
+      const nodes = []
+      const edges = []
+      let nodeIdCounter = 0
+      const getNodeId = () => `workflow_node_${Date.now()}_${nodeIdCounter++}`
+      
+      // ========== 第一阶段：生成正面角色图 ==========
+      // 角色描述
+      const characterDescId = getNodeId()
+      nodes.push({
+        id: characterDescId,
+        type: 'text',
+        position: { x: startPosition.x, y: startPosition.y },
+        data: {
+          content: '角色名称：林小雨\n性别：女\n年龄：22岁\n外貌特征：长发及腰，眼睛明亮有神，皮肤白皙，身材高挑\n服装风格：现代都市风，白色连衣裙\n性格特点：温柔善良，内心坚强',
+          label: '角色描述'
+        }
+      })
+      
+      // 风格参考图（可选）
+      const styleRefId = getNodeId()
+      nodes.push({
+        id: styleRefId,
+        type: 'image',
+        position: { x: startPosition.x, y: startPosition.y + rowSpacing },
+        data: {
+          url: '',
+          label: '风格参考图（可选）'
+        }
+      })
+      
+      // 正面全身提示词
+      const frontPromptId = getNodeId()
+      nodes.push({
+        id: frontPromptId,
+        type: 'text',
+        position: { x: startPosition.x + colSpacing, y: startPosition.y },
+        data: {
+          content: '根据角色描述，生成角色的正面全身照，人物居中，白色简洁背景，高清写实风格，电影级画质',
+          label: '正面全身提示词'
+        }
+      })
+      
+      // 正面全身生成配置
+      const frontConfigId = getNodeId()
+      nodes.push({
+        id: frontConfigId,
+        type: 'imageConfig',
+        position: { x: startPosition.x + colSpacing * 2, y: startPosition.y },
+        data: {
+          label: '生成正面全身图',
+          model: 'doubao-seedream-4-5-251128',
+          size: '1440x2560'
+        }
+      })
+      
+      // 正面全身图结果（作为后续生成的参考）
+      const frontResultId = getNodeId()
+      nodes.push({
+        id: frontResultId,
+        type: 'image',
+        position: { x: startPosition.x + colSpacing * 3, y: startPosition.y },
+        data: {
+          url: '',
+          label: '正面角色图（参考基准）'
+        }
+      })
+      
+      // ========== 第二阶段：基于正面图生成多角度 ==========
+      // 侧面半身提示词
+      const sidePromptId = getNodeId()
+      nodes.push({
+        id: sidePromptId,
+        type: 'text',
+        position: { x: startPosition.x + colSpacing * 3 + 100, y: startPosition.y + rowSpacing },
+        data: {
+          content: '参考提供的角色正面图，保持人物外貌、服装完全一致，生成角色的侧面半身照，45度角侧脸，展示五官轮廓，白色简洁背景，高清写实风格',
+          label: '侧面半身提示词'
+        }
+      })
+      
+      // 表情特写提示词
+      const closeupPromptId = getNodeId()
+      nodes.push({
+        id: closeupPromptId,
+        type: 'text',
+        position: { x: startPosition.x + colSpacing * 3 + 100, y: startPosition.y + rowSpacing * 2 },
+        data: {
+          content: '参考提供的角色正面图，保持人物五官、发型完全一致，生成角色的面部特写，展示多种表情（微笑、严肃、惊讶、悲伤），四宫格布局，高清写实风格',
+          label: '表情特写提示词'
+        }
+      })
+      
+      // 背面全身提示词
+      const backPromptId = getNodeId()
+      nodes.push({
+        id: backPromptId,
+        type: 'text',
+        position: { x: startPosition.x + colSpacing * 3 + 100, y: startPosition.y + rowSpacing * 3 },
+        data: {
+          content: '参考提供的角色正面图，保持人物发型、服装、身材完全一致，生成角色的背面全身照，展示背影，白色简洁背景，高清写实风格',
+          label: '背面全身提示词'
+        }
+      })
+      
+      // 侧面生成配置
+      const sideConfigId = getNodeId()
+      nodes.push({
+        id: sideConfigId,
+        type: 'imageConfig',
+        position: { x: startPosition.x + colSpacing * 4 + 100, y: startPosition.y + rowSpacing },
+        data: {
+          label: '侧面半身图',
+          model: 'doubao-seedream-4-5-251128',
+          size: '2048x2048'
+        }
+      })
+      
+      // 表情特写生成配置
+      const closeupConfigId = getNodeId()
+      nodes.push({
+        id: closeupConfigId,
+        type: 'imageConfig',
+        position: { x: startPosition.x + colSpacing * 4 + 100, y: startPosition.y + rowSpacing * 2 },
+        data: {
+          label: '表情特写图',
+          model: 'doubao-seedream-4-5-251128',
+          size: '2048x2048'
+        }
+      })
+      
+      // 背面生成配置
+      const backConfigId = getNodeId()
+      nodes.push({
+        id: backConfigId,
+        type: 'imageConfig',
+        position: { x: startPosition.x + colSpacing * 4 + 100, y: startPosition.y + rowSpacing * 3 },
+        data: {
+          label: '背面全身图',
+          model: 'doubao-seedream-4-5-251128',
+          size: '1440x2560'
+        }
+      })
+      
+      // ========== 连线：第一阶段 ==========
+      // 角色描述 → 正面生成
+      edges.push({
+        id: `edge_${characterDescId}_${frontConfigId}`,
+        source: characterDescId,
+        target: frontConfigId,
+        type: 'promptOrder',
+        data: { promptOrder: 1 },
+        sourceHandle: 'right',
+        targetHandle: 'left'
+      })
+      // 风格参考 → 正面生成
+      edges.push({
+        id: `edge_${styleRefId}_${frontConfigId}`,
+        source: styleRefId,
+        target: frontConfigId,
+        sourceHandle: 'right',
+        targetHandle: 'left'
+      })
+      // 正面提示词 → 正面生成
+      edges.push({
+        id: `edge_${frontPromptId}_${frontConfigId}`,
+        source: frontPromptId,
+        target: frontConfigId,
+        type: 'promptOrder',
+        data: { promptOrder: 2 },
+        sourceHandle: 'right',
+        targetHandle: 'left'
+      })
+      // 正面生成 → 正面结果
+      edges.push({
+        id: `edge_${frontConfigId}_${frontResultId}`,
+        source: frontConfigId,
+        target: frontResultId,
+        sourceHandle: 'right',
+        targetHandle: 'left'
+      })
+      
+      // ========== 连线：第二阶段（依赖正面图） ==========
+      // 正面结果 → 侧面生成（作为参考图）
+      edges.push({
+        id: `edge_${frontResultId}_${sideConfigId}`,
+        source: frontResultId,
+        target: sideConfigId,
+        sourceHandle: 'right',
+        targetHandle: 'left'
+      })
+      // 正面结果 → 表情生成（作为参考图）
+      edges.push({
+        id: `edge_${frontResultId}_${closeupConfigId}`,
+        source: frontResultId,
+        target: closeupConfigId,
+        sourceHandle: 'right',
+        targetHandle: 'left'
+      })
+      // 正面结果 → 背面生成（作为参考图）
+      edges.push({
+        id: `edge_${frontResultId}_${backConfigId}`,
+        source: frontResultId,
+        target: backConfigId,
+        sourceHandle: 'right',
+        targetHandle: 'left'
+      })
+      
+      // 提示词 → 各生成节点
+      edges.push({
+        id: `edge_${sidePromptId}_${sideConfigId}`,
+        source: sidePromptId,
+        target: sideConfigId,
+        type: 'promptOrder',
+        data: { promptOrder: 1 },
+        sourceHandle: 'right',
+        targetHandle: 'left'
+      })
+      edges.push({
+        id: `edge_${closeupPromptId}_${closeupConfigId}`,
+        source: closeupPromptId,
+        target: closeupConfigId,
+        type: 'promptOrder',
+        data: { promptOrder: 1 },
+        sourceHandle: 'right',
+        targetHandle: 'left'
+      })
+      edges.push({
+        id: `edge_${backPromptId}_${backConfigId}`,
+        source: backPromptId,
+        target: backConfigId,
+        type: 'promptOrder',
+        data: { promptOrder: 1 },
+        sourceHandle: 'right',
+        targetHandle: 'left'
+      })
+      
+      return { nodes, edges }
+    }
+  },
+  {
+    id: 'drama-scene-background',
+    name: '多时段场景背景',
+    description: '先生成基础场景，再基于基础场景生成多时段变体，保持场景一致性',
+    icon: 'ImageOutline',
+    category: 'drama',
+    cover: scene01,
+    createNodes: (startPosition) => {
+      const colSpacing = 400
+      const rowSpacing = 260
+      
+      const nodes = []
+      const edges = []
+      let nodeIdCounter = 0
+      const getNodeId = () => `workflow_node_${Date.now()}_${nodeIdCounter++}`
+      
+      // ========== 第一阶段：生成基础场景 ==========
+      // 场景描述
+      const sceneDescId = getNodeId()
+      nodes.push({
+        id: sceneDescId,
+        type: 'text',
+        position: { x: startPosition.x, y: startPosition.y },
+        data: {
+          content: '场景名称：现代都市街道\n位置：繁华商业区主街道\n环境特征：高楼大厦林立，霓虹灯招牌，车水马龙\n氛围：都市繁华、现代感强\n特殊元素：咖啡店、书店、商场入口',
+          label: '场景描述'
+        }
+      })
+      
+      // 基础场景提示词
+      const basePromptId = getNodeId()
+      nodes.push({
+        id: basePromptId,
+        type: 'text',
+        position: { x: startPosition.x + colSpacing, y: startPosition.y },
+        data: {
+          content: '根据场景描述，生成白天正午时段的场景背景作为基准，阳光明媚，光线充足均匀，展示场景全貌和所有环境元素，纯背景无人物，电影级画质，宽屏构图',
+          label: '基础场景提示词'
+        }
+      })
+      
+      // 基础场景生成配置
+      const baseConfigId = getNodeId()
+      nodes.push({
+        id: baseConfigId,
+        type: 'imageConfig',
+        position: { x: startPosition.x + colSpacing * 2, y: startPosition.y },
+        data: {
+          label: '生成基础场景',
+          model: 'doubao-seedream-4-5-251128',
+          size: '2560x1440'
+        }
+      })
+      
+      // 基础场景结果（作为后续生成的参考）
+      const baseResultId = getNodeId()
+      nodes.push({
+        id: baseResultId,
+        type: 'image',
+        position: { x: startPosition.x + colSpacing * 3, y: startPosition.y },
+        data: {
+          url: '',
+          label: '基础场景图（参考基准）'
+        }
+      })
+      
+      // ========== 第二阶段：基于基础场景生成多时段变体 ==========
+      // 傍晚场景提示词
+      const eveningPromptId = getNodeId()
+      nodes.push({
+        id: eveningPromptId,
+        type: 'text',
+        position: { x: startPosition.x + colSpacing * 3 + 100, y: startPosition.y + rowSpacing },
+        data: {
+          content: '参考提供的基础场景图，保持场景构图、建筑、环境元素完全一致，仅改变光照为傍晚时段：夕阳西下，天空呈橙红色渐变，光线柔和温暖，建筑投射长影',
+          label: '傍晚场景提示词'
+        }
+      })
+      
+      // 夜晚场景提示词
+      const nightPromptId = getNodeId()
+      nodes.push({
+        id: nightPromptId,
+        type: 'text',
+        position: { x: startPosition.x + colSpacing * 3 + 100, y: startPosition.y + rowSpacing * 2 },
+        data: {
+          content: '参考提供的基础场景图，保持场景构图、建筑、环境元素完全一致，仅改变光照为夜晚时段：霓虹灯亮起，城市灯光璀璨，天空深蓝或黑色，窗户透出暖光',
+          label: '夜晚场景提示词'
+        }
+      })
+      
+      // 雨天场景提示词
+      const rainPromptId = getNodeId()
+      nodes.push({
+        id: rainPromptId,
+        type: 'text',
+        position: { x: startPosition.x + colSpacing * 3 + 100, y: startPosition.y + rowSpacing * 3 },
+        data: {
+          content: '参考提供的基础场景图，保持场景构图、建筑、环境元素完全一致，仅改变天气为雨天：细雨绵绵，地面湿润有倒影，天空阴沉灰暗，氛围忧郁',
+          label: '雨天场景提示词'
+        }
+      })
+      
+      // 傍晚生成配置
+      const eveningConfigId = getNodeId()
+      nodes.push({
+        id: eveningConfigId,
+        type: 'imageConfig',
+        position: { x: startPosition.x + colSpacing * 4 + 100, y: startPosition.y + rowSpacing },
+        data: {
+          label: '傍晚场景',
+          model: 'doubao-seedream-4-5-251128',
+          size: '2560x1440'
+        }
+      })
+      
+      // 夜晚生成配置
+      const nightConfigId = getNodeId()
+      nodes.push({
+        id: nightConfigId,
+        type: 'imageConfig',
+        position: { x: startPosition.x + colSpacing * 4 + 100, y: startPosition.y + rowSpacing * 2 },
+        data: {
+          label: '夜晚场景',
+          model: 'doubao-seedream-4-5-251128',
+          size: '2560x1440'
+        }
+      })
+      
+      // 雨天生成配置
+      const rainConfigId = getNodeId()
+      nodes.push({
+        id: rainConfigId,
+        type: 'imageConfig',
+        position: { x: startPosition.x + colSpacing * 4 + 100, y: startPosition.y + rowSpacing * 3 },
+        data: {
+          label: '雨天场景',
+          model: 'doubao-seedream-4-5-251128',
+          size: '2560x1440'
+        }
+      })
+      
+      // ========== 连线：第一阶段 ==========
+      // 场景描述 → 基础场景生成
+      edges.push({
+        id: `edge_${sceneDescId}_${baseConfigId}`,
+        source: sceneDescId,
+        target: baseConfigId,
+        type: 'promptOrder',
+        data: { promptOrder: 1 },
+        sourceHandle: 'right',
+        targetHandle: 'left'
+      })
+      // 基础提示词 → 基础场景生成
+      edges.push({
+        id: `edge_${basePromptId}_${baseConfigId}`,
+        source: basePromptId,
+        target: baseConfigId,
+        type: 'promptOrder',
+        data: { promptOrder: 2 },
+        sourceHandle: 'right',
+        targetHandle: 'left'
+      })
+      // 基础场景生成 → 基础场景结果
+      edges.push({
+        id: `edge_${baseConfigId}_${baseResultId}`,
+        source: baseConfigId,
+        target: baseResultId,
+        sourceHandle: 'right',
+        targetHandle: 'left'
+      })
+      
+      // ========== 连线：第二阶段（依赖基础场景图） ==========
+      // 基础场景结果 → 各时段生成（作为参考图）
+      const variantConfigs = [eveningConfigId, nightConfigId, rainConfigId]
+      variantConfigs.forEach(configId => {
+        edges.push({
+          id: `edge_${baseResultId}_${configId}`,
+          source: baseResultId,
+          target: configId,
+          sourceHandle: 'right',
+          targetHandle: 'left'
+        })
+      })
+      
+      // 提示词 → 各生成节点
+      edges.push({
+        id: `edge_${eveningPromptId}_${eveningConfigId}`,
+        source: eveningPromptId,
+        target: eveningConfigId,
+        type: 'promptOrder',
+        data: { promptOrder: 1 },
+        sourceHandle: 'right',
+        targetHandle: 'left'
+      })
+      edges.push({
+        id: `edge_${nightPromptId}_${nightConfigId}`,
+        source: nightPromptId,
+        target: nightConfigId,
+        type: 'promptOrder',
+        data: { promptOrder: 1 },
+        sourceHandle: 'right',
+        targetHandle: 'left'
+      })
+      edges.push({
+        id: `edge_${rainPromptId}_${rainConfigId}`,
+        source: rainPromptId,
+        target: rainConfigId,
+        type: 'promptOrder',
+        data: { promptOrder: 1 },
+        sourceHandle: 'right',
+        targetHandle: 'left'
+      })
+      
+      return { nodes, edges }
+    }
+  },
+  // {
+  //   id: 'drama-storyboard-shot',
+  //   name: '短剧分镜图',
+  //   description: '根据角色、场景和剧情描述生成分镜画面',
+  //   icon: 'FilmOutline',
+  //   category: 'drama',
+  //   cover: workflowCover1,
+  //   createNodes: (startPosition) => {
+  //     const colSpacing = 400
+  //     const rowSpacing = 250
+      
+  //     const nodes = []
+  //     const edges = []
+  //     let nodeIdCounter = 0
+  //     const getNodeId = () => `workflow_node_${Date.now()}_${nodeIdCounter++}`
+      
+  //     // ========== 输入节点 ==========
+  //     // 角色参考图
+  //     const characterRefId = getNodeId()
+  //     nodes.push({
+  //       id: characterRefId,
+  //       type: 'image',
+  //       position: { x: startPosition.x, y: startPosition.y },
+  //       data: {
+  //         url: '',
+  //         label: '角色参考图'
+  //       }
+  //     })
+      
+  //     // 场景背景图
+  //     const sceneRefId = getNodeId()
+  //     nodes.push({
+  //       id: sceneRefId,
+  //       type: 'image',
+  //       position: { x: startPosition.x, y: startPosition.y + rowSpacing },
+  //       data: {
+  //         url: '',
+  //         label: '场景背景图'
+  //       }
+  //     })
+      
+  //     // 分镜描述
+  //     const shotDescId = getNodeId()
+  //     nodes.push({
+  //       id: shotDescId,
+  //       type: 'text',
+  //       position: { x: startPosition.x, y: startPosition.y + rowSpacing * 2 },
+  //       data: {
+  //         content: '分镜编号：001\n景别：中景\n镜头角度：平视\n画面描述：女主角站在咖啡店门口，手持一杯咖啡，微微低头看着手机，若有所思\n人物动作：站立，单手持咖啡，另一手拿手机\n表情：略带忧郁，眉头微蹙\n光线：自然光，侧逆光',
+  //         label: '分镜描述'
+  //       }
+  //     })
+      
+  //     // ========== 生成提示词 ==========
+  //     const shotPromptId = getNodeId()
+  //     nodes.push({
+  //       id: shotPromptId,
+  //       type: 'text',
+  //       position: { x: startPosition.x + colSpacing, y: startPosition.y + rowSpacing },
+  //       data: {
+  //         content: '根据角色参考图、场景背景和分镜描述，生成电影级分镜画面，保持角色外貌一致，场景融合自然，光影效果符合描述，16:9宽屏比例，电影调色',
+  //         label: '分镜生成提示词'
+  //       }
+  //     })
+      
+  //     // ========== 生成节点 ==========
+  //     const shotConfigId = getNodeId()
+  //     nodes.push({
+  //       id: shotConfigId,
+  //       type: 'imageConfig',
+  //       position: { x: startPosition.x + colSpacing * 2, y: startPosition.y + rowSpacing },
+  //       data: {
+  //         label: '分镜画面',
+  //         model: 'doubao-seedream-4-5-251128',
+  //         size: '2560x1440'
+  //       }
+  //     })
+      
+  //     // ========== 连线 ==========
+  //     edges.push({
+  //       id: `edge_${characterRefId}_${shotConfigId}`,
+  //       source: characterRefId,
+  //       target: shotConfigId,
+  //       sourceHandle: 'right',
+  //       targetHandle: 'left'
+  //     })
+  //     edges.push({
+  //       id: `edge_${sceneRefId}_${shotConfigId}`,
+  //       source: sceneRefId,
+  //       target: shotConfigId,
+  //       sourceHandle: 'right',
+  //       targetHandle: 'left'
+  //     })
+  //     edges.push({
+  //       id: `edge_${shotDescId}_${shotConfigId}`,
+  //       source: shotDescId,
+  //       target: shotConfigId,
+  //       type: 'promptOrder',
+  //       data: { promptOrder: 1 },
+  //       sourceHandle: 'right',
+  //       targetHandle: 'left'
+  //     })
+  //     edges.push({
+  //       id: `edge_${shotPromptId}_${shotConfigId}`,
+  //       source: shotPromptId,
+  //       target: shotConfigId,
+  //       type: 'promptOrder',
+  //       data: { promptOrder: 2 },
+  //       sourceHandle: 'right',
+  //       targetHandle: 'left'
+  //     })
+      
+  //     return { nodes, edges }
+  //   }
+  // }
 ]
 
 /**
