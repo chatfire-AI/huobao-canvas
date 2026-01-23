@@ -358,6 +358,7 @@ import ImageNode from '../components/nodes/ImageNode.vue'
 import VideoConfigNode from '../components/nodes/VideoConfigNode.vue'
 import ImageRoleEdge from '../components/edges/ImageRoleEdge.vue'
 import PromptOrderEdge from '../components/edges/PromptOrderEdge.vue'
+import ImageOrderEdge from '../components/edges/ImageOrderEdge.vue'
 
 const router = useRouter()
 const route = useRoute()
@@ -377,7 +378,8 @@ const nodeTypes = {
 // Register custom edge types | 注册自定义边类型
 const edgeTypes = {
   imageRole: markRaw(ImageRoleEdge),
-  promptOrder: markRaw(PromptOrderEdge)
+  promptOrder: markRaw(PromptOrderEdge),
+  imageOrder: markRaw(ImageOrderEdge)
 }
 
 // UI state | UI状态
@@ -540,6 +542,19 @@ const onConnect = (params) => {
       ...params,
       type: 'promptOrder',
       data: { promptOrder: nextOrder }
+    })
+  } else if (sourceNode?.type === 'image' && targetNode?.type === 'imageConfig') {
+    // Use imageOrder edge type | 使用图片顺序边类型
+    // Calculate next order number | 计算下一个顺序号
+    const existingImageEdges = edges.value.filter(e => 
+      e.target === params.target && e.type === 'imageOrder'
+    )
+    const nextOrder = existingImageEdges.length + 1
+    
+    addEdge({
+      ...params,
+      type: 'imageOrder',
+      data: { imageOrder: nextOrder }
     })
   } else {
     addEdge(params)

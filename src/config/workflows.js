@@ -155,6 +155,8 @@ export const WORKFLOW_TEMPLATES = [
           id: `edge_${textNodeId}_${configNodeId}`,
           source: textNodeId,
           target: configNodeId,
+          type: 'promptOrder',
+          data: { promptOrder: 1 },
           sourceHandle: 'right',
           targetHandle: 'left'
         })
@@ -164,6 +166,8 @@ export const WORKFLOW_TEMPLATES = [
           id: `edge_${characterImageId}_${configNodeId}`,
           source: characterImageId,
           target: configNodeId,
+          type: 'imageOrder',
+          data: { imageOrder: 1 },
           sourceHandle: 'right',
           targetHandle: 'left'
         })
@@ -336,6 +340,8 @@ export const WORKFLOW_TEMPLATES = [
         id: `edge_${nodeB_productImageId}_${modelConfigId}`,
         source: nodeB_productImageId,
         target: modelConfigId,
+        type: 'imageOrder',
+        data: { imageOrder: 1 },
         sourceHandle: 'right',
         targetHandle: 'left'
       })
@@ -363,6 +369,8 @@ export const WORKFLOW_TEMPLATES = [
         id: `edge_${nodeB_productImageId}_${sideConfigId}`,
         source: nodeB_productImageId,
         target: sideConfigId,
+        type: 'imageOrder',
+        data: { imageOrder: 1 },
         sourceHandle: 'right',
         targetHandle: 'left'
       })
@@ -390,6 +398,8 @@ export const WORKFLOW_TEMPLATES = [
         id: `edge_${nodeB_productImageId}_${topConfigId}`,
         source: nodeB_productImageId,
         target: topConfigId,
+        type: 'imageOrder',
+        data: { imageOrder: 1 },
         sourceHandle: 'right',
         targetHandle: 'left'
       })
@@ -417,6 +427,8 @@ export const WORKFLOW_TEMPLATES = [
         id: `edge_${nodeB_productImageId}_${explodedConfigId}`,
         source: nodeB_productImageId,
         target: explodedConfigId,
+        type: 'imageOrder',
+        data: { imageOrder: 1 },
         sourceHandle: 'right',
         targetHandle: 'left'
       })
@@ -604,6 +616,8 @@ export const WORKFLOW_TEMPLATES = [
         id: `edge_${styleRefId}_${frontConfigId}`,
         source: styleRefId,
         target: frontConfigId,
+        type: 'imageOrder',
+        data: { imageOrder: 1 },
         sourceHandle: 'right',
         targetHandle: 'left'
       })
@@ -632,6 +646,8 @@ export const WORKFLOW_TEMPLATES = [
         id: `edge_${frontResultId}_${sideConfigId}`,
         source: frontResultId,
         target: sideConfigId,
+        type: 'imageOrder',
+        data: { imageOrder: 1 },
         sourceHandle: 'right',
         targetHandle: 'left'
       })
@@ -640,6 +656,8 @@ export const WORKFLOW_TEMPLATES = [
         id: `edge_${frontResultId}_${closeupConfigId}`,
         source: frontResultId,
         target: closeupConfigId,
+        type: 'imageOrder',
+        data: { imageOrder: 1 },
         sourceHandle: 'right',
         targetHandle: 'left'
       })
@@ -648,6 +666,8 @@ export const WORKFLOW_TEMPLATES = [
         id: `edge_${frontResultId}_${backConfigId}`,
         source: frontResultId,
         target: backConfigId,
+        type: 'imageOrder',
+        data: { imageOrder: 1 },
         sourceHandle: 'right',
         targetHandle: 'left'
       })
@@ -864,6 +884,8 @@ export const WORKFLOW_TEMPLATES = [
           id: `edge_${baseResultId}_${configId}`,
           source: baseResultId,
           target: configId,
+          type: 'imageOrder',
+          data: { imageOrder: 1 },
           sourceHandle: 'right',
           targetHandle: 'left'
         })

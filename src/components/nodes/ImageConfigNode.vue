@@ -246,7 +246,7 @@ onMounted(() => {
 const getConnectedInputs = () => {
   const connectedEdges = edges.value.filter(e => e.target === props.id)
   const prompts = [] // Array of { order, content } | 提示词数组
-  const refImages = []
+  const refImages = [] // Array of { order, imageData, nodeId } | 参考图数组
 
   for (const edge of connectedEdges) {
     const sourceNode = nodes.value.find(n => n.id === edge.source)
@@ -263,7 +263,9 @@ const getConnectedInputs = () => {
       // Prefer base64, fallback to url | 优先使用 base64，回退到 url
       const imageData = sourceNode.data?.base64 || sourceNode.data?.url
       if (imageData) {
-        refImages.push(imageData)
+        // Get order from edge data, default to 1 | 从边数据获取顺序，默认为1
+        const order = edge.data?.imageOrder || 1
+        refImages.push({ order, imageData, nodeId: sourceNode.id })
       }
     }
   }
@@ -272,7 +274,11 @@ const getConnectedInputs = () => {
   prompts.sort((a, b) => a.order - b.order)
   const combinedPrompt = prompts.map(p => p.content).join('\n\n')
 
-  return { prompt: combinedPrompt, prompts, refImages }
+  // Sort refImages by order | 按顺序排序参考图
+  refImages.sort((a, b) => a.order - b.order)
+  const sortedRefImages = refImages.map(r => r.imageData)
+
+  return { prompt: combinedPrompt, prompts, refImages: sortedRefImages, refImagesWithOrder: refImages }
 }
 
 // Computed connected prompts (sorted by order) | 计算连接的提示词（按顺序排列）
@@ -368,7 +374,7 @@ const hasConnectedImageWithContent = computed(() => {
 // Handle generate action | 处理生成操作
 // mode: 'auto' = 自动判断, 'replace' = 替换现有, 'new' = 新建节点
 const handleGenerate = async (mode = 'auto') => {
-  const { prompt, prompts, refImages } = getConnectedInputs()
+  const { prompt, prompts, refImages, refImagesWithOrder } = getConnectedInputs()
 
   if (!prompt && refImages.length === 0) {
     window.$message?.warning('请连接文本节点（提示词）或图片节点（参考图）')
@@ -378,6 +384,11 @@ const handleGenerate = async (mode = 'auto') => {
   // Log prompt order for debugging | 记录提示词顺序用于调试
   if (prompts.length > 1) {
     console.log('[ImageConfigNode] 拼接提示词顺序:', prompts.map(p => `${p.order}: ${p.content.substring(0, 20)}...`))
+  }
+  
+  // Log image order for debugging | 记录图片顺序用于调试
+  if (refImagesWithOrder && refImagesWithOrder.length > 1) {
+    console.log('[ImageConfigNode] 参考图顺序:', refImagesWithOrder.map(r => `${r.order}: ${r.nodeId}`))
   }
 
   if (!isConfigured.value) {
@@ -452,7 +463,7 @@ const handleGenerate = async (mode = 'auto') => {
 
     // Add reference image if provided | 如果有参考图则添加
     if (refImages.length > 0) {
-      params.image = refImages[0]
+      params.image = refImages
     }
 
     const result = await generate(params)
