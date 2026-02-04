@@ -4,6 +4,7 @@
  */
 import { ref, watch } from 'vue'
 import { updateProjectCanvas, getProjectCanvas } from './projects'
+import { IMAGE_MODELS, VIDEO_MODELS, CHAT_MODELS, DEFAULT_IMAGE_MODEL, DEFAULT_VIDEO_MODEL, DEFAULT_CHAT_MODEL } from '../config/models'
 
 // Node ID counter | 节点ID计数器
 let nodeId = 0
@@ -87,23 +88,26 @@ const getDefaultNodeData = (type) => {
         content: '',
         label: '文本输入'
       }
-    case 'imageConfig':
+    case 'imageConfig': {
+      const imageModel = IMAGE_MODELS.find(m => m.key === DEFAULT_IMAGE_MODEL) || IMAGE_MODELS[0]
       return {
         prompt: '',
-        model: 'doubao-seedream-4-5-251128',
-        size: '2048x2048',
-        ratio: '1:1',
-        quality: '4张 | 高清',
+        model: DEFAULT_IMAGE_MODEL,
+        size: imageModel?.defaultParams?.size || '1x1',
+        quality: imageModel?.defaultParams?.quality || 'standard',
         label: '文生图'
       }
-    case 'videoConfig':
+    }
+    case 'videoConfig': {
+      const videoModel = VIDEO_MODELS.find(m => m.key === DEFAULT_VIDEO_MODEL) || VIDEO_MODELS[0]
       return {
         prompt: '',
-        ratio: '16:9',
-        duration: '5秒',
-        model: 'doubao-seedance-1-5-pro_720p',
+        ratio: videoModel?.defaultParams?.ratio || '16:9',
+        duration: videoModel?.defaultParams?.duration || 5,
+        model: DEFAULT_VIDEO_MODEL,
         label: '图生视频'
       }
+    }
     case 'video':
       return {
         url: '',
@@ -114,6 +118,14 @@ const getDefaultNodeData = (type) => {
       return {
         url: '',
         label: '图片节点'
+      }
+    case 'llmConfig':
+      return {
+        systemPrompt: '',
+        model: DEFAULT_CHAT_MODEL,
+        outputFormat: 'text',
+        outputContent: '',
+        label: 'LLM文本生成'
       }
     default:
       return {}

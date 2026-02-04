@@ -2,8 +2,8 @@
   <!-- Canvas page | 画布页面 -->
   <div class="h-screen w-screen flex flex-col bg-[var(--bg-primary)]">
     <!-- Header | 顶部导航 -->
-    <header class="flex items-center justify-between px-4 py-3 border-b border-[var(--border-color)] bg-[var(--bg-secondary)]">
-      <div class="flex items-center gap-3">
+    <AppHeader class="bg-[var(--bg-secondary)]">
+      <template #left>
         <button 
           @click="goBack"
           class="p-2 hover:bg-[var(--bg-tertiary)] rounded-lg transition-colors"
@@ -16,17 +16,8 @@
             <n-icon :size="16"><ChevronDownOutline /></n-icon>
           </button>
         </n-dropdown>
-      </div>
-      <div class="flex items-center gap-2">
-        <button 
-          @click="toggleTheme"
-          class="p-2 hover:bg-[var(--bg-tertiary)] rounded-lg transition-colors"
-        >
-          <n-icon :size="20">
-            <SunnyOutline v-if="isDark" />
-            <MoonOutline v-else />
-          </n-icon>
-        </button>
+      </template>
+      <template #right>
         <button 
           @click="showDownloadModal = true"
           class="p-2 hover:bg-[var(--bg-tertiary)] rounded-lg transition-colors"
@@ -43,13 +34,8 @@
         >
           <n-icon :size="20"><SettingsOutline /></n-icon>
         </button>
-        <!-- <div class="flex items-center gap-2 px-3 py-1.5 rounded-full bg-[var(--bg-primary)] border border-[var(--border-color)]">
-          <span class="text-[var(--accent-color)]">◆</span>
-          <span class="text-sm font-medium">112.00</span>
-          <span class="text-xs text-[var(--text-secondary)]">开通会员</span>
-        </div> -->
-      </div>
-    </header>
+      </template>
+    </AppHeader>
 
     <!-- Main canvas area | 主画布区域 -->
     <div class="flex-1 relative overflow-hidden">
@@ -270,8 +256,6 @@ import { NIcon, NSwitch, NDropdown, NMessageProvider, NSpin, NModal, NInput, NBu
 import { 
   ChevronBackOutline,
   ChevronDownOutline,
-  SunnyOutline, 
-  MoonOutline,
   SettingsOutline,
   AddOutline,
   ImageOutline,
@@ -287,9 +271,9 @@ import {
   LocateOutline,
   RemoveOutline,
   DownloadOutline,
-  AppsOutline
+  AppsOutline,
+  ChatbubbleOutline
 } from '@vicons/ionicons5'
-import { isDark, toggleTheme } from '../stores/theme'
 import { nodes, edges, addNode, addEdge, updateNode, initSampleData, loadProject, saveProject, clearCanvas, canvasViewport, updateViewport, undo, redo, canUndo, canRedo, manualSaveHistory } from '../stores/canvas'
 import { loadAllModels } from '../stores/models'
 import { useApiConfig, useChat, useWorkflowOrchestrator } from '../hooks'
@@ -299,6 +283,7 @@ import { projects, initProjectsStore, updateProject, renameProject, currentProje
 import ApiSettings from '../components/ApiSettings.vue'
 import DownloadModal from '../components/DownloadModal.vue'
 import WorkflowPanel from '../components/WorkflowPanel.vue'
+import AppHeader from '../components/AppHeader.vue'
 
 // API Config hook | API 配置 hook
 const { isConfigured: isApiConfigured } = useApiConfig()
@@ -356,6 +341,7 @@ import ImageConfigNode from '../components/nodes/ImageConfigNode.vue'
 import VideoNode from '../components/nodes/VideoNode.vue'
 import ImageNode from '../components/nodes/ImageNode.vue'
 import VideoConfigNode from '../components/nodes/VideoConfigNode.vue'
+import LLMConfigNode from '../components/nodes/LLMConfigNode.vue'
 import ImageRoleEdge from '../components/edges/ImageRoleEdge.vue'
 import PromptOrderEdge from '../components/edges/PromptOrderEdge.vue'
 import ImageOrderEdge from '../components/edges/ImageOrderEdge.vue'
@@ -372,7 +358,8 @@ const nodeTypes = {
   imageConfig: markRaw(ImageConfigNode),
   video: markRaw(VideoNode),
   image: markRaw(ImageNode),
-  videoConfig: markRaw(VideoConfigNode)
+  videoConfig: markRaw(VideoConfigNode),
+  llmConfig: markRaw(LLMConfigNode)
 }
 
 // Register custom edge types | 注册自定义边类型
@@ -427,6 +414,7 @@ const tools = [
   { id: 'text', name: '文本', icon: TextOutline, action: () => addNewNode('text') },
   { id: 'image', name: '图片', icon: ImageOutline, action: () => addNewNode('image') },
   { id: 'imageConfig', name: '文生图', icon: ColorPaletteOutline, action: () => addNewNode('imageConfig') },
+  { id: 'videoConfig', name: '视频生成', icon: VideocamOutline, action: () => addNewNode('videoConfig') },
   { id: 'undo', name: '撤销', icon: ArrowUndoOutline, action: () => undo(), disabled: () => !canUndo() },
   { id: 'redo', name: '重做', icon: ArrowRedoOutline, action: () => redo(), disabled: () => !canRedo() }
 ]
@@ -434,6 +422,7 @@ const tools = [
 // Node type options for menu | 节点类型菜单选项
 const nodeTypeOptions = [
   { type: 'text', name: '文本节点', icon: TextOutline, color: '#3b82f6' },
+  // { type: 'llmConfig', name: 'LLM文本生成', icon: ChatbubbleOutline, color: '#a855f7' },
   { type: 'imageConfig', name: '文生图配置', icon: ColorPaletteOutline, color: '#22c55e' },
   { type: 'videoConfig', name: '视频生成配置', icon: VideocamOutline, color: '#f59e0b' },
   { type: 'image', name: '图片节点', icon: ImageOutline, color: '#8b5cf6' },

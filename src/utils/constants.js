@@ -49,5 +49,11 @@ export const DEFAULT_CHAT_CONFIG = {
 // Local Storage Keys | 本地存储键
 export const STORAGE_KEYS = {
   API_KEY: 'apiKey',
-  BASE_URL: 'apiBaseUrl'
+  BASE_URL: 'apiBaseUrl',
+  CUSTOM_CHAT_MODELS: 'customChatModels',
+  CUSTOM_IMAGE_MODELS: 'customImageModels',
+  CUSTOM_VIDEO_MODELS: 'customVideoModels',
+  SELECTED_CHAT_MODEL: 'selectedChatModel',
+  SELECTED_IMAGE_MODEL: 'selectedImageModel',
+  SELECTED_VIDEO_MODEL: 'selectedVideoModel'
 }

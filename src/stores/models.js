@@ -1,6 +1,6 @@
 /**
  * Model Store | 模型状态管理
- * Built-in models for open source version | 开源版内置模型
+ * Built-in models + custom models from local storage | 开源版内置模型 + 本地存储自定义模型
  */
 
 import { ref, computed } from 'vue'
@@ -21,16 +21,29 @@ import {
   DEFAULT_VIDEO_RATIO,
   DEFAULT_VIDEO_DURATION
 } from '@/config/models'
+import { useModelConfig } from '@/hooks/useModelConfig'
 
 // Loading state (always false for built-in models) | 加载状态
 const loading = ref(false)
 const error = ref(null)
 
+// Get model config hook | 获取模型配置 hook
+const getModelConfigHook = () => {
+  try {
+    return useModelConfig()
+  } catch {
+    return null
+  }
+}
+
 /**
  * Initialize models (no-op for built-in) | 初始化模型
  */
 export const loadAllModels = async () => {
-  // Built-in models, no loading needed | 内置模型，无需加载
+  const modelConfig = getModelConfigHook()
+  if (modelConfig) {
+    return [...modelConfig.allImageModels.value, ...modelConfig.allVideoModels.value, ...modelConfig.allChatModels.value]
+  }
   return [...IMAGE_MODELS, ...VIDEO_MODELS, ...CHAT_MODELS]
 }
 
@@ -38,6 +51,12 @@ export const loadAllModels = async () => {
  * Get model config by name | 根据名称获取模型配置
  */
 export const getModelConfig = (modelKey) => {
+  const modelConfig = getModelConfigHook()
+  if (modelConfig) {
+    return modelConfig.getImageModel(modelKey) || 
+           modelConfig.getVideoModel(modelKey) || 
+           modelConfig.getChatModel(modelKey)
+  }
   const allModels = [...IMAGE_MODELS, ...VIDEO_MODELS, ...CHAT_MODELS]
   return allModels.find(m => m.key === modelKey)
 }
@@ -99,28 +118,39 @@ export const getModelDurationOptions = (modelKey) => {
   return model.durs
 }
 
-// Dropdown options (already in label/key format) | 下拉选项
-export const imageModelOptions = computed(() => IMAGE_MODELS)
-export const videoModelOptions = computed(() => VIDEO_MODELS)
-export const chatModelOptions = computed(() => CHAT_MODELS)
+// Dropdown options (built-in + custom) | 下拉选项（内置 + 自定义）
+export const imageModelOptions = computed(() => {
+  const modelConfig = getModelConfigHook()
+  return modelConfig ? modelConfig.allImageModels.value : IMAGE_MODELS
+})
+
+export const videoModelOptions = computed(() => {
+  const modelConfig = getModelConfigHook()
+  return modelConfig ? modelConfig.allVideoModels.value : VIDEO_MODELS
+})
+
+export const chatModelOptions = computed(() => {
+  const modelConfig = getModelConfigHook()
+  return modelConfig ? modelConfig.allChatModels.value : CHAT_MODELS
+})
 
 // Simple select options (for n-select) | 简单选择选项
 export const imageModelSelectOptions = computed(() => 
-  IMAGE_MODELS.map(m => ({ label: m.label, value: m.key }))
+  imageModelOptions.value.map(m => ({ label: m.label, value: m.key }))
 )
 
 export const videoModelSelectOptions = computed(() => 
-  VIDEO_MODELS.map(m => ({ label: m.label, value: m.key }))
+  videoModelOptions.value.map(m => ({ label: m.label, value: m.key }))
 )
 
 export const chatModelSelectOptions = computed(() => 
-  CHAT_MODELS.map(m => ({ label: m.label, value: m.key }))
+  chatModelOptions.value.map(m => ({ label: m.label, value: m.key }))
 )
 
-// Export model arrays | 导出模型数组
-export const imageModels = ref(IMAGE_MODELS)
-export const videoModels = ref(VIDEO_MODELS)
-export const chatModels = ref(CHAT_MODELS)
+// Export model arrays (reactive with custom models) | 导出模型数组（响应式，包含自定义模型）
+export const imageModels = computed(() => imageModelOptions.value)
+export const videoModels = computed(() => videoModelOptions.value)
+export const chatModels = computed(() => chatModelOptions.value)
 
 // Export defaults | 导出默认值
 export {

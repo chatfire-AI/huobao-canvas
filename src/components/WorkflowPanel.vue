@@ -65,7 +65,11 @@ import {
   GridOutline, 
   ImageOutline, 
   VideocamOutline,
-  FolderOpenOutline 
+  FolderOpenOutline,
+  BookOutline,
+  PersonOutline,
+  CartOutline,
+  ChatbubbleOutline
 } from '@vicons/ionicons5'
 import { WORKFLOW_TEMPLATES } from '../config/workflows'
 
@@ -91,7 +95,11 @@ const publicWorkflows = computed(() => WORKFLOW_TEMPLATES)
 const iconMap = {
   GridOutline,
   ImageOutline,
-  VideocamOutline
+  VideocamOutline,
+  BookOutline,
+  PersonOutline,
+  ShoppingOutline: CartOutline,
+  ChatbubbleOutline
 }
 
 const getIcon = (iconName) => {

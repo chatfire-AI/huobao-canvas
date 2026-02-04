@@ -136,15 +136,52 @@
           </div>
         </div>
 
+        <!-- URL Loading state | URL 加载状态 -->
+        <div v-else-if="urlLoading"
+          class="aspect-square rounded-xl bg-gradient-to-br from-cyan-400 via-blue-300 to-amber-200 flex flex-col items-center justify-center gap-3 relative overflow-hidden">
+          <div class="absolute inset-0 bg-gradient-to-br from-cyan-500/20 via-blue-400/20 to-amber-300/20 animate-pulse"></div>
+          <div class="relative z-10">
+            <img src="../../assets/loading.webp" alt="Loading" class="w-14 h-12" />
+          </div>
+          <span class="text-sm text-white font-medium relative z-10">加载中...</span>
+        </div>
+
         <!-- Upload placeholder | 上传占位 -->
-        <div v-else
-          class="aspect-square rounded-xl bg-[var(--bg-tertiary)] flex flex-col items-center justify-center gap-2 border-2 border-dashed border-[var(--border-color)] relative">
-          <n-icon :size="32" class="text-[var(--text-secondary)]">
-            <ImageOutline />
-          </n-icon>
-          <span class="text-sm text-[var(--text-secondary)] text-center">拖放图片或点击上传</span>
-          <input type="file" accept="image/*" class="absolute inset-0 opacity-0 cursor-pointer"
-            @change="handleFileUpload" />
+        <div v-else class="rounded-xl bg-[var(--bg-tertiary)] border-2 border-dashed border-[var(--border-color)] p-3">
+          <!-- Upload area | 上传区域 -->
+          <div class="aspect-video flex flex-col items-center justify-center gap-2 relative cursor-pointer hover:bg-[var(--bg-secondary)] rounded-lg transition-colors">
+            <n-icon :size="32" class="text-[var(--text-secondary)]">
+              <ImageOutline />
+            </n-icon>
+            <span class="text-sm text-[var(--text-secondary)] text-center">拖放图片或点击上传</span>
+            <input type="file" accept="image/*" class="absolute inset-0 opacity-0 cursor-pointer"
+              @change="handleFileUpload" />
+          </div>
+          
+          <!-- Divider | 分割线 -->
+          <div class="flex items-center gap-2 my-3">
+            <div class="flex-1 h-px bg-[var(--border-color)]"></div>
+            <span class="text-xs text-[var(--text-secondary)]">或</span>
+            <div class="flex-1 h-px bg-[var(--border-color)]"></div>
+          </div>
+          
+          <!-- URL input | URL 输入 -->
+          <div class="flex gap-2">
+            <input 
+              v-model="urlInput"
+              type="text" 
+              placeholder="输入图片地址..."
+              class="flex-1 px-2 py-1 text-sm bg-[var(--bg-secondary)] border border-[var(--border-color)] rounded-lg outline-none focus:border-[var(--accent-color)] text-[var(--text-primary)] placeholder:text-[var(--text-secondary)]"
+              @keydown.enter="handleUrlSubmit"
+            />
+            <button 
+              @click="handleUrlSubmit"
+              :disabled="!urlInput.trim()"
+              class="px-3 py-2 text-xs bg-[var(--accent-color)] hover:bg-[var(--accent-hover)] text-white rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap"
+            >
+              预览
+            </button>
+          </div>
         </div>
       </div>
 
@@ -241,6 +278,10 @@ const { updateNodeInternals } = useVueFlow()
 
 // Hover state | 悬浮状态
 const showActions = ref(true)
+
+// URL input state | URL 输入状态
+const urlInput = ref('')
+const urlLoading = ref(false)
 
 // Inpainting state | 涂抹重绘状态
 const isInpaintMode = ref(false)
@@ -480,6 +521,39 @@ const handleFileUpload = async (event) => {
       window.$message?.error('图片上传失败')
     }
   }
+}
+
+// Handle URL submit | 处理 URL 提交
+const handleUrlSubmit = () => {
+  const url = urlInput.value.trim()
+  if (!url) return
+  
+  // Validate URL format | 验证 URL 格式
+  if (!url.startsWith('http://') && !url.startsWith('https://')) {
+    window.$message?.warning('请输入有效的图片地址 (http:// 或 https://)')
+    return
+  }
+  
+  // Show loading state | 显示加载状态
+  urlLoading.value = true
+  
+  // Preload image to check validity | 预加载图片检查有效性
+  const img = new Image()
+  img.onload = () => {
+    // Update node with URL | 更新节点 URL
+    updateNode(props.id, {
+      url: url,
+      label: '网络图片',
+      updatedAt: Date.now()
+    })
+    urlInput.value = ''
+    urlLoading.value = false
+  }
+  img.onerror = () => {
+    window.$message?.error('图片加载失败，请检查地址是否正确')
+    urlLoading.value = false
+  }
+  img.src = url
 }
 
 // Handle delete | 处理删除

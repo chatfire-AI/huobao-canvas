@@ -2,30 +2,8 @@
   <!-- Home page | 首页 -->
   <div class="min-h-screen h-screen overflow-y-auto bg-[var(--bg-primary)]">
     <!-- Header | 顶部导航 -->
-    <header class="flex items-center justify-between px-4 md:px-8 py-4 border-b border-[var(--border-color)]">
-      <div class="flex items-center gap-2">
-        <!-- <img src="../assets/logo.png" alt="Logo" class="w-8 h-8" /> -->
-        <!-- <span class="text-lg font-bold text-[var(--text-primary)]">火宝无限画布</span> -->
-      </div>
-      <div class="flex items-center gap-4">
-        <a 
-          href="https://github.com/chatfire-AI/huobao-canvas"
-          target="_blank"
-          rel="noopener noreferrer"
-          class="p-2 rounded-lg hover:bg-[var(--bg-tertiary)] transition-colors text-[var(--text-primary)] hover:text-[var(--accent-color)]"
-          title="GitHub"
-        >
-          <n-icon :size="20"><LogoGithub /></n-icon>
-        </a>
-        <button 
-          @click="toggleTheme"
-          class="p-2 rounded-lg hover:bg-[var(--bg-tertiary)] transition-colors"
-        >
-          <n-icon :size="20">
-            <SunnyOutline v-if="isDark" />
-            <MoonOutline v-else />
-          </n-icon>
-        </button>
+    <AppHeader>
+      <template #right>
         <button 
           @click="showApiSettings = true"
           class="p-2 hover:bg-[var(--bg-tertiary)] rounded-lg transition-colors"
@@ -34,13 +12,8 @@
         >
           <n-icon :size="20"><SettingsOutline /></n-icon>
         </button>
-        <!-- <div class="flex items-center gap-2 px-3 py-1.5 rounded-full bg-[var(--bg-secondary)] border border-[var(--border-color)]">
-          <span class="text-[var(--accent-color)]">◆</span>
-          <span class="text-sm font-medium">112.00</span>
-          <span class="text-xs text-[var(--text-secondary)]">开通会员</span>
-        </div> -->
-      </div>
-    </header>
+      </template>
+    </AppHeader>
 
     <!-- Main content | 主要内容 -->
     <main class="max-w-5xl mx-auto px-4 py-8 md:py-16">
@@ -230,8 +203,6 @@ import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { NIcon, NDropdown, NModal, NInput, NButton, useDialog } from 'naive-ui'
 import { 
-  SunnyOutline, 
-  MoonOutline, 
   AddOutline, 
   ImageOutline, 
   SendOutline,
@@ -242,10 +213,8 @@ import {
   CreateOutline,
   CopyOutline,
   SettingsOutline,
-  TrashOutline,
-  LogoGithub
+  TrashOutline
 } from '@vicons/ionicons5'
-import { isDark, toggleTheme } from '../stores/theme'
 import { 
   projects, 
   initProjectsStore, 
@@ -256,6 +225,7 @@ import {
 } from '../stores/projects'
 import { useApiConfig } from '../hooks/useApiConfig'
 import ApiSettings from '../components/ApiSettings.vue'
+import AppHeader from '../components/AppHeader.vue'
 
 const router = useRouter()
 const dialog = useDialog()

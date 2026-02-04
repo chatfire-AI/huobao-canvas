@@ -294,18 +294,8 @@ const connectedRefImages = computed(() => {
 // Handle model selection | 处理模型选择
 const handleModelSelect = (key) => {
   localModel.value = key
-  // Update size and quality to model's default | 更新为模型默认尺寸和画质
-  const config = getModelConfig(key)
-  const updates = { model: key }
-  if (config?.defaultParams?.size) {
-    localSize.value = config.defaultParams.size
-    updates.size = config.defaultParams.size
-  }
-  if (config?.defaultParams?.quality) {
-    localQuality.value = config.defaultParams.quality
-    updates.quality = config.defaultParams.quality
-  }
-  updateNode(props.id, updates)
+  // Only update model, keep size and quality unchanged | 仅更新模型，保持尺寸和画质不变
+  updateNode(props.id, { model: key })
 }
 
 // Handle quality selection | 处理画质选择

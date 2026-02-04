@@ -50,6 +50,18 @@ export const BANANA_SIZE_OPTIONS = [
 // Image generation models | 图片生成模型
 export const IMAGE_MODELS = [
     {
+        label: 'Nano Banana Pro',
+        key: 'nano-banana-pro',
+        sizes: BANANA_SIZE_OPTIONS.map(s => s.key),
+        // qualities: SEEDREAM_QUALITY_OPTIONS,
+        // getSizesByQuality: (quality) => quality === '4k' ? SEEDREAM_4K_SIZE_OPTIONS : SEEDREAM_SIZE_OPTIONS,
+        defaultParams: {
+            size: '1x1',
+            quality: 'standard',
+            style: 'vivid'
+        }
+    },
+    {
         label: '豆包 Seedream 4.5',
         key: 'doubao-seedream-4-5-251128',
         sizes: SEEDREAM_SIZE_OPTIONS.map(s => s.key),
@@ -71,18 +83,7 @@ export const IMAGE_MODELS = [
             style: 'vivid'
         }
     },
-    {
-        label: 'Nano Banana Pro',
-        key: 'nano-banana-pro',
-        sizes: BANANA_SIZE_OPTIONS.map(s => s.key),
-        // qualities: SEEDREAM_QUALITY_OPTIONS,
-        // getSizesByQuality: (quality) => quality === '4k' ? SEEDREAM_4K_SIZE_OPTIONS : SEEDREAM_SIZE_OPTIONS,
-        defaultParams: {
-            size: '1x1',
-            quality: 'standard',
-            style: 'vivid'
-        }
-    }
+
 ]
 
 // Video ratio options | 视频比例选项
@@ -97,31 +98,38 @@ export const VIDEO_RATIO_LIST = [
 // Video generation models | 视频生成模型
 export const VIDEO_MODELS = [
     {
-        label: '豆包视频 720P',
-        key: 'doubao-seedance-1-5-pro_720p',
+        label: 'veo3.1',
+        key: 'veo3.1',
         ratios: VIDEO_RATIO_LIST.map(s => s.key),
         durs: [{ label: '5 秒', key: 5 }, { label: '10 秒', key: 10 }],
         defaultParams: { ratio: '16:9', duration: 5 }
     },
-    {
-        label: '可灵视频 O1',
-        key: 'kling-video-o1',
-        ratios: VIDEO_RATIO_LIST.map(s => s.key),
-        durs: [{ label: '5 秒', key: 5 }, { label: '10 秒', key: 10 }],
-        defaultParams: { ratio: '16:9', duration: 5 }
-    },
-    {
-        label: 'Wan 2.6 720P', key: 'wan2.6_720p',
-        ratios: VIDEO_RATIO_LIST.map(s => s.key),
-        durs: [{ label: '5 秒', key: 5 }, { label: '10 秒', key: 10 }],
-        defaultParams: { ratio: '16:9', duration: 5 }
-    },
-    {
-        label: 'Sora 2', key: 'sora-2',
-        ratios: VIDEO_RATIO_LIST.map(s => s.key),
-        durs: [{ label: '5 秒', key: 5 }, { label: '10 秒', key: 10 }],
-        defaultParams: { ratio: '16:9', duration: 5 }
-    }
+    // {
+    //     label: 'runway/gen4-turbo',
+    //     key: 'runway/gen4-turbo',
+    //     ratios: VIDEO_RATIO_LIST.map(s => s.key),
+    //     durs: [{ label: '5 秒', key: 5 }, { label: '10 秒', key: 10 }],
+    //     defaultParams: { ratio: '16:9', duration: 5 }
+    // },
+    // {
+    //     label: '可灵视频 O1',
+    //     key: 'kling-video-o1',
+    //     ratios: VIDEO_RATIO_LIST.map(s => s.key),
+    //     durs: [{ label: '5 秒', key: 5 }, { label: '10 秒', key: 10 }],
+    //     defaultParams: { ratio: '16:9', duration: 5 }
+    // },
+    // {
+    //     label: 'viduq2-pro_720p', key: 'viduq2-pro_720p',
+    //     ratios: VIDEO_RATIO_LIST.map(s => s.key),
+    //     durs: [{ label: '5 秒', key: 5 }, { label: '10 秒', key: 10 }],
+    //     defaultParams: { ratio: '16:9', duration: 5 }
+    // },
+    // {
+    //     label: 'Sora 2', key: 'sora-2',
+    //     ratios: VIDEO_RATIO_LIST.map(s => s.key),
+    //     durs: [{ label: '5 秒', key: 5 }, { label: '10 秒', key: 10 }],
+    //     defaultParams: { ratio: '16:9', duration: 5 }
+    // }
 ]
 
 // Chat/LLM models | 对话模型
@@ -163,8 +171,8 @@ export const VIDEO_DURATION_OPTIONS = [
 ]
 
 // Default values | 默认值
-export const DEFAULT_IMAGE_MODEL = 'doubao-seedream-4-5-251128'
-export const DEFAULT_VIDEO_MODEL = 'doubao-seedance-1-5-pro_720p'
+export const DEFAULT_IMAGE_MODEL = 'nano-banana-pro'
+export const DEFAULT_VIDEO_MODEL = 'veo3.1'
 export const DEFAULT_CHAT_MODEL = 'gpt-4o-mini'
 export const DEFAULT_IMAGE_SIZE = '2048x2048'
 export const DEFAULT_VIDEO_RATIO = '16:9'

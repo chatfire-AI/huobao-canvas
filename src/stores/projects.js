@@ -43,38 +43,86 @@ export const loadProjects = () => {
 }
 
 /**
+ * Clean node data for storage | 清理节点数据用于存储
+ * Removes base64 data URLs to reduce storage size | 移除 base64 数据减小存储大小
+ */
+const cleanNodeForStorage = (node) => {
+  if (!node.data) return node
+  
+  const cleanedData = { ...node.data }
+  
+  // Remove base64 data | 移除 base64 数据
+  if (cleanedData.base64) {
+    delete cleanedData.base64
+  }
+  
+  // If url is a base64 data URL, keep it only if it's from external source | 如果 url 是 base64，只有外部来源才保留
+  if (cleanedData.url?.startsWith?.('data:')) {
+    // For uploaded images, we can't persist them in localStorage | 上传的图片无法持久化到 localStorage
+    delete cleanedData.url
+  }
+  
+  // Remove mask data | 移除蒙版数据
+  if (cleanedData.maskData) {
+    delete cleanedData.maskData
+  }
+  
+  return { ...node, data: cleanedData }
+}
+
+/**
+ * Clean project for storage | 清理项目用于存储
+ */
+const cleanProjectForStorage = (project) => {
+  return {
+    ...project,
+    canvasData: project.canvasData ? {
+      ...project.canvasData,
+      nodes: project.canvasData.nodes?.map(cleanNodeForStorage) || []
+    } : project.canvasData,
+    // Remove base64 thumbnails | 移除 base64 缩略图
+    thumbnail: project.thumbnail?.startsWith?.('data:') ? '' : project.thumbnail
+  }
+}
+
+/**
  * Save projects to localStorage | 保存项目到 localStorage
  * Handles QuotaExceededError by compressing data | 通过压缩数据处理配额超限错误
  */
 export const saveProjects = () => {
+  // Always clean data before saving | 保存前始终清理数据
+  const cleanedProjects = projects.value.map(cleanProjectForStorage)
+  
   try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(projects.value))
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(cleanedProjects))
   } catch (err) {
     if (err.name === 'QuotaExceededError') {
-      console.warn('localStorage quota exceeded, attempting to clean up...')
-      // Try to save without base64 image data | 尝试保存时移除 base64 图片数据
-      const compressedProjects = projects.value.map(project => ({
+      console.warn('localStorage quota exceeded, attempting aggressive cleanup...')
+      
+      // Remove thumbnails and limit old projects | 移除缩略图并限制旧项目
+      const minimalProjects = cleanedProjects.map((project, index) => ({
         ...project,
-        canvasData: project.canvasData ? {
-          ...project.canvasData,
-          nodes: project.canvasData.nodes?.map(node => {
-            if (node.type === 'image' && node.data?.base64) {
-              // Remove base64 data, keep only url | 移除 base64 数据，只保留 url
-              const { base64, ...restData } = node.data
-              return { ...node, data: restData }
-            }
-            return node
-          })
-        } : project.canvasData,
-        // Compress thumbnail if it's a data URL | 如果缩略图是 data URL 则压缩
-        thumbnail: project.thumbnail?.startsWith?.('data:') ? '' : project.thumbnail
+        thumbnail: '', // Remove all thumbnails | 移除所有缩略图
+        // Keep only essential canvas data for older projects | 旧项目只保留基本画布数据
+        canvasData: index > 10 ? { nodes: [], edges: [], viewport: project.canvasData?.viewport } : project.canvasData
       }))
+      
       try {
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(compressedProjects))
-        console.log('Saved compressed projects successfully')
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(minimalProjects))
+        console.log('Saved with aggressive cleanup')
+        window.$message?.warning('存储空间不足，已自动清理部分数据')
       } catch (retryErr) {
-        console.error('Still failed after compression:', retryErr)
-        window.$message?.error('存储空间已满，请手动删除一些项目后重试')
+        console.error('Still failed after aggressive cleanup:', retryErr)
+        // Last resort: only keep first 5 projects | 最后手段：只保留前5个项目
+        try {
+          const essentialProjects = minimalProjects.slice(0, 5)
+          localStorage.setItem(STORAGE_KEY, JSON.stringify(essentialProjects))
+          projects.value = projects.value.slice(0, 5)
+          window.$message?.warning('存储空间严重不足，已保留最近 5 个项目')
+        } catch (finalErr) {
+          console.error('Cannot save even minimal data:', finalErr)
+          window.$message?.error('存储失败，请清理浏览器存储空间')
+        }
       }
     } else {
       console.error('Failed to save projects:', err)

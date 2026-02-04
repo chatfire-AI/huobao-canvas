@@ -1037,7 +1037,396 @@ export const WORKFLOW_TEMPLATES = [
       
   //     return { nodes, edges }
   //   }
-  // }
+  // },
+  // ========== 绘本生成器工作流 ==========
+  {
+    id: 'picture-book-generator',
+    name: '绘本生成器',
+    description: '根据故事大纲生成16页绘本，包含角色设计、剧情拆分和图文生成',
+    icon: 'BookOutline',
+    category: 'creative',
+    cover: workflowCover1,
+    createNodes: (startPosition) => {
+      const colSpacing = 420
+      const rowSpacing = 300
+      const pageRowSpacing = 200
+      
+      const nodes = []
+      const edges = []
+      let nodeIdCounter = 0
+      const getNodeId = () => `workflow_node_${Date.now()}_${nodeIdCounter++}`
+      
+      // ========== 第一阶段：故事输入与角色设计 ==========
+      
+      // 故事大纲输入
+      const storyInputId = getNodeId()
+      nodes.push({
+        id: storyInputId,
+        type: 'text',
+        position: { x: startPosition.x, y: startPosition.y },
+        data: {
+          content: `【绘本名称】小兔子的冒险之旅
+
+【故事主题】勇气与友谊
+
+【主要角色】
+1. 小白兔米米 - 主角，白色毛发，粉红色耳朵内侧，穿蓝色背带裤，性格勇敢好奇
+2. 小狐狸橙橙 - 伙伴，橙色毛发，白色尾巴尖，戴绿色围巾，聪明机智
+3. 老乌龟爷爷 - 智者，深绿色壳，戴小眼镜，和蔼慈祥
+
+【故事梗概】
+小白兔米米住在森林边的小木屋里，有一天她发现了一张神秘的藏宝图。在好朋友小狐狸橙橙的陪伴下，她们踏上了寻宝之旅。途中遇到各种挑战，最后在老乌龟爷爷的帮助下，她们发现真正的宝藏是友谊和勇气。
+
+【画风要求】
+温馨治愈的水彩绘本风格，色彩明亮柔和，适合3-6岁儿童阅读`,
+          label: '故事大纲'
+        }
+      })
+      
+      // 角色设计系统提示词
+      const characterSystemPromptId = getNodeId()
+      nodes.push({
+        id: characterSystemPromptId,
+        type: 'text',
+        position: { x: startPosition.x + colSpacing, y: startPosition.y - rowSpacing },
+        data: {
+          content: `你是专业的绘本角色设计师。根据故事大纲，为每个主要角色生成详细的视觉描述提示词。
+
+要求：
+1. 每个角色生成正面全身图的提示词
+2. 保持角色特征明确、可识别
+3. 风格统一，适合儿童绘本
+4. 输出格式为每个角色单独一段，用 --- 分隔
+
+示例输出格式：
+【角色1名称】
+[详细的图像生成提示词，包含外貌、服装、表情、姿态、背景等]
+---
+【角色2名称】
+[详细的图像生成提示词]`,
+          label: '角色设计提示词模板'
+        }
+      })
+      
+      // 角色设计 LLM 节点
+      const characterLLMId = getNodeId()
+      nodes.push({
+        id: characterLLMId,
+        type: 'llmConfig',
+        position: { x: startPosition.x + colSpacing * 2, y: startPosition.y - rowSpacing },
+        data: {
+          label: '角色设计生成',
+          systemPrompt: `你是专业的绘本角色设计师。根据故事大纲提取所有角色，为每个角色生成适合图像生成的详细提示词。
+
+输出要求：
+1. 每个角色单独一段
+2. 包含：外貌特征、服装、表情、姿态、背景色
+3. 使用绘本水彩风格描述
+4. 适合儿童绘本的可爱形象`,
+          model: 'gpt-4o-mini',
+          outputFormat: 'text'
+        }
+      })
+      
+      // 主角色1图像配置
+      const character1ConfigId = getNodeId()
+      nodes.push({
+        id: character1ConfigId,
+        type: 'imageConfig',
+        position: { x: startPosition.x + colSpacing * 3, y: startPosition.y - rowSpacing * 1.5 },
+        data: {
+          label: '主角色1设计图',
+          model: 'doubao-seedream-4-5-251128',
+          size: '2048x2048'
+        }
+      })
+      
+      // 主角色1提示词
+      const character1PromptId = getNodeId()
+      nodes.push({
+        id: character1PromptId,
+        type: 'text',
+        position: { x: startPosition.x + colSpacing * 2.5, y: startPosition.y - rowSpacing * 1.5 },
+        data: {
+          content: '可爱的小白兔，白色毛发蓬松柔软，粉红色耳朵内侧，穿着蓝色背带裤，大眼睛明亮有神，表情开朗自信，全身正面站立姿态，白色简洁背景，儿童绘本水彩风格，温馨治愈，色彩明亮柔和',
+          label: '角色1:小白兔米米'
+        }
+      })
+      
+      // 主角色1图像结果
+      const character1ImageId = getNodeId()
+      nodes.push({
+        id: character1ImageId,
+        type: 'image',
+        position: { x: startPosition.x + colSpacing * 4, y: startPosition.y - rowSpacing * 1.5 },
+        data: {
+          url: '',
+          label: '角色1参考图'
+        }
+      })
+      
+      // 主角色2提示词
+      const character2PromptId = getNodeId()
+      nodes.push({
+        id: character2PromptId,
+        type: 'text',
+        position: { x: startPosition.x + colSpacing * 2.5, y: startPosition.y - rowSpacing * 0.5 },
+        data: {
+          content: '可爱的小狐狸，橙色毛发光泽亮丽，白色尾巴尖，戴着绿色围巾，机灵的眼睛，调皮的微笑，全身正面站立姿态，白色简洁背景，儿童绘本水彩风格，温馨治愈，色彩明亮柔和',
+          label: '角色2:小狐狸橙橙'
+        }
+      })
+      
+      // 主角色2图像配置
+      const character2ConfigId = getNodeId()
+      nodes.push({
+        id: character2ConfigId,
+        type: 'imageConfig',
+        position: { x: startPosition.x + colSpacing * 3, y: startPosition.y - rowSpacing * 0.5 },
+        data: {
+          label: '主角色2设计图',
+          model: 'doubao-seedream-4-5-251128',
+          size: '2048x2048'
+        }
+      })
+      
+      // 主角色2图像结果
+      const character2ImageId = getNodeId()
+      nodes.push({
+        id: character2ImageId,
+        type: 'image',
+        position: { x: startPosition.x + colSpacing * 4, y: startPosition.y - rowSpacing * 0.5 },
+        data: {
+          url: '',
+          label: '角色2参考图'
+        }
+      })
+      
+      // ========== 第二阶段：剧情拆分为16页 ==========
+      
+      // 剧情拆分 LLM 节点
+      const storyLLMId = getNodeId()
+      nodes.push({
+        id: storyLLMId,
+        type: 'llmConfig',
+        position: { x: startPosition.x + colSpacing, y: startPosition.y + rowSpacing },
+        data: {
+          label: '剧情拆分(16页)',
+          systemPrompt: `你是专业的绘本编剧。将故事拆分成16页绘本内容。
+
+输出格式（严格按此格式）：
+第1页：[场景描述] | [画面内容] | [配文]
+第2页：[场景描述] | [画面内容] | [配文]
+...
+第16页：[场景描述] | [画面内容] | [配文]
+
+要求：
+1. 每页都要有明确的场景、画面描述和配文
+2. 故事节奏合理：开场(1-2页)→发展(3-8页)→高潮(9-13页)→结局(14-16页)
+3. 画面描述要具体，便于图像生成
+4. 配文简洁，适合幼儿阅读（每页不超过30字）
+5. 保持角色特征一致性`,
+          model: 'gpt-4o',
+          outputFormat: 'text'
+        }
+      })
+      
+      // 剧情拆分结果展示
+      const storyResultId = getNodeId()
+      nodes.push({
+        id: storyResultId,
+        type: 'text',
+        position: { x: startPosition.x + colSpacing * 2, y: startPosition.y + rowSpacing },
+        data: {
+          content: '',
+          label: '16页剧情内容'
+        }
+      })
+      
+      // ========== 第三阶段：绘本页面生成（示例前4页） ==========
+      
+      const pageBaseY = startPosition.y + rowSpacing * 2.5
+      
+      // 生成4页示例（实际使用时可复制扩展到16页）
+      const pagePrompts = [
+        {
+          scene: '森林边的小木屋',
+          content: '清晨阳光洒在森林边的小木屋上，小白兔米米在窗边伸懒腰，开始新的一天',
+          text: '在森林边的小木屋里，住着一只可爱的小白兔，她叫米米。'
+        },
+        {
+          scene: '发现藏宝图',
+          content: '米米在阁楼的旧箱子里发现一张泛黄的藏宝图，眼睛闪闪发光',
+          text: '有一天，米米在阁楼发现了一张神秘的藏宝图！'
+        },
+        {
+          scene: '找好朋友',
+          content: '米米跑到橙橙家门口敲门，小狐狸橙橙探出头来，好奇地看着藏宝图',
+          text: '"橙橙！快看我发现了什么！"米米兴奋地喊道。'
+        },
+        {
+          scene: '出发冒险',
+          content: '米米和橙橙背着小背包，站在森林入口，阳光照在她们身上，充满希望',
+          text: '两个好朋友决定一起去寻找宝藏，勇敢地出发了！'
+        }
+      ]
+      
+      pagePrompts.forEach((page, index) => {
+        const pageY = pageBaseY + index * pageRowSpacing
+        const pageNum = index + 1
+        
+        // 页面提示词
+        const pagePromptId = getNodeId()
+        nodes.push({
+          id: pagePromptId,
+          type: 'text',
+          position: { x: startPosition.x + colSpacing * 3, y: pageY },
+          data: {
+            content: `【第${pageNum}页】场景：${page.scene}
+画面描述：${page.content}
+配文：${page.text}
+
+图像提示词：${page.content}，儿童绘本水彩风格，温馨治愈，色彩明亮柔和，精美细节，高清画质`,
+            label: `第${pageNum}页内容`
+          }
+        })
+        
+        // 页面图像配置
+        const pageConfigId = getNodeId()
+        nodes.push({
+          id: pageConfigId,
+          type: 'imageConfig',
+          position: { x: startPosition.x + colSpacing * 4, y: pageY },
+          data: {
+            label: `第${pageNum}页插图`,
+            model: 'doubao-seedream-4-5-251128',
+            size: '2048x2048'
+          }
+        })
+        
+        // 连线：页面提示词 → 页面配置
+        edges.push({
+          id: `edge_${pagePromptId}_${pageConfigId}`,
+          source: pagePromptId,
+          target: pageConfigId,
+          type: 'promptOrder',
+          data: { promptOrder: 1 },
+          sourceHandle: 'right',
+          targetHandle: 'left'
+        })
+        
+        // 连线：角色1参考图 → 页面配置
+        edges.push({
+          id: `edge_${character1ImageId}_${pageConfigId}_ref`,
+          source: character1ImageId,
+          target: pageConfigId,
+          type: 'imageOrder',
+          data: { imageOrder: 1 },
+          sourceHandle: 'right',
+          targetHandle: 'left'
+        })
+        
+        // 连线：角色2参考图 → 页面配置（部分页面）
+        if (index >= 2) {
+          edges.push({
+            id: `edge_${character2ImageId}_${pageConfigId}_ref`,
+            source: character2ImageId,
+            target: pageConfigId,
+            type: 'imageOrder',
+            data: { imageOrder: 2 },
+            sourceHandle: 'right',
+            targetHandle: 'left'
+          })
+        }
+      })
+      
+      // ========== 连线：第一阶段 ==========
+      // 故事大纲 → 角色设计LLM
+      edges.push({
+        id: `edge_${storyInputId}_${characterLLMId}`,
+        source: storyInputId,
+        target: characterLLMId,
+        type: 'promptOrder',
+        data: { promptOrder: 1 },
+        sourceHandle: 'right',
+        targetHandle: 'left'
+      })
+      
+      // 角色提示词模板 → 角色设计LLM
+      edges.push({
+        id: `edge_${characterSystemPromptId}_${characterLLMId}`,
+        source: characterSystemPromptId,
+        target: characterLLMId,
+        type: 'promptOrder',
+        data: { promptOrder: 2 },
+        sourceHandle: 'right',
+        targetHandle: 'left'
+      })
+      
+      // 角色1提示词 → 角色1配置
+      edges.push({
+        id: `edge_${character1PromptId}_${character1ConfigId}`,
+        source: character1PromptId,
+        target: character1ConfigId,
+        type: 'promptOrder',
+        data: { promptOrder: 1 },
+        sourceHandle: 'right',
+        targetHandle: 'left'
+      })
+      
+      // 角色1配置 → 角色1图像
+      edges.push({
+        id: `edge_${character1ConfigId}_${character1ImageId}`,
+        source: character1ConfigId,
+        target: character1ImageId,
+        sourceHandle: 'right',
+        targetHandle: 'left'
+      })
+      
+      // 角色2提示词 → 角色2配置
+      edges.push({
+        id: `edge_${character2PromptId}_${character2ConfigId}`,
+        source: character2PromptId,
+        target: character2ConfigId,
+        type: 'promptOrder',
+        data: { promptOrder: 1 },
+        sourceHandle: 'right',
+        targetHandle: 'left'
+      })
+      
+      // 角色2配置 → 角色2图像
+      edges.push({
+        id: `edge_${character2ConfigId}_${character2ImageId}`,
+        source: character2ConfigId,
+        target: character2ImageId,
+        sourceHandle: 'right',
+        targetHandle: 'left'
+      })
+      
+      // ========== 连线：第二阶段 ==========
+      // 故事大纲 → 剧情拆分LLM
+      edges.push({
+        id: `edge_${storyInputId}_${storyLLMId}`,
+        source: storyInputId,
+        target: storyLLMId,
+        type: 'promptOrder',
+        data: { promptOrder: 1 },
+        sourceHandle: 'right',
+        targetHandle: 'left'
+      })
+      
+      // 剧情拆分LLM → 结果展示
+      edges.push({
+        id: `edge_${storyLLMId}_${storyResultId}`,
+        source: storyLLMId,
+        target: storyResultId,
+        sourceHandle: 'right',
+        targetHandle: 'left'
+      })
+      
+      return { nodes, edges }
+    }
+  }
 ]
 
 /**
