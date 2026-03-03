@@ -48,22 +48,22 @@
     <div class="p-3">
       <!-- Loading state | 加载状态 -->
       <div 
-        v-if="data.loading"
+        v-if="(data.taskId && !data.url) || (data.loading && !data.taskId)"
         class="aspect-video rounded-lg bg-gradient-to-br from-cyan-400 via-blue-300 to-amber-200 flex flex-col items-center justify-center gap-3 relative overflow-hidden"
       >
         <!-- Animated gradient overlay | 动画渐变遮罩 -->
         <div class="absolute inset-0 bg-gradient-to-br from-cyan-500/20 via-blue-400/20 to-amber-300/20 animate-pulse"></div>
-        
+
         <!-- Loading image | 加载图片 -->
         <div class="relative z-10">
-          <img 
-            src="../../assets/loading.webp" 
-            alt="Loading" 
+          <img
+            src="../../assets/loading.webp"
+            alt="Loading"
             class="w-14 h-12"
           />
         </div>
-        
-        <span class="text-sm text-white font-medium relative z-10">创作中，预计等待 1 分钟</span>
+
+        <span class="text-sm text-white font-medium relative z-10">{{ data.taskId ? '创作中，预计等待 1 分钟' : '任务创建中...' }}</span>
       </div>
       <!-- Error state | 错误状态 -->
       <div 
@@ -140,11 +140,12 @@
  * Video node component | 视频节点组件
  * Displays and manages video content
  */
-import { ref, nextTick } from 'vue'
+import { ref, nextTick, watch, onMounted } from 'vue'
 import { Handle, Position, useVueFlow } from '@vue-flow/core'
 import { NIcon, NSpin } from 'naive-ui'
 import { TrashOutline, ExpandOutline, VideocamOutline, CopyOutline, CloseCircleOutline, DownloadOutline, EyeOutline, CreateOutline } from '@vicons/ionicons5'
 import { updateNode, removeNode, duplicateNode, addNode, addEdge, nodes } from '../../stores/canvas'
+import { useVideoGeneration } from '../../hooks/useApi'
 import NodeHandleMenu from './NodeHandleMenu.vue'
 
 const props = defineProps({
@@ -154,6 +155,9 @@ const props = defineProps({
 
 // Vue Flow instance
 const { updateNodeInternals } = useVueFlow()
+
+// Get pollVideoTask from useVideoGeneration | 从 useVideoGeneration 获取轮询函数
+const { pollVideoTask } = useVideoGeneration()
 
 // Hover state | 悬浮状态
 const showActions = ref(false)
@@ -168,6 +172,61 @@ const labelInputRef = ref(null)
 const operations = [
   { type: 'videoConfig', label: '生视频', icon: VideocamOutline }
 ]
+
+// Polling state | 轮询状态
+const isPolling = ref(false)
+
+// Watch for taskId changes and start polling | 监听 taskId 变化并开始轮询
+watch(() => props.data?.taskId, (taskId) => {
+  if (taskId && !props.data?.url && !isPolling.value) {
+    startPolling(taskId)
+  }
+})
+
+// 页面刷新后恢复轮询 | Resume polling after page refresh
+onMounted(() => {
+  const { taskId, url } = props.data || {}
+  if (taskId && !url && !isPolling.value) {
+    startPolling(taskId)
+  }
+})
+
+// Start polling for video result | 开始轮询获取视频结果
+const startPolling = async (taskId) => {
+  if (isPolling.value) return
+
+  isPolling.value = true
+
+  try {
+    const result = await pollVideoTask(taskId, (attempt, percentage) => {
+      // 更新进度
+      updateNode(props.id, {
+        progress: percentage,
+        attempt
+      })
+    })
+    // 轮询成功，更新视频节点
+    updateNode(props.id, {
+      url: result.url,
+      loading: false,
+      progress: 100,
+      label: '视频生成',
+      taskId: null  // 清除 taskId
+    })
+    window.$message?.success('视频生成成功')
+  } catch (err) {
+    // 轮询失败
+    updateNode(props.id, {
+      loading: false,
+      error: err.message || '生成失败',
+      label: '生成失败',
+      taskId: null  // 清除 taskId
+    })
+    window.$message?.error(err.message || '视频生成失败')
+  } finally {
+    isPolling.value = false
+  }
+}
 
 // Handle menu select | 处理菜单选择
 const handleSelect = (item) => {

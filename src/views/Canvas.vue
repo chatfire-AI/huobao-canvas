@@ -372,7 +372,7 @@ const edgeTypes = {
 // UI state | UI状态
 const showNodeMenu = ref(false)
 const chatInput = ref('')
-const autoExecute = ref(true)
+const autoExecute = ref(false)
 const isMobile = ref(false)
 const showGrid = ref(true)
 const showApiSettings = ref(false)

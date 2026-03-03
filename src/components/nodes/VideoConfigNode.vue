@@ -105,9 +105,9 @@
       </div> -->
 
         <!-- Generate button | 生成按钮 -->
-        <button @click="handleGenerate" :disabled="loading || !isConfigured"
+        <button @click="handleGenerate" :disabled="isGenerating || !isConfigured"
           class="w-full flex items-center justify-center gap-2 py-2 px-4 rounded-lg bg-[var(--accent-color)] hover:bg-[var(--accent-hover)] text-white text-sm font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
-          <n-spin v-if="loading" :size="14" />
+          <n-spin v-if="isGenerating" :size="14" />
           <template v-else>
             <n-icon :size="16">
               <VideocamOutline />
@@ -150,7 +150,11 @@ import { ChevronForwardOutline, ChevronDownOutline, TrashOutline, VideocamOutlin
 import { useVideoGeneration, useApiConfig } from '../../hooks'
 import { updateNode, removeNode, duplicateNode, addNode, addEdge, nodes, edges } from '../../stores/canvas'
 import NodeHandleMenu from './NodeHandleMenu.vue'
-import { videoModelOptions, getModelRatioOptions, getModelDurationOptions, getModelConfig, DEFAULT_VIDEO_MODEL } from '../../stores/models'
+import { useModelStore } from '../../stores/pinia'
+import { getModelRatioOptions, getModelDurationOptions, getModelConfig, DEFAULT_VIDEO_MODEL } from '../../stores/models'
+
+// 使用 Pinia store 获取模型选项（根据渠道过滤）
+const modelStore = useModelStore()
 
 const props = defineProps({
   id: String,
@@ -164,10 +168,11 @@ const { updateNodeInternals } = useVueFlow()
 const { isConfigured } = useApiConfig()
 
 // Video generation hook | 视频生成 hook
-const { loading, error, status, video: generatedVideo, progress, generate } = useVideoGeneration()
+const { loading, error, status, video: generatedVideo, progress, createVideoTaskOnly } = useVideoGeneration()
 
 // Local state | 本地状态
 const showHandleMenu = ref(false)
+const isGenerating = ref(false)  // 任务创建中状态
 const localModel = ref(props.data?.model || DEFAULT_VIDEO_MODEL)
 const localRatio = ref(props.data?.ratio || '16:9')
 const localDuration = ref(props.data?.dur || 5)
@@ -214,12 +219,17 @@ const imagesByRole = computed(() => {
 // Get current model config | 获取当前模型配置
 const currentModelConfig = computed(() => getModelConfig(localModel.value))
 
-// Model options from store | 从 store 获取模型选项
-const modelOptions = videoModelOptions
+// Model options from Pinia store (filtered by provider) | 从 Pinia store 获取模型选项（根据渠道过滤）
+const modelOptions = computed(() => modelStore.allVideoModelOptions)
 
 // Display model name | 显示模型名称
 const displayModelName = computed(() => {
   const model = modelOptions.value.find(m => m.key === localModel.value)
+  // 如果当前模型不在选项中，尝试从 allVideoModels 找到
+  if (!model) {
+    const allModel = modelStore.allVideoModels.find(m => m.key === localModel.value)
+    return allModel?.label || localModel.value || '选择模型'
+  }
   return model?.label || localModel.value || '选择模型'
 })
 
@@ -319,16 +329,21 @@ const createdVideoNodeId = ref(null)
 
 // Handle generate action | 处理生成操作
 const handleGenerate = async () => {
+  // 设置生成中状态
+  isGenerating.value = true
+
   const { prompt, first_frame_image, last_frame_image, images } = getConnectedInputs()
 
   const hasInput = prompt || first_frame_image || last_frame_image || images.length > 0
   if (!hasInput) {
     window.$message?.warning('请先连接文本节点或图片节点')
+    isGenerating.value = false
     return
   }
 
   if (!isConfigured.value) {
     window.$message?.warning('请先配置 API Key')
+    isGenerating.value = false
     return
   }
 
@@ -395,22 +410,34 @@ const handleGenerate = async () => {
       params.dur = localDuration.value
     }
 
-    const result = await generate(params)
+    // 只创建任务，获取 taskId，不在这里轮询
+    const { taskId: newTaskId, url } = await createVideoTaskOnly(params)
 
-    // Update video node with generated URL | 更新视频节点 URL
-    if (result && result.url) {
+    // 如果有直接 URL，更新视频节点
+    if (url) {
       updateNode(videoNodeId, {
-        url: result.url,
+        url: url,
         loading: false,
         label: '视频生成',
         model: localModel.value,
         updatedAt: Date.now()
       })
-      
+      window.$message?.success('视频生成成功')
+      // Mark this config node as executed | 标记配置节点已执行
+      updateNode(props.id, { executed: true, outputNodeId: videoNodeId })
+    } else if (newTaskId) {
+      // 需要轮询，传递 taskId 给 VideoNode
+      updateNode(videoNodeId, {
+        taskId: newTaskId,
+        loading: true,
+        label: '视频生成中...',
+        model: localModel.value,
+        updatedAt: Date.now()
+      })
+      window.$message?.success('视频任务已创建')
       // Mark this config node as executed | 标记配置节点已执行
       updateNode(props.id, { executed: true, outputNodeId: videoNodeId })
     }
-    window.$message?.success('视频生成成功')
   } catch (err) {
     // Update node to show error | 更新节点显示错误
     updateNode(videoNodeId, {
@@ -420,6 +447,8 @@ const handleGenerate = async () => {
       updatedAt: Date.now()
     })
     window.$message?.error(err.message || '视频生成失败')
+  } finally {
+    isGenerating.value = false
   }
 }
 
@@ -454,8 +483,13 @@ const handleDelete = () => {
 
 // Initialize on mount | 挂载时初始化
 onMounted(() => {
-  if (!localModel.value) {
-    localModel.value = DEFAULT_VIDEO_MODEL
+  // 检查当前模型是否在可用模型列表中
+  const availableModels = modelStore.availableVideoModels
+  const isModelAvailable = availableModels.some(m => m.key === localModel.value)
+
+  if (!localModel.value || !isModelAvailable) {
+    // 使用 store 中的默认模型或第一个可用模型
+    localModel.value = modelStore.selectedVideoModel || availableModels[0]?.key || DEFAULT_VIDEO_MODEL
     updateNode(props.id, { model: localModel.value })
   }
 })

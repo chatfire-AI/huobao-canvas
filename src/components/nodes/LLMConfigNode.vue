@@ -181,6 +181,7 @@ import { updateNode, removeNode, duplicateNode, addNode, addEdge, addNodes, addE
 import NodeHandleMenu from './NodeHandleMenu.vue'
 import MentionsPicker from '../MentionsPicker.vue'
 import { useChat, useApiConfig } from '../../hooks'
+import { useModelStore } from '../../stores/pinia'
 import { parseMentions, removeMention as removeMentionUtil } from '../../hooks/useNodeRef'
 
 const props = defineProps({
@@ -676,6 +677,16 @@ watch(systemPrompt, (newVal) => {
 
 // Initialize editor content | 初始化 editor 内容
 onMounted(() => {
+  // 检查当前模型是否在可用模型列表中
+  const availableModels = modelStore.availableChatModels
+  const isModelAvailable = availableModels.some(m => m.key === model.value)
+
+  if (!model.value || !isModelAvailable) {
+    // 使用 store 中的默认模型或第一个可用模型
+    model.value = modelStore.selectedChatModel || availableModels[0]?.key || 'gpt-4o-mini'
+    updateConfig()
+  }
+
   if (systemPromptRef.value) {
     if (props.data?.systemPrompt) {
       systemPrompt.value = props.data.systemPrompt
@@ -688,20 +699,20 @@ onMounted(() => {
   }
 })
 
-const model = ref(props.data?.model || 'gpt-4o-mini')
 const outputFormat = ref(props.data?.outputFormat || 'text')
 const outputContent = ref(props.data?.outputContent || '')
 const isGenerating = ref(false)
 const isSplitting = ref(false)
 const splitMessage = ref('')
 
-// Model options | 模型选项
-const modelOptions = [
-  { label: 'GPT-4o Mini', value: 'gpt-4o-mini' },
-  { label: 'GPT-4o', value: 'gpt-4o' },
-  { label: 'Claude 3.5 Sonnet', value: 'claude-3-5-sonnet-20241022' },
-  { label: 'DeepSeek V3', value: 'deepseek-chat' }
-]
+// Model Store (Pinia) | 模型配置 Store
+const modelStore = useModelStore()
+
+// 使用全部模型（不按渠道过滤）
+const modelOptions = computed(() => modelStore.allChatModelOptions)
+
+// 默认模型使用选中的模型
+const model = ref(props.data?.model || modelStore.selectedChatModel || 'gpt-4o-mini')
 
 // Format options | 格式选项
 const formatOptions = [

@@ -9,6 +9,9 @@ export { useApiConfig } from './useApiConfig'
 // Model Configuration Hook | 模型配置 Hook
 export { useModelConfig } from './useModelConfig'
 
+// Provider Hook | 渠道管理 Hook
+export { useProvider } from './useProvider'
+
 // API Operation Hooks | API 操作 Hooks
 export {
   useApiState,

@@ -12,6 +12,8 @@ import {
 } from '@/api'
 import { getModelByName } from '@/config/models'
 import { useApiConfig } from './useApiConfig'
+import { useProvider } from './useProvider'
+import { useModelStore } from '@/stores/pinia'
 
 /**
  * Base API state hook | 基础 API 状态 Hook
@@ -52,6 +54,7 @@ export const useApiState = () => {
  */
 export const useChat = (options = {}) => {
   const { loading, error, status, reset, setLoading, setError, setSuccess } = useApiState()
+  const { adaptRequest, adaptResponse } = useProvider()
 
   const messages = ref([])
   const currentResponse = ref('')
@@ -68,13 +71,19 @@ export const useChat = (options = {}) => {
         { role: 'user', content }
       ]
 
+      // 适配请求参数
+      const adaptedParams = adaptRequest('chat', {
+        model: options.model || 'gpt-4o-mini',
+        messages: msgList
+      })
+
       if (stream) {
         status.value = 'streaming'
         abortController = new AbortController()
         let fullResponse = ''
 
         for await (const chunk of streamChatCompletions(
-          { model: options.model || 'gpt-4o-mini', messages: msgList },
+          adaptedParams,
           abortController.signal
         )) {
           fullResponse += chunk
@@ -118,6 +127,8 @@ export const useChat = (options = {}) => {
  */
 export const useImageGeneration = () => {
   const { loading, error, status, reset, setLoading, setError, setSuccess } = useApiState()
+  const { adaptRequest, adaptResponse } = useProvider()
+  const modelStore = useModelStore()
 
   const images = ref([])
   const currentImage = ref(null)
@@ -133,7 +144,7 @@ export const useImageGeneration = () => {
 
     try {
       const modelConfig = getModelByName(params.model)
-      
+
       // Build request data | 构建请求数据
       const requestData = {
         model: params.model,
@@ -147,22 +158,22 @@ export const useImageGeneration = () => {
         requestData.image = params.image
       }
 
-      // Call API | 调用 API
-      const response = await generateImage(requestData, {
-        requestType: 'json',
-        endpoint: modelConfig?.endpoint || '/images/generations'
-      })
-      // Parse response (OpenAI format) | 解析响应
-      const data = response.data || response
-      const generatedImages = (Array.isArray(data) ? data : [data]).map(item => ({
-        url: item.url || item.b64_json || item,
-        revisedPrompt: item.revised_prompt || ''
-      }))
+      // 适配请求参数
+      const adaptedParams = adaptRequest('image', requestData)
 
-      images.value = generatedImages
-      currentImage.value = generatedImages[0] || null
+      // Call API | 调用 API
+      const response = await generateImage(adaptedParams, {
+        requestType: 'json',
+        endpoint: modelStore.getImageEndpoint()
+      })
+
+      // 适配响应数据
+      const adaptedData = adaptResponse('image', response)
+
+      images.value = adaptedData
+      currentImage.value = adaptedData[0] || null
       setSuccess()
-      return generatedImages
+      return adaptedData
     } catch (err) {
       setError(err)
       throw err
@@ -174,10 +185,13 @@ export const useImageGeneration = () => {
 
 /**
  * Video generation composable | 视频生成组合式函数
- * Simplified for open source - fixed input/output format with polling
+ * Simplified for open source - fixed input/output format
  */
+
 export const useVideoGeneration = () => {
   const { loading, error, status, reset, setLoading, setError, setSuccess } = useApiState()
+  const { adaptRequest, adaptResponse } = useProvider()
+  const modelStore = useModelStore()
 
   const video = ref(null)
   const taskId = ref(null)
@@ -188,7 +202,94 @@ export const useVideoGeneration = () => {
   })
 
   /**
-   * Generate video with fixed params | 固定参数生成视频
+   * Create video task only (no polling) | 仅创建视频任务（不轮询）
+   */
+  const createVideoTaskOnly = async (params) => {
+    const modelConfig = getModelByName(params.model)
+
+    // Build request data | 构建请求数据
+    const requestData = {
+      model: params.model,
+      prompt: params.prompt || ''
+    }
+    // Add optional params | 添加可选参数
+    if (params.first_frame_image) requestData.first_frame_image = params.first_frame_image
+    if (params.last_frame_image) requestData.last_frame_image = params.last_frame_image
+    if (params.ratio) requestData.size = params.ratio
+    if (params.dur) requestData.seconds = params.dur
+
+    // 适配请求参数
+    const adaptedParams = adaptRequest('video', requestData)
+
+    // Call API to create task | 调用 API 创建任务
+    const task = await createVideoTask(adaptedParams, {
+      requestType: 'json',
+      endpoint: modelStore.getVideoEndpoint()
+    })
+
+    // Check if async (need polling) | 检查是否异步
+    const isAsync = modelConfig?.async !== false
+
+    // If has video URL directly, return | 如果直接有视频 URL，返回
+    if (!isAsync || task.data?.url || task.url || task.content?.video_url) {
+      return {
+        taskId: null,
+        url: task.data?.url || task.url || task.content?.video_url
+      }
+    }
+
+    // Get task ID | 获取任务 ID
+    const newTaskId = task.id || task.task_id || task.taskId
+    if (!newTaskId) {
+      throw new Error('未获取到任务 ID')
+    }
+
+    return { taskId: newTaskId }
+  }
+
+  /**
+   * Poll video task | 轮询视频任务
+   */
+  const pollVideoTask = async (pollTaskId, onProgress = () => {}) => {
+    const maxAttempts = 120
+    const interval = 5000
+
+    for (let i = 0; i < maxAttempts; i++) {
+      onProgress(i + 1, Math.min(Math.round((i / maxAttempts) * 100), 99))
+
+      // 获取任务查询端点，支持 {taskId} 占位符替换
+      let taskEndpoint = modelStore.getVideoTaskEndpoint()
+      if (taskEndpoint.includes('{taskId}')) {
+        taskEndpoint = taskEndpoint.replace('{taskId}', pollTaskId)
+      }
+
+      const result = await getVideoTaskStatus(pollTaskId, {
+        endpoint: taskEndpoint
+      })
+
+      // 适配轮询响应
+      const adaptedResult = adaptResponse('video', result)
+
+      // Check for completion | 检查是否完成
+      if (result.status === 'completed' || result.status === 'succeeded' || result.data) {
+        const videoUrl = adaptedResult.url || result.data?.url || result.data?.[0]?.url || result.url || result.content?.video_url || result.video_url
+        return { ...adaptedResult, url: videoUrl,  }
+      }
+
+      // Check for failure | 检查是否失败
+      if (result.status === 'failed' || result.status === 'error') {
+        throw new Error(result.error?.message || result.message || '视频生成失败')
+      }
+
+      // Wait before next poll | 等待下次轮询
+      await new Promise(resolve => setTimeout(resolve, interval))
+    }
+
+    throw new Error('视频生成超时')
+  }
+
+  /**
+   * Generate video with fixed params (includes polling) | 固定参数生成视频（含轮询）
    * @param {Object} params - { model, prompt, first_frame_image, last_frame_image, ratio, duration }
    */
   const generate = async (params) => {
@@ -199,81 +300,36 @@ export const useVideoGeneration = () => {
     progress.percentage = 0
 
     try {
-      const modelConfig = getModelByName(params.model)
-      
-      // Build request data | 构建请求数据
-      const requestData = {
-        model: params.model,
-        prompt: params.prompt || ''
-      }
-      // Add optional params | 添加可选参数
-      if (params.first_frame_image) requestData.first_frame_image = params.first_frame_image
-      if (params.last_frame_image) requestData.last_frame_image = params.last_frame_image
-      if (params.ratio) requestData.size = params.ratio
-      if (params.dur) requestData.seconds = params.dur
+      // 创建任务
+      const { taskId: newTaskId, url } = await createVideoTaskOnly(params)
 
-      // Call API | 调用 API
-      const task = await createVideoTask(requestData, {
-        requestType: 'json',
-        endpoint: modelConfig?.endpoint || '/videos'
-      })
-
-      // Check if async (need polling) | 检查是否异步
-      const isAsync = modelConfig?.async !== false
-
-      // If has video URL directly, return | 如果直接有视频 URL，返回
-      if (!isAsync || task.data?.url || task.url) {
-        const videoUrl = task.data?.url || task.url || task.data?.[0]?.url
-        video.value = { url: videoUrl, ...task }
+      // 如果有直接 URL，返回
+      if (url) {
+        video.value = { url }
         setSuccess()
         return video.value
       }
 
-      // Get task ID for polling | 获取任务 ID 用于轮询
-      const id = task.id || task.task_id || task.taskId
-      if (!id) {
-        throw new Error('未获取到任务 ID')
-      }
-
-      taskId.value = id
+      // 需要轮询
+      taskId.value = newTaskId
       status.value = 'polling'
 
-      // Poll for result | 轮询获取结果
-      const maxAttempts = 120
-      const interval = 5000
+      // 轮询获取结果
+      const result = await pollVideoTask(newTaskId, (attempt, percentage) => {
+        progress.attempt = attempt
+        progress.percentage = percentage
+      })
 
-      for (let i = 0; i < maxAttempts; i++) {
-        progress.attempt = i + 1
-        progress.percentage = Math.min(Math.round((i / maxAttempts) * 100), 99)
-
-        const result = await getVideoTaskStatus(id)
-
-        // Check for completion | 检查是否完成
-        if (result.status === 'completed' || result.status === 'succeeded' || result.data) {
-          progress.percentage = 100
-          const videoUrl = result.data?.url || result.data?.[0]?.url || result.url || result.video_url
-          video.value = { url: videoUrl, ...result }
-          setSuccess()
-          return video.value
-        }
-
-        // Check for failure | 检查是否失败
-        if (result.status === 'failed' || result.status === 'error') {
-          throw new Error(result.error?.message || result.message || '视频生成失败')
-        }
-
-        // Wait before next poll | 等待下次轮询
-        await new Promise(resolve => setTimeout(resolve, interval))
-      }
-
-      throw new Error('视频生成超时')
+      video.value = result
+      setSuccess()
+      return result
     } catch (err) {
       setError(err)
       throw err
     }
   }
 
-  return { loading, error, status, video, taskId, progress, generate, reset }
+  return { loading, error, status, video, taskId, progress, generate, reset, createVideoTaskOnly, pollVideoTask }
 }
 
 /**

@@ -172,8 +172,12 @@ import { ChevronDownOutline, ChevronForwardOutline, CopyOutline, TrashOutline, R
 import { useImageGeneration, useApiConfig } from '../../hooks'
 import { updateNode, addNode, addEdge, nodes, edges, duplicateNode, removeNode } from '../../stores/canvas'
 import NodeHandleMenu from './NodeHandleMenu.vue'
-import { imageModelOptions, getModelSizeOptions, getModelQualityOptions, getModelConfig, DEFAULT_IMAGE_MODEL } from '../../stores/models'
+import { useModelStore } from '../../stores/pinia'
+import { getModelSizeOptions, getModelQualityOptions, getModelConfig, DEFAULT_IMAGE_MODEL } from '../../stores/models'
 import { parseMentions } from '../../hooks/useNodeRef'
+
+// 使用 Pinia store 获取模型选项（根据渠道过滤）
+const modelStore = useModelStore()
 
 const props = defineProps({
   id: String,
@@ -236,12 +240,17 @@ const handleSelect = (item) => {
 // Get current model config | 获取当前模型配置
 const currentModelConfig = computed(() => getModelConfig(localModel.value))
 
-// Model options from store | 从 store 获取模型选项
-const modelOptions = imageModelOptions
+// Model options from Pinia store (filtered by provider) | 从 Pinia store 获取模型选项（根据渠道过滤）
+const modelOptions = computed(() => modelStore.allImageModelOptions)
 
 // Display model name | 显示模型名称
 const displayModelName = computed(() => {
   const model = modelOptions.value.find(m => m.key === localModel.value)
+  // 如果当前模型不在选项中，尝试从 allImageModels 找到
+  if (!model) {
+    const allModel = modelStore.allImageModels.find(m => m.key === localModel.value)
+    return allModel?.label || localModel.value || '选择模型'
+  }
   return model?.label || localModel.value || '选择模型'
 })
 
@@ -280,9 +289,13 @@ const displaySize = computed(() => {
 
 // Initialize on mount | 挂载时初始化
 onMounted(() => {
-  // Set default model if not set | 如果未设置则设置默认模型
-  if (!localModel.value) {
-    localModel.value = DEFAULT_IMAGE_MODEL
+  // 检查当前模型是否在可用模型列表中
+  const availableModels = modelStore.availableImageModels
+  const isModelAvailable = availableModels.some(m => m.key === localModel.value)
+
+  if (!localModel.value || !isModelAvailable) {
+    // 使用 store 中的默认模型或第一个可用模型
+    localModel.value = modelStore.selectedImageModel || availableModels[0]?.key || DEFAULT_IMAGE_MODEL
     updateNode(props.id, { model: localModel.value })
   }
 })
@@ -468,20 +481,32 @@ const getConnectedInputs = () => {
 // Handle model selection | 处理模型选择
 const handleModelSelect = (key) => {
   localModel.value = key
-  // Set default size for new model | 为新模型设置默认尺寸
-  const newSizeOptions = getModelSizeOptions(key, localQuality.value)
-  if (newSizeOptions.length > 0) {
-    // Find best size: 2048 or closest | 查找最佳尺寸：2048 或最接近的
-    let defaultSize = newSizeOptions.find(o => o.key === '2048x2048')?.key
-    if (!defaultSize) {
-      // Try to find 1024 or the largest available
-      defaultSize = newSizeOptions.find(o => o.key.includes('1024'))?.key || newSizeOptions[0].key
-    }
-    localSize.value = defaultSize
-    updateNode(props.id, { model: key, size: defaultSize })
-  } else {
-    updateNode(props.id, { model: key })
+  const config = getModelConfig(key)
+
+  // 同步 Quality 到模型默认值
+  if (config?.defaultParams?.quality) {
+    localQuality.value = config.defaultParams.quality
   }
+
+  // 同步 Size 到模型默认值
+  const newSizeOptions = getModelSizeOptions(key, localQuality.value)
+  let defaultSize = config?.defaultParams?.size
+
+  if (!defaultSize && newSizeOptions.length > 0) {
+    // 备用逻辑：查找 2048 或最接近的尺寸
+    defaultSize = newSizeOptions.find(o => o.key === '2048x2048')?.key
+      || newSizeOptions.find(o => o.key.includes('1024'))?.key
+      || newSizeOptions[0].key
+  }
+
+  localSize.value = defaultSize
+
+  // 更新节点数据
+  updateNode(props.id, {
+    model: key,
+    quality: localQuality.value,
+    size: defaultSize
+  })
 }
 
 // Handle quality selection | 处理画质选择
@@ -709,6 +734,24 @@ const handleDelete = () => {
   removeNode(props.id)
   window.$message?.success('节点已删除')
 }
+
+// 监听模型变化，同步 Quality 和 Size
+watch(() => props.data?.model, (newModel) => {
+  if (newModel && newModel !== localModel.value) {
+    localModel.value = newModel
+    const config = getModelConfig(newModel)
+
+    // 同步 Quality
+    if (config?.defaultParams?.quality) {
+      localQuality.value = config.defaultParams.quality
+    }
+
+    // 同步 Size
+    if (config?.defaultParams?.size) {
+      localSize.value = config.defaultParams.size
+    }
+  }
+})
 
 // Watch for auto-execute flag | 监听自动执行标志
 watch(

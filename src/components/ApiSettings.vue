@@ -5,15 +5,22 @@
       <!-- API 配置标签 -->
       <n-tab-pane name="api" tab="API 配置">
         <n-form ref="formRef" :model="formData" label-placement="left" label-width="80">
+          <n-form-item label="渠道" path="provider">
+            <n-select
+              v-model:value="formData.provider"
+              :options="providerOptions"
+              placeholder="选择 API 渠道"
+            />
+          </n-form-item>
           <n-form-item label="Base URL" path="baseUrl">
-            <n-input 
-              v-model:value="formData.baseUrl" 
+            <n-input
+              v-model:value="formData.baseUrl"
               placeholder="https://api.chatfire.site/v1"
             />
           </n-form-item>
           <n-form-item label="API Key" path="apiKey">
-            <n-input 
-              v-model:value="formData.apiKey" 
+            <n-input
+              v-model:value="formData.apiKey"
               type="password"
               show-password-on="click"
               placeholder="请输入 API Key"
@@ -27,19 +34,19 @@
           <div class="endpoint-list">
             <div class="endpoint-item">
               <span class="endpoint-label">问答</span>
-              <n-tag size="small" type="info" class="endpoint-tag">/chat/completions</n-tag>
+              <n-tag size="small" type="info" class="endpoint-tag">{{ currentEndpoints.chat }}</n-tag>
             </div>
             <div class="endpoint-item">
               <span class="endpoint-label">生图</span>
-              <n-tag size="small" type="success" class="endpoint-tag">/images/generations</n-tag>
+              <n-tag size="small" type="success" class="endpoint-tag">{{ currentEndpoints.image }}</n-tag>
             </div>
             <div class="endpoint-item">
               <span class="endpoint-label">视频生成</span>
-              <n-tag size="small" type="warning" class="endpoint-tag">/videos</n-tag>
+              <n-tag size="small" type="warning" class="endpoint-tag">{{ currentEndpoints.video }}</n-tag>
             </div>
             <div class="endpoint-item">
               <span class="endpoint-label">视频查询</span>
-              <n-tag size="small" type="warning" class="endpoint-tag">/videos/{taskId}</n-tag>
+              <n-tag size="small" type="warning" class="endpoint-tag">{{ currentEndpoints.videoQuery }}</n-tag>
             </div>
           </div>
 
@@ -73,8 +80,8 @@
               <n-tag size="tiny" type="info">{{ allChatModels.length }} 个</n-tag>
             </div>
             <div class="model-input-row">
-              <n-input 
-                v-model:value="newChatModel" 
+              <n-input
+                v-model:value="newChatModel"
                 placeholder="输入模型名称，如 gpt-4o"
                 size="small"
                 @keyup.enter="handleAddChatModel"
@@ -84,13 +91,13 @@
               </n-button>
             </div>
             <div class="model-tags">
-              <n-tag 
-                v-for="model in allChatModels" 
+              <n-tag
+                v-for="model in allChatModels"
                 :key="model.key"
                 size="small"
                 :closable="model.isCustom"
                 :type="model.isCustom ? 'info' : 'default'"
-                @close="removeCustomChatModel(model.key)"
+                @close="handleRemoveChatModel(model.key)"
               >
                 {{ model.label }}
               </n-tag>
@@ -104,8 +111,8 @@
               <n-tag size="tiny" type="success">{{ allImageModels.length }} 个</n-tag>
             </div>
             <div class="model-input-row">
-              <n-input 
-                v-model:value="newImageModel" 
+              <n-input
+                v-model:value="newImageModel"
                 placeholder="输入模型名称，如 dall-e-3"
                 size="small"
                 @keyup.enter="handleAddImageModel"
@@ -115,13 +122,13 @@
               </n-button>
             </div>
             <div class="model-tags">
-              <n-tag 
-                v-for="model in allImageModels" 
+              <n-tag
+                v-for="model in allImageModels"
                 :key="model.key"
                 size="small"
                 :closable="model.isCustom"
                 :type="model.isCustom ? 'success' : 'default'"
-                @close="removeCustomImageModel(model.key)"
+                @close="handleRemoveImageModel(model.key)"
               >
                 {{ model.label }}
               </n-tag>
@@ -135,8 +142,8 @@
               <n-tag size="tiny" type="warning">{{ allVideoModels.length }} 个</n-tag>
             </div>
             <div class="model-input-row">
-              <n-input 
-                v-model:value="newVideoModel" 
+              <n-input
+                v-model:value="newVideoModel"
                 placeholder="输入模型名称，如 sora-2"
                 size="small"
                 @keyup.enter="handleAddVideoModel"
@@ -146,13 +153,13 @@
               </n-button>
             </div>
             <div class="model-tags">
-              <n-tag 
-                v-for="model in allVideoModels" 
+              <n-tag
+                v-for="model in allVideoModels"
                 :key="model.key"
                 size="small"
                 :closable="model.isCustom"
                 :type="model.isCustom ? 'warning' : 'default'"
-                @close="removeCustomVideoModel(model.key)"
+                @close="handleRemoveVideoModel(model.key)"
               >
                 {{ model.label }}
               </n-tag>
@@ -186,9 +193,10 @@
  * API Settings Component | API 设置组件
  * Modal for configuring API key, base URL, and custom models
  */
-import { ref, reactive, watch } from 'vue'
-import { NModal, NForm, NFormItem, NInput, NButton, NAlert, NDivider, NTag, NTabs, NTabPane } from 'naive-ui'
-import { useApiConfig, useModelConfig } from '../hooks'
+import { ref, reactive, watch, computed } from 'vue'
+import { NModal, NForm, NFormItem, NInput, NButton, NAlert, NDivider, NTag, NTabs, NTabPane, NSelect } from 'naive-ui'
+import { useModelStore } from '../stores/pinia'
+import { getProviderConfig } from '../config/providers'
 
 // Props | 属性
 const props = defineProps({
@@ -201,33 +209,42 @@ const props = defineProps({
 // Emits | 事件
 const emit = defineEmits(['update:show', 'saved'])
 
-// API Config hook | API 配置 hook
-const { apiKey, baseUrl, isConfigured, setApiKey, setBaseUrl, clear: clearConfig } = useApiConfig()
+// API Config 状态
+const isConfigured = computed(() => !!modelStore.currentApiKey)
 
-// Model Config hook | 模型配置 hook
-const { 
-  customChatModels, 
-  customImageModels, 
-  customVideoModels,
-  allChatModels,
-  allImageModels,
-  allVideoModels,
-  addCustomChatModel,
-  addCustomImageModel,
-  addCustomVideoModel,
-  removeCustomChatModel,
-  removeCustomImageModel,
-  removeCustomVideoModel,
-  clearCustomModels
-} = useModelConfig()
+// Model Store (Pinia) | 模型配置 Store
+const modelStore = useModelStore()
+
+// Provider options for select | 渠道下拉选项
+const providerOptions = modelStore.providerList.map(p => ({
+  label: p.label,
+  value: p.key
+}))
+
+// 当前渠道的端点路径
+const currentEndpoints = computed(() => {
+  const config = getProviderConfig(formData.provider)
+  return config.endpoints || {
+    chat: '/chat/completions',
+    image: '/v1/images/generations',
+    video: '/v1/videos',
+    videoQuery: '/v1/videos/{taskId}'
+  }
+})
+
+// 全局模型列表（不区分渠道）
+const allChatModels = computed(() => modelStore.allChatModels)
+const allImageModels = computed(() => modelStore.allImageModels)
+const allVideoModels = computed(() => modelStore.allVideoModels)
 
 // Modal visibility | 弹窗可见性
 const showModal = ref(props.show)
 
 // Form data | 表单数据
 const formData = reactive({
-  apiKey: apiKey.value,
-  baseUrl: baseUrl.value
+  provider: modelStore.currentProvider,
+  apiKey: '',
+  baseUrl: ''
 })
 
 // New model inputs | 新模型输入
@@ -235,13 +252,26 @@ const newChatModel = ref('')
 const newImageModel = ref('')
 const newVideoModel = ref('')
 
+// 初始化或切换渠道时，更新 API 配置
+const updateFormApiConfig = () => {
+  const provider = formData.provider
+  const config = getProviderConfig(provider)
+  formData.apiKey = modelStore.apiKeysByProvider[provider] || ''
+  formData.baseUrl = modelStore.baseUrlsByProvider[provider] || config.defaultBaseUrl || ''
+}
+
 // Watch prop changes | 监听属性变化
 watch(() => props.show, (val) => {
   showModal.value = val
   if (val) {
-    formData.apiKey = apiKey.value
-    formData.baseUrl = baseUrl.value
+    formData.provider = modelStore.currentProvider
+    updateFormApiConfig()
   }
+})
+
+// 监听渠道变化，更新表单中的 API 配置
+watch(() => formData.provider, () => {
+  updateFormApiConfig()
 })
 
 // Watch modal changes | 监听弹窗变化
@@ -252,32 +282,48 @@ watch(showModal, (val) => {
 // Handle add models | 处理添加模型
 const handleAddChatModel = () => {
   if (newChatModel.value.trim()) {
-    addCustomChatModel(newChatModel.value.trim())
+    modelStore.addCustomChatModel(newChatModel.value.trim())
     newChatModel.value = ''
   }
 }
 
 const handleAddImageModel = () => {
   if (newImageModel.value.trim()) {
-    addCustomImageModel(newImageModel.value.trim())
+    modelStore.addCustomImageModel(newImageModel.value.trim())
     newImageModel.value = ''
   }
 }
 
 const handleAddVideoModel = () => {
   if (newVideoModel.value.trim()) {
-    addCustomVideoModel(newVideoModel.value.trim())
+    modelStore.addCustomVideoModel(newVideoModel.value.trim())
     newVideoModel.value = ''
   }
 }
 
+// Handle remove models | 处理删除模型
+const handleRemoveChatModel = (modelKey) => {
+  modelStore.removeCustomChatModel(modelKey)
+}
+
+const handleRemoveImageModel = (modelKey) => {
+  modelStore.removeCustomImageModel(modelKey)
+}
+
+const handleRemoveVideoModel = (modelKey) => {
+  modelStore.removeCustomVideoModel(modelKey)
+}
+
 // Handle save | 处理保存
 const handleSave = () => {
+  if (formData.provider) {
+    modelStore.setProvider(formData.provider)
+  }
   if (formData.apiKey) {
-    setApiKey(formData.apiKey)
+    modelStore.setApiKeyByProvider(formData.provider, formData.apiKey)
   }
   if (formData.baseUrl) {
-    setBaseUrl(formData.baseUrl)
+    modelStore.setBaseUrlByProvider(formData.provider, formData.baseUrl)
   }
   showModal.value = false
   emit('saved')
@@ -285,10 +331,10 @@ const handleSave = () => {
 
 // Handle clear | 处理清除
 const handleClear = () => {
-  clearConfig()
-  clearCustomModels()
+  modelStore.clearApiConfigByProvider(formData.provider)
+  modelStore.clearCustomModels()
   formData.apiKey = ''
-  formData.baseUrl = 'https://api.chatfire.site/v1'
+  formData.baseUrl = ''
 }
 </script>
 

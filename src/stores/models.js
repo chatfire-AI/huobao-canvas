@@ -11,6 +11,7 @@ import {
   SEEDREAM_SIZE_OPTIONS,
   SEEDREAM_4K_SIZE_OPTIONS,
   SEEDREAM_QUALITY_OPTIONS,
+  SEEDANCE_RESOLUTION_OPTIONS,
   VIDEO_RATIO_LIST,
   VIDEO_RATIO_OPTIONS,
   VIDEO_DURATION_OPTIONS,
@@ -113,38 +114,81 @@ export const getModelRatioOptions = (modelKey) => {
 export const getModelDurationOptions = (modelKey) => {
   const model = VIDEO_MODELS.find(m => m.key === modelKey)
   if (!model?.durs) return VIDEO_DURATION_OPTIONS
-  
+
   // durs is already in { label, key } format | durs 已经是 { label, key } 格式
   return model.durs
 }
 
-// Dropdown options (built-in + custom) | 下拉选项（内置 + 自定义）
+/**
+ * Get resolution options for video model | 获取视频模型分辨率选项
+ * Returns options based on model's resolutions array
+ */
+export const getModelResolutionOptions = (modelKey) => {
+  const model = VIDEO_MODELS.find(m => m.key === modelKey)
+  if (!model?.resolutions) return SEEDANCE_RESOLUTION_OPTIONS
+
+  return model.resolutions.map(res => {
+    const option = SEEDANCE_RESOLUTION_OPTIONS.find(o => o.key === res)
+    return option || { label: res, key: res }
+  })
+}
+
+// Dropdown options (built-in + custom) | 下拉选项（内置 + 自定义）- 根据渠道过滤
 export const imageModelOptions = computed(() => {
   const modelConfig = getModelConfigHook()
-  return modelConfig ? modelConfig.allImageModels.value : IMAGE_MODELS
+  return modelConfig ? modelConfig.availableImageModels.value : IMAGE_MODELS
 })
 
 export const videoModelOptions = computed(() => {
   const modelConfig = getModelConfigHook()
-  return modelConfig ? modelConfig.allVideoModels.value : VIDEO_MODELS
+  return modelConfig ? modelConfig.availableVideoModels.value : VIDEO_MODELS
 })
 
 export const chatModelOptions = computed(() => {
   const modelConfig = getModelConfigHook()
-  return modelConfig ? modelConfig.allChatModels.value : CHAT_MODELS
+  return modelConfig ? modelConfig.availableChatModels.value : CHAT_MODELS
+})
+
+// All model options (not filtered by provider) | 所有模型选项（不按渠道过滤）
+export const allImageModelOptions = computed(() => {
+  const modelConfig = getModelConfigHook()
+  return modelConfig ? modelConfig.allAvailableImageModels.value : IMAGE_MODELS
+})
+
+export const allVideoModelOptions = computed(() => {
+  const modelConfig = getModelConfigHook()
+  return modelConfig ? modelConfig.allAvailableVideoModels.value : VIDEO_MODELS
+})
+
+export const allChatModelOptions = computed(() => {
+  const modelConfig = getModelConfigHook()
+  return modelConfig ? modelConfig.allAvailableChatModels.value : CHAT_MODELS
 })
 
 // Simple select options (for n-select) | 简单选择选项
-export const imageModelSelectOptions = computed(() => 
+export const imageModelSelectOptions = computed(() =>
   imageModelOptions.value.map(m => ({ label: m.label, value: m.key }))
 )
 
-export const videoModelSelectOptions = computed(() => 
+export const videoModelSelectOptions = computed(() =>
   videoModelOptions.value.map(m => ({ label: m.label, value: m.key }))
 )
 
-export const chatModelSelectOptions = computed(() => 
+export const chatModelSelectOptions = computed(() =>
   chatModelOptions.value.map(m => ({ label: m.label, value: m.key }))
+)
+
+// All select options (not filtered by provider) | 所有选择选项（不按渠道过滤）
+export const allImageModelSelectOptions = computed(() =>
+  allImageModelOptions.value.map(m => ({ label: m.label, value: m.key }))
+)
+
+export const allVideoModelSelectOptions = computed(() =>
+  allVideoModelOptions.value.map(m => ({ label: m.label, value: m.key }))
+)
+
+export const allChatModelSelectOptions = computed(() =>
+  allChatModelOptions.value.map(m => ({ label: m.label, value: m.key }))
 )
 
 // Export model arrays (reactive with custom models) | 导出模型数组（响应式，包含自定义模型）
@@ -163,7 +207,7 @@ export {
 }
 
 // Export options | 导出选项
-export { SEEDREAM_SIZE_OPTIONS, SEEDREAM_4K_SIZE_OPTIONS, SEEDREAM_QUALITY_OPTIONS, VIDEO_RATIO_OPTIONS, VIDEO_DURATION_OPTIONS }
+export { SEEDREAM_SIZE_OPTIONS, SEEDREAM_4K_SIZE_OPTIONS, SEEDREAM_QUALITY_OPTIONS, SEEDANCE_RESOLUTION_OPTIONS, VIDEO_RATIO_OPTIONS, VIDEO_DURATION_OPTIONS }
 
 // Export state | 导出状态
 export { loading, error }
