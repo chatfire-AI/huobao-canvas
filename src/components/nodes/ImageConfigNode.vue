@@ -33,13 +33,6 @@
               <TrashOutline />
             </n-icon>
           </button>
-          <n-dropdown :options="modelOptions" @select="handleModelSelect">
-            <button class="p-1 hover:bg-[var(--bg-tertiary)] rounded transition-colors">
-              <n-icon :size="14">
-                <ChevronDownOutline />
-              </n-icon>
-            </button>
-          </n-dropdown>
         </div>
       </div>
 
@@ -165,7 +158,7 @@
  * Image config node component | 文生图配置节点组件
  * Configuration panel for text-to-image generation with API integration
  */
-import { ref, computed, watch, onMounted } from 'vue'
+import { ref, computed, watch, onMounted, nextTick } from 'vue'
 import { Handle, Position, useVueFlow } from '@vue-flow/core'
 import { NIcon, NDropdown, NSpin } from 'naive-ui'
 import { ChevronDownOutline, ChevronForwardOutline, CopyOutline, TrashOutline, RefreshOutline, AddOutline, ImageOutline, CreateOutline } from '@vicons/ionicons5'
@@ -752,6 +745,13 @@ watch(() => props.data?.model, (newModel) => {
     }
   }
 })
+
+// 修复 Vue Flow visibility: hidden 问题
+watch(() => props.data, () => {
+  nextTick(() => {
+    updateNodeInternals(props.id)
+  })
+}, { deep: true })
 
 // Watch for auto-execute flag | 监听自动执行标志
 watch(

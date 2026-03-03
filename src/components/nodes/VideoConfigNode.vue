@@ -143,7 +143,7 @@
  * Video config node component | 视频配置节点组件
  * Configuration panel for video generation with API integration
  */
-import { ref, computed, watch, onMounted } from 'vue'
+import { ref, computed, watch, onMounted, nextTick } from 'vue'
 import { Handle, Position, useVueFlow } from '@vue-flow/core'
 import { NIcon, NDropdown, NSpin } from 'naive-ui'
 import { ChevronForwardOutline, ChevronDownOutline, TrashOutline, VideocamOutline, CopyOutline, CreateOutline } from '@vicons/ionicons5'
@@ -500,6 +500,14 @@ watch(() => props.data?.model, (newModel) => {
     localModel.value = newModel
   }
 })
+
+// 修复 Vue Flow visibility: hidden 问题
+// 当节点数据变化时，强制更新内部状态
+watch(() => props.data, () => {
+  nextTick(() => {
+    updateNodeInternals(props.id)
+  })
+}, { deep: true })
 
 // Watch for auto-execute flag | 监听自动执行标志
 watch(

@@ -13,11 +13,14 @@ export const chatCompletions = (data) =>
   })
 
 // 流式对话补全
-export const streamChatCompletions = async function* (data, signal) {
+export const streamChatCompletions = async function* (data, signal, options = {}) {
   const apiKey = localStorage.getItem('apiKey')
-  const baseUrl = getBaseUrl()
-  
-  const response = await fetch(`${baseUrl}/chat/completions`, {
+  // 优先使用传入的 baseUrl，否则使用默认的
+  const baseUrl = options.baseUrl || getBaseUrl()
+  // 使用 options.endpoint 或默认的 /chat/completions
+  const endpoint = options.endpoint || '/chat/completions'
+
+  const response = await fetch(`${baseUrl}${endpoint}`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',

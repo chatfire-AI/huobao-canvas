@@ -385,6 +385,12 @@ export const useModelStore = defineStore('model', () => {
     return `${currentBaseUrl.value}${endpoint}`
   }
 
+  // 获取聊天端点（支持参考图片）
+  const getChatEndpoint = () => {
+    const endpoint = providerConfig.value?.endpoints?.chat || '/chat/completions'
+    return `${currentBaseUrl.value}${endpoint}`
+  }
+
   // ============ Methods: Get Models By Provider (for ApiSettings) ============
 
   const getModelsByProvider = (provider) => {
@@ -587,6 +593,7 @@ export const useModelStore = defineStore('model', () => {
     getImageEndpoint,
     getVideoEndpoint,
     getVideoTaskEndpoint,
+    getChatEndpoint,
 
     // Get models by provider (for ApiSettings)
     getModelsByProvider,

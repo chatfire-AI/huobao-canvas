@@ -55,20 +55,38 @@ export const useApiState = () => {
 export const useChat = (options = {}) => {
   const { loading, error, status, reset, setLoading, setError, setSuccess } = useApiState()
   const { adaptRequest, adaptResponse } = useProvider()
+  const modelStore = useModelStore()
 
   const messages = ref([])
   const currentResponse = ref('')
   let abortController = null
 
-  const send = async (content, stream = true) => {
+  const send = async (content, stream = true, chatOptions = {}) => {
     setLoading(true)
     currentResponse.value = ''
 
     try {
+      // 构建用户消息内容（支持参考图片）
+      let userContent
+      const images = chatOptions.images || options.images || []
+
+      if (images.length > 0) {
+        // 多模态消息：文本 + 图片
+        userContent = [
+          { type: 'text', text: content },
+          ...images.map(img => ({
+            type: 'image_url',
+            image_url: { url: img.url || img }
+          }))
+        ]
+      } else {
+        userContent = content
+      }
+
       const msgList = [
         ...(options.systemPrompt ? [{ role: 'system', content: options.systemPrompt }] : []),
         ...messages.value,
-        { role: 'user', content }
+        { role: 'user', content: userContent }
       ]
 
       // 适配请求参数
@@ -82,9 +100,14 @@ export const useChat = (options = {}) => {
         abortController = new AbortController()
         let fullResponse = ''
 
+        // 使用 modelStore 获取完整 URL
+        const chatUrl = modelStore.getChatEndpoint()
+        const endpoint = new URL(chatUrl).pathname
+
         for await (const chunk of streamChatCompletions(
           adaptedParams,
-          abortController.signal
+          abortController.signal,
+          { baseUrl: new URL(chatUrl).origin, endpoint }
         )) {
           fullResponse += chunk
           currentResponse.value = fullResponse

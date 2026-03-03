@@ -10,7 +10,7 @@ export const PROVIDERS = {
     defaultBaseUrl: 'https://api.chatfire.site',
     // 端点路径
     endpoints: {
-      chat: '/chat/completions',
+      chat: '/v1/chat/completions',
       image: '/v1/images/generations',
       video: '/v1/video/generations',
       videoQuery: '/v1/videos/{taskId}'
@@ -173,7 +173,7 @@ export const PROVIDERS = {
     defaultBaseUrl: 'https://api.chatfire.cn',
     // 端点路径
     endpoints: {
-      chat: '/chat/completions',
+      chat: '/v1/chat/completions',
       image: '/v1/images/generations',
       video: '/v1/videos',
       videoQuery: '/v1/videos/{taskId}'

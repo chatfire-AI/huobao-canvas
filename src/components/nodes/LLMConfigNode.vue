@@ -6,34 +6,28 @@
       class="llm-node bg-[var(--bg-secondary)] rounded-xl border min-w-[320px] max-w-[400px] relative transition-all duration-200"
       :class="data.selected ? 'border-1 border-purple-500 shadow-lg shadow-purple-500/20' : 'border border-[var(--border-color)]'">
       <!-- Header | 头部 -->
-      <div class="flex items-center justify-between px-3 py-2 border-b border-[var(--border-color)] bg-gradient-to-r from-purple-500/10 to-transparent">
+      <div
+        class="flex items-center justify-between px-3 py-2 border-b border-[var(--border-color)] bg-gradient-to-r from-purple-500/10 to-transparent">
         <div class="flex items-center gap-2">
           <n-icon :size="16" class="text-purple-500">
             <ChatbubbleOutline />
           </n-icon>
-          <span
-            v-if="!isEditingLabel"
-            @dblclick="startEditLabel"
+          <span v-if="!isEditingLabel" @dblclick="startEditLabel"
             class="text-sm font-medium text-[var(--text-secondary)] cursor-text hover:bg-[var(--bg-tertiary)] px-1 rounded transition-colors"
-            title="双击编辑名称"
-          >{{ nodeLabel }}</span>
-          <input
-            v-else
-            ref="labelInputRef"
-            v-model="editingLabelValue"
-            @blur="finishEditLabel"
-            @keydown.enter="finishEditLabel"
-            @keydown.escape="cancelEditLabel"
-            class="text-sm font-medium bg-[var(--bg-tertiary)] text-[var(--text-secondary)] px-1 rounded outline-none border border-purple-500"
-          />
+            title="双击编辑名称">{{ nodeLabel }}</span>
+          <input v-else ref="labelInputRef" v-model="editingLabelValue" @blur="finishEditLabel"
+            @keydown.enter="finishEditLabel" @keydown.escape="cancelEditLabel"
+            class="text-sm font-medium bg-[var(--bg-tertiary)] text-[var(--text-secondary)] px-1 rounded outline-none border border-purple-500" />
         </div>
         <div class="flex items-center gap-1">
-          <button @click="handleDuplicate" class="p-1 hover:bg-[var(--bg-tertiary)] rounded transition-colors" title="复制节点">
+          <button @click="handleDuplicate" class="p-1 hover:bg-[var(--bg-tertiary)] rounded transition-colors"
+            title="复制节点">
             <n-icon :size="14">
               <CopyOutline />
             </n-icon>
           </button>
-          <button @click="handleDelete" class="p-1 hover:bg-[var(--bg-tertiary)] rounded transition-colors" title="删除节点">
+          <button @click="handleDelete" class="p-1 hover:bg-[var(--bg-tertiary)] rounded transition-colors"
+            title="删除节点">
             <n-icon :size="14">
               <TrashOutline />
             </n-icon>
@@ -47,18 +41,9 @@
         <div class="relative">
           <label class="text-xs text-[var(--text-secondary)] mb-1 block">系统提示词</label>
           <div class="textarea-wrapper" ref="textareaWrapper">
-            <div
-              ref="systemPromptRef"
-              class="editor-content"
-              contenteditable="true"
-              @input="handleInput"
-              @keydown="handleKeydown"
-              @paste="handlePaste"
-              @blur="handleBlur"
-              @wheel.stop
-              @mousedown.stop
-              :data-placeholder="placeholder"
-            ></div>
+            <div ref="systemPromptRef" class="editor-content" contenteditable="true" @input="handleInput"
+              @keydown="handleKeydown" @paste="handlePaste" @blur="handleBlur" @wheel.stop @mousedown.stop
+              :data-placeholder="placeholder"></div>
           </div>
           <!-- @ 提及预览 -->
           <!-- <div class="mentions-preview mt-1 flex flex-wrap gap-1" v-if="mentionsPreview.length > 0">
@@ -76,33 +61,23 @@
         <!-- Model selection | 模型选择 -->
         <div>
           <label class="text-xs text-[var(--text-secondary)] mb-1 block">模型</label>
-          <n-select
-            v-model:value="model"
-            :options="modelOptions"
-            size="small"
-            @update:value="updateConfig"
-          />
+          <n-select v-model:value="model" :options="modelOptions" label-field="label" value-field="key" size="small"
+            @update:value="updateConfig" />
         </div>
 
         <!-- Output format | 输出格式 -->
         <div>
           <label class="text-xs text-[var(--text-secondary)] mb-1 block">输出格式</label>
-          <n-select
-            v-model:value="outputFormat"
-            :options="formatOptions"
-            size="small"
-            @update:value="updateConfig"
-          />
+          <n-select v-model:value="outputFormat" :options="formatOptions" size="small" @update:value="updateConfig" />
         </div>
 
         <!-- Generate button | 生成按钮 -->
-        <button 
-          @click="handleGenerate"
-          :disabled="isGenerating"
-          class="w-full px-4 py-2 text-sm rounded-lg bg-purple-500 hover:bg-purple-600 text-white transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
-        >
+        <button @click="handleGenerate" :disabled="isGenerating"
+          class="w-full px-4 py-2 text-sm rounded-lg bg-purple-500 hover:bg-purple-600 text-white transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2">
           <n-spin v-if="isGenerating" :size="14" />
-          <n-icon v-else :size="14"><SparklesOutline /></n-icon>
+          <n-icon v-else :size="14">
+            <SparklesOutline />
+          </n-icon>
           {{ isGenerating ? '生成中...' : '执行生成' }}
         </button>
 
@@ -110,40 +85,35 @@
         <div v-if="outputContent" class="mt-2">
           <div class="flex items-center justify-between mb-1">
             <label class="text-xs text-[var(--text-secondary)]">生成结果</label>
-            <button 
-              @click="handleCopyOutput"
-              class="text-xs text-[var(--text-secondary)] hover:text-purple-500 flex items-center gap-1 transition-colors"
-            >
-              <n-icon :size="12"><CopyOutline /></n-icon>
+            <button @click="handleCopyOutput"
+              class="text-xs text-[var(--text-secondary)] hover:text-purple-500 flex items-center gap-1 transition-colors">
+              <n-icon :size="12">
+                <CopyOutline />
+              </n-icon>
               复制
             </button>
           </div>
-          <div 
-            @wheel.stop 
-            @mousedown.stop
-            class="bg-[var(--bg-tertiary)] rounded-lg p-2 text-xs text-[var(--text-primary)] max-h-[150px] overflow-y-auto border border-[var(--border-color)]"
-          >
+          <div @wheel.stop @mousedown.stop
+            class="bg-[var(--bg-tertiary)] rounded-lg p-2 text-xs text-[var(--text-primary)] max-h-[150px] overflow-y-auto border border-[var(--border-color)]">
             <pre class="whitespace-pre-wrap">{{ outputContent }}</pre>
           </div>
 
           <!-- Split actions | 拆分操作 -->
           <div class="mt-2 flex gap-2">
-            <button
-              @click="handleSplitToTextWithImage"
-              :disabled="isSplitting"
-              class="flex-1 px-3 py-1.5 text-xs rounded-lg border border-purple-400 text-purple-500 hover:bg-purple-50 dark:hover:bg-purple-900/20 transition-colors disabled:opacity-50 flex items-center justify-center gap-1"
-            >
+            <button @click="handleSplitToTextWithImage" :disabled="isSplitting"
+              class="flex-1 px-3 py-1.5 text-xs rounded-lg border border-purple-400 text-purple-500 hover:bg-purple-50 dark:hover:bg-purple-900/20 transition-colors disabled:opacity-50 flex items-center justify-center gap-1">
               <n-spin v-if="isSplitting" :size="12" />
-              <n-icon v-else :size="12"><ImageOutline /></n-icon>
+              <n-icon v-else :size="12">
+                <ImageOutline />
+              </n-icon>
               {{ isSplitting ? '拆分中...' : '拆分图文' }}
             </button>
-            <button
-              @click="handleSplitToTextOnly"
-              :disabled="isSplitting"
-              class="flex-1 px-3 py-1.5 text-xs rounded-lg border border-purple-400 text-purple-500 hover:bg-purple-50 dark:hover:bg-purple-900/20 transition-colors disabled:opacity-50 flex items-center justify-center gap-1"
-            >
+            <button @click="handleSplitToTextOnly" :disabled="isSplitting"
+              class="flex-1 px-3 py-1.5 text-xs rounded-lg border border-purple-400 text-purple-500 hover:bg-purple-50 dark:hover:bg-purple-900/20 transition-colors disabled:opacity-50 flex items-center justify-center gap-1">
               <n-spin v-if="isSplitting" :size="12" />
-              <n-icon v-else :size="12"><ListOutline /></n-icon>
+              <n-icon v-else :size="12">
+                <ListOutline />
+              </n-icon>
               {{ isSplitting ? '拆分中...' : '拆分文本' }}
             </button>
           </div>
@@ -153,19 +123,15 @@
 
       <!-- Handles | 连接点 -->
       <Handle type="target" :position="Position.Left" id="left" class="!bg-purple-500" />
-      <NodeHandleMenu :nodeId="id" nodeType="llmConfig" dotColor="#a855f7" :visible="showHandleMenu" :operations="operations" @select="handleSelect" />
+      <NodeHandleMenu :nodeId="id" nodeType="llmConfig" dotColor="#a855f7" :visible="showHandleMenu"
+        :operations="operations" @select="handleSelect" />
     </div>
   </div>
 
   <!-- Mentions picker | @ 选择器 -->
-  <MentionsPicker
-    v-model:visible="showMentionsPicker"
-    :position="mentionsPosition"
-    context="llmConfig"
-    :showSearch="false"
-    :connectedNodeIds="hasConnectedNodes ? connectedTextNodeIds : []"
-    @select="handleMentionSelect"
-  />
+  <MentionsPicker v-model:visible="showMentionsPicker" :position="mentionsPosition" context="llmConfig"
+    :showSearch="false" :connectedNodeIds="hasConnectedNodes ? connectedTextNodeIds : []"
+    @select="handleMentionSelect" />
 </template>
 
 <script setup>
@@ -664,6 +630,11 @@ watch(() => props.data, (newData) => {
   if (newData?.model !== undefined) model.value = newData.model
   if (newData?.outputFormat !== undefined) outputFormat.value = newData.outputFormat
   if (newData?.outputContent !== undefined) outputContent.value = newData.outputContent
+
+  // 修复 Vue Flow visibility: hidden 问题
+  nextTick(() => {
+    updateNodeInternals(props.id)
+  })
 }, { deep: true })
 
 // Watch content changes and sync to editor | 监听内容变化并同步到编辑器
@@ -713,7 +684,6 @@ const modelOptions = computed(() => modelStore.allChatModelOptions)
 
 // 默认模型使用选中的模型
 const model = ref(props.data?.model || modelStore.selectedChatModel || 'gpt-4o-mini')
-
 // Format options | 格式选项
 const formatOptions = [
   { label: '纯文本', value: 'text' },
@@ -729,14 +699,20 @@ const chatHook = computed(() => {
   })
 })
 
-// Update config in store | 更新存储中的配置
+// 防抖定时器
+let updateConfigTimer = null
+
+// Update config in store | 更新存储中的配置（防抖）
 const updateConfig = () => {
-  updateNode(props.id, { 
-    systemPrompt: systemPrompt.value,
-    model: model.value,
-    outputFormat: outputFormat.value,
-    outputContent: outputContent.value
-  })
+  if (updateConfigTimer) clearTimeout(updateConfigTimer)
+  updateConfigTimer = setTimeout(() => {
+    updateNode(props.id, {
+      systemPrompt: systemPrompt.value,
+      model: model.value,
+      outputFormat: outputFormat.value,
+      outputContent: outputContent.value
+    })
+  }, 150)
 }
 
 // Get input from connected nodes | 获取连接节点的输入
@@ -867,7 +843,7 @@ const handleGenerate = async () => {
 
     // 如果 user 消息为空，使用简单提示
     const result = await send(userMessage || '请根据以上信息生成内容', true)
-    
+
     if (result) {
       outputContent.value = result
       updateNode(props.id, { outputContent: result, executed: true })
@@ -889,8 +865,7 @@ watch(
       updateNode(props.id, { autoExecute: false })
       setTimeout(() => handleGenerate(), 100)
     }
-  },
-  { immediate: true }
+  }
 )
 
 // Start editing label | 开始编辑 label
