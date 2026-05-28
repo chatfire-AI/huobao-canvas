@@ -5,13 +5,14 @@
 
 // 渠道适配配置
 export const PROVIDERS = {
-  chatfire: {
+chatfire: {
     label: '火宝 (Chatfire)',
     defaultBaseUrl: 'https://api.chatfire.site',
     // 端点路径
     endpoints: {
       chat: '/v1/chat/completions',
       image: '/v1/images/generations',
+      imageEdit: '/v1/images/edits',
       video: '/v1/video/generations',
       videoQuery: '/v1/video/task/{taskId}'
     },
@@ -47,7 +48,7 @@ export const PROVIDERS = {
           const content = []
 
           // 构建完整参数文本
-          // 格式: prompt --resolution 720p --ratio 16:9 --dur 5 --fps 24 --wm true --seed 11 --cf false
+          // 格式：prompt --resolution 720p --ratio 16:9 --dur 5 --fps 24 --wm true --seed 11 --cf false
           let textPrompt = params.prompt || ''
 
           // 添加 resolution 参数
@@ -168,6 +169,76 @@ export const PROVIDERS = {
       }
     }
   },
+  futureppo: {
+    label: 'FuturePPO (futureppo.top)',
+    defaultBaseUrl: 'https://api.futureppo.top',
+    // 端点路径
+    endpoints: {
+      chat: '/v1/chat/completions',
+      image: '/v1/images/generations',
+      imageEdit: '/v1/images/edits',
+      video: '/v1/video/generations',
+      videoQuery: '/v1/video/task/{taskId}'
+    },
+    // 请求参数适配（使用 OpenAI 兼容格式）
+    requestAdapter: {
+      chat: (params) => {
+        const adapted = {
+          model: params.model,
+          messages: params.messages
+        }
+        if (params.temperature !== undefined) adapted.temperature = params.temperature
+        if (params.max_tokens !== undefined) adapted.max_tokens = params.max_tokens
+        if (params.stream !== undefined) adapted.stream = params.stream
+        return adapted
+      },
+      image: (params) => {
+        const adapted = {
+          model: params.model,
+          prompt: params.prompt
+        }
+        if (params.size) adapted.size = params.size
+        if (params.n) adapted.n = params.n
+        if (params.quality) adapted.quality = params.quality
+        if (params.style) adapted.style = params.style
+        if (params.image) adapted.image = params.image
+        return adapted
+      },
+      video: (params) => {
+        const adapted = {
+          model: params.model,
+          prompt: params.prompt || ''
+        }
+        if (params.first_frame_image) adapted.first_frame_image = params.first_frame_image
+        if (params.last_frame_image) adapted.last_frame_image = params.last_frame_image
+        if (params.size) adapted.size = params.size
+        if (params.seconds) adapted.seconds = params.seconds
+        return adapted
+      }
+    },
+    // 响应数据适配
+    responseAdapter: {
+      chat: (response) => {
+        if (response.choices && response.choices.length > 0) {
+          return response.choices[0].message?.content || ''
+        }
+        return ''
+      },
+      image: (response) => {
+        const data = response.data || response
+        return (Array.isArray(data) ? data : [data]).map(item => ({
+          url: item.url || item.b64_json || '',
+          revisedPrompt: item.revised_prompt || ''
+        }))
+      },
+      video: (response) => {
+        return {
+          url: response.data?.url || response.url || response.data?.[0]?.url || '',
+          ...response
+        }
+      }
+    }
+  },
   openai: {
     label: 'OpenAI',
     defaultBaseUrl: 'https://api.chatfire.cn',
@@ -175,6 +246,7 @@ export const PROVIDERS = {
     endpoints: {
       chat: '/v1/chat/completions',
       image: '/v1/images/generations',
+      imageEdit: '/v1/images/edits',
       video: '/v1/videos',
       videoQuery: '/v1/videos/{taskId}'
     },
