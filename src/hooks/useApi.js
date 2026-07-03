@@ -177,17 +177,25 @@ export const useImageGeneration = () => {
       }
 
       // Add reference image if provided | 添加参考图
-      if (params.image) {
+      // refImages 可能是一个数组，取第一个作为参考图
+      if (params.image && Array.isArray(params.image)) {
+        // 是数组，取第一个
+        requestData.image = params.image[0]
+      } else if (params.image) {
+        // 是单个值直接使用
         requestData.image = params.image
       }
-
-      // 适配请求参数
+      // Adapt request | 适配请求
       const adaptedParams = adaptRequest('image', requestData)
-
+      
       // Call API | 调用 API
+      // 如果有参考图，使用图生图端点 (/v1/images/edits)，否则使用文生图端点 (/v1/images/generations)
+      const hasRefImage = !!(params.image && (Array.isArray(params.image) ? params.image[0] : params.image))
+      const endpoint = hasRefImage ? modelStore.getImageEditEndpoint() : modelStore.getImageEndpoint()
+      
       const response = await generateImage(adaptedParams, {
-        requestType: 'json',
-        endpoint: modelStore.getImageEndpoint()
+        requestType: hasRefImage ? 'formdata' : 'json',
+        endpoint: endpoint
       })
 
       // 适配响应数据

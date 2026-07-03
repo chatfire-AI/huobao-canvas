@@ -37,8 +37,8 @@
               <n-tag size="small" type="info" class="endpoint-tag">{{ currentEndpoints.chat }}</n-tag>
             </div>
             <div class="endpoint-item">
-              <span class="endpoint-label">生图</span>
-              <n-tag size="small" type="success" class="endpoint-tag">{{ currentEndpoints.image }}</n-tag>
+              <span class="endpoint-label">图生图</span>
+              <n-tag size="small" type="success" class="endpoint-tag">{{ currentEndpoints.imageEdit }}</n-tag>
             </div>
             <div class="endpoint-item">
               <span class="endpoint-label">视频生成</span>
@@ -227,6 +227,7 @@ const currentEndpoints = computed(() => {
   return config.endpoints || {
     chat: '/chat/completions',
     image: '/v1/images/generations',
+    imageEdit: '/v1/images/edits',
     video: '/v1/videos',
     videoQuery: '/v1/videos/{taskId}'
   }
