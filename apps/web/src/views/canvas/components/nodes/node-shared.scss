@@ -1,0 +1,331 @@
+.canvas-node {
+  width: 260px;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  color: var(--cf-text-primary);
+  // 每类节点的标识色，供类型图标 chip 与状态点使用
+  --node-accent: var(--cf-brand);
+  // 卡片外标题的高度，用于连接桩垂直对位到卡片中心
+  --node-head-h: 28px;
+}
+
+.text-node {
+  --node-accent: #3b82f6;
+}
+
+.image-node {
+  --node-accent: #8b5cf6;
+}
+
+.video-node {
+  --node-accent: var(--cf-brand);
+}
+
+// ── 卡片外标题（liblib 风格：图标 + 名称浮于卡片左上方）──
+.node-outside-head {
+  height: var(--node-head-h);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 2px 4px 6px;
+  box-sizing: border-box;
+  color: var(--cf-text-secondary);
+  font-size: 12px;
+  user-select: none;
+}
+
+.node-outside-head .node-type-icon {
+  width: 22px;
+  height: 22px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  border-radius: 7px;
+  background: color-mix(in srgb, var(--node-accent) 12%, transparent);
+  color: var(--node-accent);
+  font-size: 13px;
+}
+
+.node-outside-head .node-title {
+  min-width: 0;
+  overflow: hidden;
+  font-size: 12px;
+  font-weight: 750;
+  line-height: 16px;
+  letter-spacing: -0.01em;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.node-outside-head .node-status-dot {
+  width: 7px;
+  height: 7px;
+  flex-shrink: 0;
+  border-radius: 999px;
+  background: var(--cf-border-strong);
+}
+
+// ── 卡片本体：发丝边框 + 大圆角 + 柔和阴影 ──
+.node-card {
+  overflow: hidden;
+  position: relative;
+  box-sizing: border-box;
+  border: 1px solid var(--cf-border);
+  border-radius: 14px;
+  background: var(--cf-bg-elevated);
+  box-shadow: var(--cf-shadow-sm);
+  transition: box-shadow 0.16s ease, border-color 0.16s ease, transform 0.16s ease;
+}
+
+.canvas-node:hover .node-card {
+  border-color: var(--cf-border-strong);
+  box-shadow: var(--cf-shadow-md);
+}
+
+.canvas-node.is-selected .node-card {
+  border-color: color-mix(in srgb, var(--node-accent) 70%, transparent);
+  box-shadow:
+    0 0 0 3px color-mix(in srgb, var(--node-accent) 22%, transparent),
+    var(--cf-shadow-md);
+}
+
+// ── 媒体铺满 ──
+.media-card {
+  height: 172px;
+}
+
+.node-media-fill {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  display: block;
+  object-fit: cover;
+  background: var(--cf-bg-subtle);
+}
+
+// 空状态：居中大占位图标 + 提示
+.node-media-empty {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 16px;
+  box-sizing: border-box;
+  color: var(--cf-text-tertiary);
+  text-align: center;
+}
+
+.node-media-empty .empty-icon {
+  display: inline-flex;
+  font-size: 30px;
+  opacity: 0.55;
+}
+
+.node-media-empty p {
+  margin: 0;
+  overflow: hidden;
+  display: -webkit-box;
+  font-size: 11.5px;
+  line-height: 1.5;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+}
+
+// ── 底部浮层：模型胶囊 + 状态胶囊 ──
+.node-overlay-bottom {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 18px 10px 8px;
+  box-sizing: border-box;
+  pointer-events: none;
+}
+
+.media-card.has-media .node-overlay-bottom {
+  background: linear-gradient(transparent, rgba(0, 0, 0, 0.42));
+}
+
+// 视频原生控制条占位，浮层上移
+.media-card.is-video.has-media .node-overlay-bottom {
+  bottom: 32px;
+  background: none;
+}
+
+.node-model-pill,
+.node-status-pill {
+  max-width: 62%;
+  overflow: hidden;
+  padding: 3px 9px;
+  border-radius: 999px;
+  background: rgba(18, 18, 20, 0.58);
+  backdrop-filter: blur(8px) saturate(1.2);
+  color: rgba(255, 255, 255, 0.94);
+  font-size: 10.5px;
+  font-weight: 700;
+  line-height: 14px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.node-status-pill {
+  margin-left: auto;
+  flex-shrink: 0;
+}
+
+.canvas-node.is-running .node-status-pill,
+.canvas-node.is-waiting .node-status-pill {
+  background: color-mix(in srgb, var(--cf-brand) 82%, #141416);
+}
+
+.canvas-node.is-success .node-status-pill {
+  background: color-mix(in srgb, var(--cf-success) 82%, #141416);
+}
+
+.canvas-node.is-unavailable .node-status-pill {
+  background: color-mix(in srgb, var(--cf-warning) 82%, #141416);
+}
+
+.canvas-node.is-error .node-status-pill {
+  background: color-mix(in srgb, var(--cf-error) 82%, #141416);
+}
+
+.canvas-node.is-expired .node-status-pill {
+  background: rgba(20, 20, 22, 0.55);
+}
+
+// ── 运行中 shimmer 扫光 ──
+.canvas-node.is-running .media-card::after,
+.canvas-node.is-waiting .media-card::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  background: linear-gradient(105deg, transparent 42%, rgba(255, 255, 255, 0.16) 50%, transparent 58%);
+  background-size: 240% 100%;
+  animation: node-shimmer 1.4s linear infinite;
+  pointer-events: none;
+}
+
+@keyframes node-shimmer {
+  from {
+    background-position: 190% 0;
+  }
+  to {
+    background-position: -90% 0;
+  }
+}
+
+// ── 状态点配色 ──
+.canvas-node.is-running .node-status-dot,
+.canvas-node.is-waiting .node-status-dot {
+  background: var(--cf-brand);
+  animation: node-dot-pulse 1.1s ease-in-out infinite;
+}
+
+.canvas-node.is-success .node-status-dot {
+  background: var(--cf-success);
+}
+
+.canvas-node.is-unavailable .node-status-dot {
+  background: var(--cf-warning);
+}
+
+.canvas-node.is-error .node-status-dot {
+  background: var(--cf-error);
+}
+
+@keyframes node-dot-pulse {
+  0%, 100% {
+    box-shadow: 0 0 0 0 color-mix(in srgb, var(--cf-brand) 42%, transparent);
+  }
+  50% {
+    box-shadow: 0 0 0 5px transparent;
+  }
+}
+
+// ── 文本节点卡片 ──
+.text-card .node-card-body {
+  padding: 12px 14px 14px;
+}
+
+.text-card .node-outside-head {
+  padding-bottom: 5px;
+}
+
+.text-card .node-card-body p {
+  min-height: 66px;
+  margin: 0;
+  display: -webkit-box;
+  overflow: hidden;
+  color: var(--cf-text-primary);
+  font-size: 13px;
+  line-height: 1.65;
+  white-space: pre-wrap;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 4;
+}
+
+.text-card.has-status .node-card-body {
+  padding-bottom: 32px;
+}
+
+.text-editor {
+  width: 100%;
+  min-height: 96px;
+  box-sizing: border-box;
+  resize: vertical;
+  border: 0;
+  outline: 0;
+  background: transparent;
+  color: var(--cf-text-primary);
+  font: inherit;
+  font-size: 13px;
+  line-height: 1.65;
+}
+
+// 文本节点的状态胶囊：浮在卡片右下角
+.text-card .node-status-pill {
+  position: absolute;
+  right: 10px;
+  bottom: 8px;
+  z-index: 2;
+  max-width: calc(100% - 20px);
+  background: var(--cf-bg-subtle);
+  backdrop-filter: none;
+  color: var(--cf-text-secondary);
+}
+
+.canvas-node.is-running .text-card .node-status-pill,
+.canvas-node.is-waiting .text-card .node-status-pill {
+  background: var(--cf-brand-soft);
+  color: var(--cf-brand);
+}
+
+.canvas-node.is-success .text-card .node-status-pill {
+  background: color-mix(in srgb, var(--cf-success) 14%, transparent);
+  color: var(--cf-success);
+}
+
+.canvas-node.is-unavailable .text-card .node-status-pill {
+  background: color-mix(in srgb, var(--cf-warning) 16%, transparent);
+  color: var(--cf-warning);
+}
+
+.canvas-node.is-error .text-card .node-status-pill {
+  background: color-mix(in srgb, var(--cf-error) 14%, transparent);
+  color: var(--cf-error);
+}
+
+// 连接手柄样式统一维护在 NodeHandlePlus.vue 的 scoped 样式中
+

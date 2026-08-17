@@ -1,0 +1,38 @@
+services:
+  web:
+    build: ./apps/web
+    ports:
+      - "8080:80"
+    # 显式公共 DNS：规避本机代理（Clash 等）fake-ip 污染容器内 nginx 上游解析。
+    # 海外厂商（openai/xai/anthropic/gemini）若需走本机代理，请移除这两行改用宿主机 DNS。
+    dns:
+      - 223.5.5.5
+      - 119.29.29.29
+    environment:
+      # 推理上游：默认 ChatFire 公共 API，可改为任意 OpenAI 兼容网关
+      UPSTREAM: ${UPSTREAM:-https://api.chatfire.site}
+      # 浏览器侧请求基地址：默认空串（同源，走 nginx 反代）
+      API_BASE_URL: ${API_BASE_URL:-}
+      # 媒体转存：none（默认）| http（需启用 storage profile）
+      STORAGE_PROVIDER: ${STORAGE_PROVIDER:-none}
+      STORAGE_UPLOAD_URL: ${STORAGE_UPLOAD_URL:-/storage/upload}
+      STORAGE_UPSTREAM: http://storage:16811
+      CLOUD_MEDIA_DOMAIN: ${CLOUD_MEDIA_DOMAIN:-}
+    restart: unless-stopped
+
+  # 可选媒体存储服务：docker compose --profile storage up -d
+  storage:
+    build: ./apps/storage
+    profiles: ["storage"]
+    environment:
+      PORT: 16811
+      DATA_DIR: /data
+      # 对外访问前缀（经 web 反代）
+      PUBLIC_BASE: ${STORAGE_PUBLIC_BASE:-http://localhost:8080/storage}
+      EXPIRE_DAYS: ${EXPIRE_DAYS:-7}
+    volumes:
+      - storage-data:/data
+    restart: unless-stopped
+
+volumes:
+  storage-data:

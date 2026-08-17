@@ -1,0 +1,13 @@
+{
+  "name": "chatfire-canvas-storage",
+  "version": "0.1.0",
+  "type": "module",
+  "private": true,
+  "description": "可选的媒体转存服务：把画布生成的 base64/厂商临时 URL 转存到本地磁盘并对外提供访问",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}

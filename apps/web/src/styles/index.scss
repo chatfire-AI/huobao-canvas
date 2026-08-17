@@ -1,0 +1,264 @@
+// 全局样式重置
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto", "Oxygen",
+    "Ubuntu", "Cantarell", "Fira Sans", "Droid Sans", "Helvetica Neue",
+    sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  background-color: var(--cf-bg-page);
+  color: var(--cf-text-primary);
+  transition: background-color 0.2s, color 0.2s;
+}
+
+html,
+body,
+#app {
+  height: 100%;
+}
+
+ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+// 滚动条样式
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--cf-border-strong);
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--cf-text-tertiary);
+}
+
+// 通用工具类
+.text-primary {
+  color: var(--cf-text-primary);
+}
+
+.text-secondary {
+  color: var(--cf-text-secondary);
+}
+
+.text-muted {
+  color: var(--cf-text-tertiary);
+}
+
+.bg-primary {
+  background-color: var(--cf-bg-page);
+}
+
+.bg-secondary {
+  background-color: var(--cf-bg-surface);
+}
+
+.bg-tertiary {
+  background-color: var(--cf-bg-subtle);
+}
+
+// 共享页面基元（供后续页面迁移使用）
+.cf-card {
+  background: var(--cf-bg-surface);
+  border: 1px solid var(--cf-border);
+  border-radius: var(--cf-radius-lg);
+  box-shadow: var(--cf-shadow-sm);
+}
+
+.page-eyebrow {
+  color: var(--cf-brand);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  margin-bottom: 4px;
+}
+
+.page-header {
+  margin-bottom: 32px;
+}
+
+.page-title {
+  margin: 0;
+  font-size: 29px;
+  font-weight: 800;
+  letter-spacing: 0.2px;
+  line-height: 1.25;
+  color: var(--cf-text-primary);
+}
+
+.page-subtitle {
+  margin: 6px 0 0;
+  color: var(--cf-text-secondary);
+  font-size: 13px;
+}
+
+.footer {
+  .label {
+    color: var(--cf-text-tertiary);
+  }
+  .val:hover {
+    color: var(--cf-brand);
+  }
+}
+
+// 自定义按钮
+.chatfire-btn {
+  border-radius: var(--cf-radius-md);
+  height: 34px;
+  line-height: 34px;
+  padding: 0px 14px;
+  cursor: pointer;
+  transition: all 0.2s ease 0s;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+
+  &.primary {
+    background-color: var(--cf-brand);
+    color: #ffffff;
+    border-radius: var(--cf-radius-md);
+    &:hover {
+      background-color: var(--cf-brand-hover);
+    }
+  }
+  &.warning {
+    background-color: var(--cf-error);
+    color: #ffffff;
+  }
+
+  &.disabled {
+    cursor: not-allowed;
+    opacity: 0.7;
+  }
+
+  &.loading {
+    cursor: not-allowed;
+    opacity: 0.7;
+  }
+  &.large {
+    height: 44px;
+    line-height: 44px;
+    padding: 0px 20px;
+    font-size: 14px;
+  }
+  &.small {
+    height: 30px;
+    line-height: 30px;
+    padding: 0px 14px;
+    font-size: 12px;
+  }
+
+  &.text {
+    background-color: transparent;
+    color: var(--cf-text-primary);
+    border-radius: var(--cf-radius-md);
+    &:hover {
+      color: var(--cf-text-primary);
+      background-color: var(--cf-bg-subtle);
+    }
+  }
+  &:hover:not(.disabled):not(.loading) {
+    transform: scale(1.05);
+  }
+}
+
+// n-dialog 样式
+.n-dialog {
+  background: var(--cf-bg-elevated);
+  color: var(--cf-text-primary);
+  border-radius: var(--cf-radius-lg);
+}
+.custom-dialog {
+  background: var(--cf-bg-elevated);
+  color: var(--cf-text-primary);
+  border-radius: var(--cf-radius-lg);
+
+  .n-button {
+    --n-border: 1px solid transparent !important;
+    --n-border-focus: 1px solid transparent !important;
+    --n-border-hover: 1px solid transparent !important;
+    --n-border-pressed: 1px solid transparent !important;
+    border: 1px solid transparent;
+    border-radius: var(--cf-radius-md);
+  }
+  .n-button--default-type {
+    background-color: transparent;
+    color: var(--cf-text-primary);
+    &:hover {
+      color: var(--cf-text-primary);
+      background-color: var(--cf-bg-subtle);
+    }
+  }
+  .n-button--warning-type {
+    --n-color-hover: var(--cf-error) !important;
+    background-color: var(--cf-error);
+    color: #ffffff;
+  }
+}
+
+.n-select-menu {
+  background-color: var(--cf-bg-elevated);
+  color: var(--cf-text-primary);
+  border-radius: var(--cf-radius-lg);
+}
+
+// ============ n-drawer 全局主题 ============
+// 抽屉由 Naive 通过独立容器挂载到 body(teleport 链上无 scoped 属性),
+// 组件内 :deep() 无法触达,必须与 .n-dialog 一样放在全局样式层。
+// Naive 运行时注入的样式位于文档更晚处,这里用 html body 前缀提升优先级。
+html body .n-drawer {
+  background: var(--cf-bg-elevated) !important;
+  color: var(--cf-text-primary) !important;
+  border-radius: var(--cf-radius-lg) 0 0 var(--cf-radius-lg) !important;
+}
+
+html body .n-drawer-mask {
+  background: var(--cf-scrim) !important;
+}
+
+html body .n-drawer-header {
+  border-bottom: 1px solid var(--cf-border) !important;
+  background: var(--cf-bg-elevated) !important;
+  color: var(--cf-text-primary) !important;
+}
+
+html body .n-drawer-header__main {
+  color: var(--cf-text-primary) !important;
+  font-size: 14px !important;
+  font-weight: 650 !important;
+}
+
+html body .n-drawer-body-content-wrapper {
+  background: var(--cf-bg-elevated) !important;
+  color: var(--cf-text-primary) !important;
+  font-size: 13px !important;
+}
+
+.n-drawer-body-content-wrapper::-webkit-scrollbar {
+  width: 6px;
+}
+
+.n-drawer-body-content-wrapper::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.n-drawer-body-content-wrapper::-webkit-scrollbar-thumb {
+  background: var(--cf-border-strong);
+  border-radius: 3px;
+}

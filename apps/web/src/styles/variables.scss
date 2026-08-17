@@ -1,0 +1,90 @@
+// ============ Design Tokens (light) ============
+// Source of truth: output/prototypes/platform-redesign-prototype.html
+:root {
+  color-scheme: light;
+  --cf-bg-page: #f7f8fa;
+  --cf-bg-surface: #ffffff;
+  --cf-bg-elevated: #ffffff;
+  --cf-bg-subtle: #f1f3f6;
+  --cf-border: #e7e9ee;
+  --cf-border-strong: #d6dae1;
+  --cf-text-primary: #17181a;
+  --cf-text-secondary: #5c6370;
+  --cf-text-tertiary: #9aa1ad;
+  --cf-text-on-brand: #ffffff;
+  --cf-brand: #f97316;
+  --cf-brand-hover: #ea580c;
+  --cf-brand-pressed: #c2410c;
+  --cf-brand-soft: rgba(249, 115, 22, .1);
+  --cf-brand-soft-strong: rgba(249, 115, 22, .18);
+  --cf-success: #16a34a;
+  --cf-success-soft: rgba(22, 163, 74, .1);
+  --cf-warning: #d97706;
+  --cf-warning-soft: rgba(217, 119, 6, .12);
+  --cf-error: #dc2626;
+  --cf-error-soft: rgba(220, 38, 38, .1);
+  --cf-info: #2563eb;
+  --cf-info-soft: rgba(37, 99, 235, .1);
+  --cf-neutral-soft: rgba(92, 99, 112, .12);
+  --cf-scrim: rgba(15, 23, 42, .45);
+  --cf-radius-sm: 8px;
+  --cf-radius-md: 10px;
+  --cf-radius-lg: 14px;
+  --cf-radius-xl: 18px;
+  --cf-shadow-sm: 0 1px 2px rgba(16, 24, 40, .05);
+  --cf-shadow-md: 0 4px 14px rgba(16, 24, 40, .08);
+  --cf-shadow-lg: 0 16px 40px rgba(16, 24, 40, .14);
+  --cf-sidebar-width: 200px;
+
+  // ============ Playground（演武场）Tokens（弱化配色:灰为主 + 平台橙点缀） ============
+  // 主色跟随全站品牌橙,与全局 Naive UI 主色/侧边栏一致,消除橙蓝冲突
+  --pg-accent: var(--cf-brand);
+  --pg-accent-hover: var(--cf-brand-hover);
+  --pg-accent-pressed: var(--cf-brand-pressed);
+  --pg-accent-soft: var(--cf-brand-soft);
+  --pg-accent-soft-strong: var(--cf-brand-soft-strong);
+  --pg-accent-gradient: linear-gradient(135deg, #f97316 0%, #fb923c 100%);
+  --pg-method-post: #2563eb;
+  --pg-method-get: #16a34a;
+  --pg-method-other: #7c8aa5;
+}
+
+// ============ Design Tokens (dark) ============
+html.dark {
+  color-scheme: dark;
+  --cf-bg-page: #0b0f16;
+  --cf-bg-surface: #131a24;
+  --cf-bg-elevated: #182230;
+  --cf-bg-subtle: rgba(148, 163, 184, .08);
+  --cf-border: rgba(148, 163, 184, .14);
+  --cf-border-strong: rgba(148, 163, 184, .28);
+  --cf-text-primary: #f1f5f9;
+  --cf-text-secondary: rgba(226, 232, 240, .65);
+  --cf-text-tertiary: #8b94a3;
+  --cf-text-on-brand: #2a1503;
+  --cf-brand: #ffb076;
+  --cf-brand-hover: #ffc194;
+  --cf-brand-pressed: #f5934e;
+  --cf-brand-soft: rgba(255, 176, 118, .14);
+  --cf-brand-soft-strong: rgba(255, 176, 118, .24);
+  --cf-success: #4ade80;
+  --cf-success-soft: rgba(74, 222, 128, .14);
+  --cf-warning: #fbbf24;
+  --cf-warning-soft: rgba(251, 191, 36, .14);
+  --cf-error: #f87171;
+  --cf-error-soft: rgba(248, 113, 113, .14);
+  --cf-info: #60a5fa;
+  --cf-info-soft: rgba(96, 165, 250, .14);
+  --cf-neutral-soft: rgba(148, 163, 184, .16);
+  --cf-scrim: rgba(0, 0, 0, .6);
+  --cf-shadow-sm: 0 1px 2px rgba(0, 0, 0, .3);
+  --cf-shadow-md: 0 4px 14px rgba(0, 0, 0, .35);
+  --cf-shadow-lg: 0 16px 40px rgba(0, 0, 0, .5);
+
+  // ============ Playground（演武场）Tokens(灰 + 橙点缀 · dark) ============
+  // 主色引用 --cf-brand,自动跟随暗色品牌值;仅渐变在此覆盖为暗色适配
+  --pg-accent-gradient: linear-gradient(135deg, #ffb076 0%, #ff9a5c 100%);
+  --pg-method-post: #60a5fa;
+  --pg-method-get: #4ade80;
+  --pg-method-other: #8b94a3;
+}
