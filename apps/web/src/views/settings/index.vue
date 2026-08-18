@@ -11,13 +11,14 @@ import {
 } from '@/utils/apiKeySession.js'
 import {
   getCatalogMode, setCatalogMode, getStorageProvider, setStorageProvider,
-  getGatewayBaseUrl, setGatewayBaseUrl, PUBLIC_API_BASE_URL,
+  setGatewayBaseUrl, PUBLIC_API_BASE_URL,
 } from '@/config'
 import {
   readCatalogOverrides, setModelDisabled, setProviderHidden,
   upsertCustomModel, removeCustomModel, MODEL_TYPE_MAP,
 } from '@/api/localCatalog'
 import { protocolRegistry } from '@/views/playground/protocols/registry.js'
+import { appFetch } from '@/utils/desktopBridge.js'
 import { resolveModelIcon } from '@/utils/tools'
 
 const router = useRouter()
@@ -46,8 +47,14 @@ const handleStorageChange = (value) => {
 const cfQuickKey = ref('')
 const cfQuickTesting = ref(false)
 const cfCurrentKey = ref(getCurrentApiKey())
-// 空串 = 同源反代（推荐）；输入框留空时由 placeholder 展示公共地址
-const gatewayBaseInput = ref(getGatewayBaseUrl())
+
+// 一键接入时各厂商 baseUrl 覆盖的网关挂载前缀（'' = 网关根路径 /v1、/v1beta 等）。
+// 以 ChatFire 网关适配为主：预设路径经 applyProviderBaseUrl 前缀替换后恰好落在网关挂载点上。
+const GATEWAY_PROVIDER_PREFIX = {
+  openai: '', anthropic: '', gemini: '', deepseek: '', moonshot: '', xiaomi: '',
+  xai: '', minimax: '', volcengine: '/volcengine', qwen: '/qwen', vidu: '/vidu',
+  zhipu: '/zhipu',
+}
 
 const chatfireQuickSetup = async () => {
   const key = cfQuickKey.value.trim()
@@ -55,51 +62,46 @@ const chatfireQuickSetup = async () => {
     window.$message?.warning('请粘贴 ChatFire API Key')
     return
   }
-  const base = gatewayBaseInput.value.trim().replace(/\/$/, '')
   cfQuickTesting.value = true
   try {
-    // 空串 → 同源探测（dev vite proxy / 生产 nginx 反代，规避 CORS）；
-    // 用户显式填了绝对地址才跨域直连；跨域失败自动回退同源并清除失效覆盖
-    const probe = (b) => fetch(`${b}/v1/models`, { headers: { Authorization: `Bearer ${key}` } })
-    let resp
-    let effectiveBase = base
-    try {
-      resp = await probe(base)
-    } catch (error) {
-      if (!base) throw error
-      resp = await probe('')
-      effectiveBase = ''
-      gatewayBaseInput.value = ''
-      window.$message?.info('自定义网关地址跨域不可达，已回退为内置同源反代')
-    }
+    // 网关地址写死为公共网关：桌面端 plugin-http 直连；浏览器依赖网关 CORS 放开
+    const resp = await appFetch(`${PUBLIC_API_BASE_URL}/v1/models`, { headers: { Authorization: `Bearer ${key}` } })
     if (!resp.ok) {
       window.$message?.warning(`Key 校验返回 ${resp.status}，已保存，请确认 Key 有效`)
     }
-    setGatewayBaseUrl(effectiveBase)
+    setGatewayBaseUrl(PUBLIC_API_BASE_URL)
     addApiKey(key, 'ChatFire')
     setCurrentApiKey(key)
     cfCurrentKey.value = key
-    setCatalogMode('gateway')
-    catalogMode.value = 'gateway'
+    // 厂商一键接入：baseUrl 指向网关挂载前缀 + ChatFire Key 直接赋值，
+    // 厂商卡片即刻可用（官方直连语义不变，清空覆盖即恢复厂商官方域名）
+    for (const [providerId, prefix] of Object.entries(GATEWAY_PROVIDER_PREFIX)) {
+      setProviderApiKey(providerId, key)
+      setProviderBaseUrl(providerId, `${PUBLIC_API_BASE_URL}${prefix}`)
+    }
+    providerKeys.value = getProviderKeys()
+    // 同步刷新厂商卡片的 baseUrl 输入框（baseInputs 是本地态，不随 localStorage 自动更新）
+    baseInputs.value = Object.fromEntries(providers.map((p) => [p.id, effectiveProviderBaseUrl(p)]))
     cfQuickKey.value = ''
-    window.$message?.success('已接入 ChatFire 网关，返回画布即可使用全部模型')
+    window.$message?.success('已接入 ChatFire：12 家厂商已自动配置好 Key 与网关地址，返回画布即可使用')
   } catch (error) {
-    window.$message?.error(`连接失败：${error?.message || error}（请确认网关地址可达；绝对地址需目标允许跨域）`)
+    console.error('[chatfireQuickSetup]', error)
+    const detail = [error?.message, error?.stack?.split('\n')[1]?.trim()].filter(Boolean).join(' @ ')
+    window.$message?.error(`连接失败：${detail || error}（请检查网络后重试）`, { duration: 8000 })
   } finally {
     cfQuickTesting.value = false
   }
 }
 
-const saveGatewayBase = () => {
-  const value = gatewayBaseInput.value.trim().replace(/\/$/, '')
-  setGatewayBaseUrl(value)
-  gatewayBaseInput.value = getGatewayBaseUrl()
-  window.$message?.success('网关地址已保存')
-}
-
 const chatfireDisconnect = () => {
   setCurrentApiKey('')
   cfCurrentKey.value = ''
+  // 清除一键接入写入的厂商 Key 与 baseUrl 覆盖（setProviderApiKey 空串会删除整条厂商配置）
+  for (const providerId of Object.keys(GATEWAY_PROVIDER_PREFIX)) {
+    setProviderApiKey(providerId, '')
+  }
+  providerKeys.value = getProviderKeys()
+  baseInputs.value = Object.fromEntries(providers.map((p) => [p.id, effectiveProviderBaseUrl(p)]))
   setCatalogMode('official')
   catalogMode.value = 'official'
 }
@@ -167,7 +169,7 @@ const testProvider = async (provider) => {
   }
   testing.value[provider.id] = true
   try {
-    const resp = await fetch(url, { headers: buildProviderAuthHeaders(provider, key) })
+    const resp = await appFetch(url, { headers: buildProviderAuthHeaders(provider, key) })
     testResults.value[provider.id] = resp.ok ? 'ok' : `HTTP ${resp.status}`
     if (resp.ok) window.$message?.success(`${provider.label} 连通正常`)
     else window.$message?.warning(`${provider.label} 返回 ${resp.status}，请检查 Key`)
@@ -367,25 +369,24 @@ const typeTagType = (type) => ({ '1': 'info', '2': 'success', '3': 'warning' }[S
       <section v-if="activeSection === 'chatfire'" class="pane">
         <div class="pane-head">
           <h1>⚡ 火宝 ChatFire</h1>
-          <n-tag v-if="cfCurrentKey && catalogMode === 'gateway'" type="success">已接入</n-tag>
+          <n-tag v-if="cfCurrentKey" type="success">已接入</n-tag>
         </div>
         <p class="pane-desc">
           一个 Key 使用全部 10+ 厂商的聚合模型，按量计费，无需逐厂商注册。
-          粘贴 Key 即自动切换到网关模式。
+          粘贴 Key 一键接入，自动为 11 家厂商配置好网关地址与 Key。
           <a href="https://chatfire.site" target="_blank" rel="noopener">前往 chatfire.site 注册获取 Key →</a>
         </p>
 
         <div class="card">
           <div class="field-row">
             <span class="field-label">网关地址</span>
-            <n-input v-model:value="gatewayBaseInput" :placeholder="`留空走同源反代（默认代理到 ${PUBLIC_API_BASE_URL}）`" />
-            <n-button @click="saveGatewayBase">保存</n-button>
+            <span class="saved-mask">{{ PUBLIC_API_BASE_URL }}</span>
           </div>
           <div class="field-row">
             <span class="field-label">API Key</span>
-            <template v-if="cfCurrentKey && catalogMode === 'gateway'">
+            <template v-if="cfCurrentKey">
               <span class="saved-mask">{{ maskKey(cfCurrentKey) }}</span>
-              <n-button text type="error" size="small" @click="chatfireDisconnect">断开并切回官方直连</n-button>
+              <n-button text type="error" size="small" @click="chatfireDisconnect">断开接入</n-button>
             </template>
             <template v-else>
               <n-input
