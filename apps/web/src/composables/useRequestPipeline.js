@@ -348,14 +348,24 @@ export function useRequestPipeline({ getNestedValue, wait = defaultWait }) {
     data = await consumeResponse(response)
 
     const resultType = resolveResultType({ model, selectedEndpoint: endpoint, outputSchema })
-    // 适配器提取结果：media 簇返回新形状 { parsedResults, unavailableReason }；chat 簇返回旧媒体形状
-    // （{ urls, b64s, protectedReason }），后者回落统一出参提取，行为与 useModelRunner 保持一致。
-    const rawExtraction = adapter.extractMedia
-      ? adapter.extractMedia(data, outputSchema, getNestedValue)
-      : { parsedResults: [], unavailableReason: '' }
-    const extraction = Array.isArray(rawExtraction?.parsedResults)
-      ? rawExtraction
-      : extractMediaResult(data, resultType, outputSchema, getNestedValue)
+    // chat/文本结果优先走适配器 extractText（choices[0].message.content 等协议字段）：
+    // 否则 extractLegacyResults 无 displayField 时会把整个响应对象当结果，节点渲染不出文本
+    let extraction
+    const chatText = !MEDIA_RESULT_TYPES.has(resultType) && typeof adapter.extractText === 'function'
+      ? adapter.extractText(data)
+      : ''
+    if (typeof chatText === 'string' && chatText.trim()) {
+      extraction = { parsedResults: [chatText], unavailableReason: '' }
+    } else {
+      // 适配器提取结果：media 簇返回新形状 { parsedResults, unavailableReason }；chat 簇返回旧媒体形状
+      // （{ urls, b64s, protectedReason }），后者回落统一出参提取，行为与 useModelRunner 保持一致。
+      const rawExtraction = adapter.extractMedia
+        ? adapter.extractMedia(data, outputSchema, getNestedValue)
+        : { parsedResults: [], unavailableReason: '' }
+      extraction = Array.isArray(rawExtraction?.parsedResults)
+        ? rawExtraction
+        : extractMediaResult(data, resultType, outputSchema, getNestedValue)
+    }
     // 任务 ID：端点 query.taskIdPath（厂商官方）> 响应头 > 适配器解析
     const vendorQuery = endpoint?.query || null
     const taskId = (vendorQuery?.taskIdPath && normalizeTaskId(getNestedValue?.(data, vendorQuery.taskIdPath)))

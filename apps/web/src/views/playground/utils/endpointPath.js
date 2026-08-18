@@ -18,6 +18,7 @@ const MOUNTED_SUBMIT_PREFIXES = [
   '/volcengine/',
   '/vidu/',
   '/minimax/',
+  '/zhipu/',
   '/official/',
 ]
 

@@ -126,7 +126,11 @@ export function extractChatResponseText(protocol, response) {
       .map((part) => part.text || '')
       .join('') || ''
   }
-  return response.choices?.[0]?.message?.content || ''
+  // OpenAI 兼容：content 可能是字符串或多模态 parts 数组
+  const content = response.choices?.[0]?.message?.content
+  if (typeof content === 'string') return content
+  if (Array.isArray(content)) return content.map((part) => part?.text || '').join('')
+  return ''
 }
 
 function toResponsesMessage(message) {
