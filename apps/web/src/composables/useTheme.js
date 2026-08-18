@@ -7,7 +7,8 @@ function getInitialDark() {
   const saved = localStorage.getItem(STORAGE_KEY);
   if (saved === "dark") return true;
   if (saved === "light") return false;
-  return window.matchMedia("(prefers-color-scheme: dark)").matches;
+  // 默认暗色（不再跟随系统；用户显式切换后按 localStorage）
+  return true;
 }
 
 // 共享的响应式主题状态（模块级单例，所有 useTheme() 调用共享）

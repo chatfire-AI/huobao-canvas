@@ -154,6 +154,14 @@
       </div>
       <button
         type="button"
+        class="tips-toggle"
+        :title="isDark ? '切换到浅色主题' : '切换到暗色主题'"
+        @click="toggleTheme"
+      >
+        <svg-icon :icon="isDark ? 'tabler:sun' : 'tabler:moon'" />
+      </button>
+      <button
+        type="button"
         class="settings-entry"
         title="设置（厂商 / 模型 / 存储）"
         @click="$emit('open-settings')"
@@ -177,6 +185,9 @@
 
 <script setup>
 import { computed, nextTick, onBeforeUnmount, ref, watch } from 'vue'
+import { useTheme } from '@/composables/useTheme'
+
+const { isDark, toggleTheme } = useTheme()
 
 const props = defineProps({
   projectId: { type: String, default: '' },

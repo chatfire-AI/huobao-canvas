@@ -6,6 +6,12 @@
     <title>ChatFire Canvas</title>
     <!-- 部署时注入的运行时配置（可选，见 docker-entrypoint 30-app-config.sh） -->
     <script src="/config.js"></script>
+    <!-- 首帧前定主题，避免浅色闪屏：默认暗色，仅用户显式选过浅色才用浅色 -->
+    <script>
+      if (localStorage.getItem('chatfire-theme') !== 'light') {
+        document.documentElement.classList.add('dark')
+      }
+    </script>
   </head>
   <body>
     <div id="app"></div>
