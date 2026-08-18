@@ -39,6 +39,8 @@ export default defineConfig({
   server: {
     host: "0.0.0.0",
     port: process.env.PORT || 8021,
+    // Tauri devUrl 钉死 8021：端口被占时直接报错，禁止静默顺延（否则桌面窗口白屏）
+    strictPort: true,
     proxy: {
       // 注意：/v1 前缀会吞掉 /v1beta，/v1beta 必须排在 /v1 之前
       "/v1beta": { target: upstream, changeOrigin: true },

@@ -31,3 +31,7 @@ pnpm-debug.log*
 
 # Storage runtime data
 apps/storage/data/
+
+# Desktop (Tauri)
+apps/desktop/src-tauri/target/
+apps/desktop/node_modules/

@@ -12,6 +12,7 @@ import { buildModelRunnerAuthHeaders, errorMessage, sanitizeModelRunnerHeaders }
 import { persistMediaResults } from './useMediaStorage.js'
 import { getProviderForModel, getProvider, buildProviderAuthHeaders, applyProviderBaseUrl } from '../config/providers/index.js'
 import { getProviderApiKey } from '../utils/apiKeySession.js'
+import { appFetch } from '../utils/desktopBridge.js'
 
 // 请求 URL 拼接：绝对路径（厂商 baseUrl 覆盖为 http 地址时）直连，否则走 apiBaseUrl 前缀
 const joinUrl = (apiBaseUrl, path) =>
@@ -100,10 +101,10 @@ export function useRequestPipeline({ getNestedValue, wait = defaultWait }) {
         else if (typeof value === 'object' && value !== null) fd.append(key, JSON.stringify(value))
         else if (value !== undefined && value !== null && value !== '' && key !== 'model') fd.append(key, value)
       }
-      response = await fetch(joinUrl(apiBaseUrl, endpointPath), { method: 'POST', headers: requestHeaders, body: fd, signal })
+      response = await appFetch(joinUrl(apiBaseUrl, endpointPath), { method: 'POST', headers: requestHeaders, body: fd, signal })
     } else {
       requestHeaders['Content-Type'] = 'application/json'
-      response = await fetch(joinUrl(apiBaseUrl, endpointPath), {
+      response = await appFetch(joinUrl(apiBaseUrl, endpointPath), {
         method: 'POST', headers: requestHeaders, body: JSON.stringify(body), signal,
       })
     }
@@ -210,7 +211,7 @@ export function useRequestPipeline({ getNestedValue, wait = defaultWait }) {
       let response
       let data
       try {
-        response = await fetch(pollUrl, { method: vendorQuery?.method || 'GET', headers: authHeaders, signal })
+        response = await appFetch(pollUrl, { method: vendorQuery?.method || 'GET', headers: authHeaders, signal })
       } catch (error) {
         if (error?.name === 'AbortError') throw error
         if (signal?.aborted) throw taskError('已取消', 'terminal')
