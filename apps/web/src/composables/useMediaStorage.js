@@ -1,5 +1,5 @@
 import { uploadMediaBase64, uploadMediaUrl } from '@/api/storage'
-import { getStorageProvider, CLOUD_MEDIA_DOMAIN, MEDIA_EXPIRE_DAYS } from '@/config'
+import { getStorageProvider, getBucketConfig, CLOUD_MEDIA_DOMAIN, MEDIA_EXPIRE_DAYS } from '@/config'
 
 export { MEDIA_EXPIRE_DAYS }
 
@@ -14,11 +14,22 @@ export const toMediaDisplayUrl = (item) => {
   return ''
 }
 
-/** 判断是否为已转存到云端的素材 URL（用于界面保留期提醒）。
- *  匹配配置的 CDN 域名或 Type-A 签名参数(?sign=时间戳-rand-uid-md5)。 */
-export const isCloudMediaUrl = (url) =>
-  typeof url === 'string' && ((CLOUD_MEDIA_DOMAIN && url.includes(CLOUD_MEDIA_DOMAIN))
-    || /[?&]sign=\d+-\d+-\d+-[0-9a-f]{32}/.test(url))
+/** 判断是否为已转存到云端的素材 URL（用于界面保留期提醒与跳过重复转存）。
+ *  匹配：配置的 CDN 域名 / Type-A 签名参数(?sign=...) / 用户桶的访问域名或虚拟主机域名。 */
+export const isCloudMediaUrl = (url) => {
+  if (typeof url !== 'string') return false
+  if (/[?&]sign=\d+-\d+-\d+-[0-9a-f]{32}/.test(url)) return true
+  const domains = [CLOUD_MEDIA_DOMAIN]
+  const bucket = getBucketConfig()
+  if (bucket) {
+    domains.push(String(bucket.publicBase || '').replace(/^https?:\/\//, '').replace(/\/$/, ''))
+    if (bucket.endpoint && bucket.bucket) {
+      const endpoint = String(bucket.endpoint).replace(/^https?:\/\//, '').replace(/\/$/, '')
+      domains.push(`${bucket.bucket}.${endpoint}`)
+    }
+  }
+  return domains.some((domain) => domain && url.includes(domain))
+}
 
 const MEDIA_TYPES = new Set(['image', 'video', 'audio'])
 

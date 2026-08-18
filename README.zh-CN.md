@@ -21,7 +21,7 @@
 - ⚙️ **设置页**：按厂商配置 API Key、连通测试、模型启停、自定义模型
 - 🔑 **BYOK**：API Key 仅存浏览器本地，不经过任何服务端
 - 💾 **本地优先**：项目数据保存在 IndexedDB（Dexie），无需注册账号
-- ☁️ **可选媒体持久化**：生成素材转存为可插拔的存储 Provider
+- ☁️ **可选媒体持久化**：生成素材可直传自有对象存储桶（TOS / COS / S3 兼容，BYOS 凭证仅存本地）或自建存储服务
 - 🔄 **双目录模式**：官方直连（默认，独立可用）或接入任意 ChatFire/OpenAI 兼容网关
 
 ## 快速开始
@@ -50,7 +50,7 @@ pnpm dev        # http://localhost:8021
 |---|---|---|
 | `VITE_API_BASE_URL` | `https://api.chatfire.site` | 推理端点（任意 OpenAI 兼容网关） |
 | `VITE_UPSTREAM` | `https://api.chatfire.site` | dev server 代理目标 |
-| `VITE_STORAGE_PROVIDER` | `none` | 媒体转存：`none` 或 `http` |
+| `VITE_STORAGE_PROVIDER` | `none` | 媒体转存默认 provider：`none` / `s3`（自有桶，设置页配置）/ `http`（自建服务） |
 | `VITE_STORAGE_UPLOAD_URL` | `/storage/upload` | provider 为 `http` 时的上传接口 |
 
 ## 贡献

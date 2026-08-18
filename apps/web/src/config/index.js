@@ -33,7 +33,42 @@ export const getStorageProvider = () => {
 }
 
 export const setStorageProvider = (provider) => {
-  window.localStorage.setItem(STORAGE_PROVIDER_STORAGE, provider === 'http' ? 'http' : 'none')
+  const value = ['http', 's3'].includes(provider) ? provider : 'none'
+  window.localStorage.setItem(STORAGE_PROVIDER_STORAGE, value)
+}
+
+// ── 对象存储桶直传配置（BYOS：TOS / COS / S3 兼容，凭证仅存 localStorage）──
+const BUCKET_CONFIG_STORAGE = 'chatfire_canvas_bucket_config'
+
+/**
+ * 桶配置：{ vendor: 's3'|'cos', endpoint, region, bucket, accessKey, secretKey,
+ *           publicBase（自定义访问域名，可空）, pathStyle（MinIO 等路径风格，可空） }
+ */
+export const getBucketConfig = () => {
+  try {
+    const raw = window.localStorage.getItem(BUCKET_CONFIG_STORAGE)
+    return raw ? JSON.parse(raw) : null
+  } catch {
+    return null
+  }
+}
+
+export const setBucketConfig = (config) => {
+  if (!config) {
+    window.localStorage.removeItem(BUCKET_CONFIG_STORAGE)
+    return
+  }
+  window.localStorage.setItem(BUCKET_CONFIG_STORAGE, JSON.stringify(config))
+}
+
+/** 桶配置是否完整可用（endpoint/bucket/AK/SK 必填；SigV4 的 region 参与签名 scope，COS 的 region 已含在 endpoint 中） */
+export const isBucketConfigured = () => {
+  const cfg = getBucketConfig()
+  if (!cfg) return false
+  const base = Boolean(cfg.endpoint?.trim() && cfg.bucket?.trim()
+    && cfg.accessKey?.trim() && cfg.secretKey?.trim())
+  if (!base) return false
+  return cfg.vendor === 'cos' ? true : Boolean(cfg.region?.trim())
 }
 
 /** provider = 'http' 时的上传接口地址 */

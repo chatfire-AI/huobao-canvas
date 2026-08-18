@@ -12,6 +12,7 @@ import {
 import {
   getCatalogMode, setCatalogMode, getStorageProvider, setStorageProvider,
   setGatewayBaseUrl, PUBLIC_API_BASE_URL,
+  getBucketConfig, setBucketConfig, isBucketConfigured,
 } from '@/config'
 import {
   readCatalogOverrides, setModelDisabled, setProviderHidden,
@@ -39,8 +40,52 @@ const handleCatalogModeChange = (mode) => {
 }
 
 const handleStorageChange = (value) => {
+  if (value === 's3' && !isBucketConfigured()) {
+    window.$message?.warning('请先填写下方桶配置并保存')
+  }
   setStorageProvider(value)
   storageProvider.value = value
+}
+
+// ── 对象存储桶直传（BYOS：TOS / COS / S3 兼容）──
+const bucketForm = ref({
+  vendor: 's3', endpoint: '', region: '', bucket: '',
+  accessKey: '', secretKey: '', publicBase: '', pathStyle: false,
+  ...(getBucketConfig() || {}),
+})
+const bucketTesting = ref(false)
+
+const saveBucketConfig = () => {
+  const cfg = Object.fromEntries(
+    Object.entries(bucketForm.value).map(([k, v]) => [k, typeof v === 'string' ? v.trim() : v]),
+  )
+  setBucketConfig(cfg)
+  window.$message?.success('桶配置已保存（仅存于当前浏览器）')
+}
+
+const testBucketUpload = async () => {
+  saveBucketConfig()
+  bucketTesting.value = true
+  try {
+    const { uploadMediaBase64 } = await import('@/api/storage')
+    const probe = btoa(`chatfire-canvas bucket probe ${Date.now()}`)
+    const prevProvider = getStorageProvider()
+    // 探测上传需强制走 s3 通道（用户可能还没切换 provider）
+    setStorageProvider('s3')
+    try {
+      const res = await uploadMediaBase64(probe, 'text/plain')
+      const check = await appFetch(res.url)
+      if (!check.ok) throw new Error(`上传成功但访问返回 ${check.status}，请检查桶的公开读或访问域名配置`)
+      window.$message?.success('桶连通正常：测试文件已上传并可公开访问')
+    } finally {
+      setStorageProvider(prevProvider)
+    }
+  } catch (error) {
+    console.error('[testBucketUpload]', error)
+    window.$message?.error(`桶测试失败：${error?.message || error}（请确认桶 CORS 已允许本页面来源的 PUT）`, { duration: 8000 })
+  } finally {
+    bucketTesting.value = false
+  }
 }
 
 // ── ChatFire（火宝）一键配置 ──
@@ -64,8 +109,8 @@ const chatfireQuickSetup = async () => {
   }
   cfQuickTesting.value = true
   try {
-    // 网关地址写死为公共网关：桌面端 plugin-http 直连；浏览器依赖网关 CORS 放开
-    const resp = await appFetch(`${PUBLIC_API_BASE_URL}/v1/models`, { headers: { Authorization: `Bearer ${key}` } })
+    // 相对路径：浏览器走同源反代（vite proxy / nginx），桌面端由 desktopBridge 解析为网关直连
+    const resp = await appFetch('/v1/models', { headers: { Authorization: `Bearer ${key}` } })
     if (!resp.ok) {
       window.$message?.warning(`Key 校验返回 ${resp.status}，已保存，请确认 Key 有效`)
     }
@@ -506,12 +551,49 @@ const typeTagType = (type) => ({ '1': 'info', '2': 'success', '3': 'warning' }[S
           <div class="field-row">
             <div class="field-block">
               <strong>媒体转存</strong>
-              <p class="card-hint">开启后生成结果转存到自建存储服务（docker compose --profile storage）；关闭则保留厂商原始链接（可能过期）。</p>
+              <p class="card-hint">对象存储桶：生成结果直传到你的 TOS / COS / S3 桶（凭证仅存本浏览器）；自建存储服务：docker compose --profile storage；关闭则保留厂商原始链接（可能过期）。</p>
             </div>
             <n-radio-group :value="storageProvider" @update:value="handleStorageChange">
               <n-radio-button value="none">关闭</n-radio-button>
-              <n-radio-button value="http">启用</n-radio-button>
+              <n-radio-button value="s3">对象存储桶</n-radio-button>
+              <n-radio-button value="http">自建存储服务</n-radio-button>
             </n-radio-group>
+          </div>
+          <div v-if="storageProvider === 's3'" class="bucket-form">
+            <n-form label-placement="left" label-width="100" size="small">
+              <n-form-item label="存储类型">
+                <n-radio-group v-model:value="bucketForm.vendor">
+                  <n-radio-button value="s3">S3 兼容（AWS / 火山 TOS / MinIO）</n-radio-button>
+                  <n-radio-button value="cos">腾讯云 COS</n-radio-button>
+                </n-radio-group>
+              </n-form-item>
+              <n-form-item label="Endpoint">
+                <n-input v-model:value="bucketForm.endpoint" :placeholder="bucketForm.vendor === 'cos' ? 'cos.ap-guangzhou.myqcloud.com' : 'tos-cn-beijing.volces.com'" />
+              </n-form-item>
+              <n-form-item v-if="bucketForm.vendor !== 'cos'" label="Region">
+                <n-input v-model:value="bucketForm.region" placeholder="cn-beijing（参与签名，必填）" />
+              </n-form-item>
+              <n-form-item label="Bucket">
+                <n-input v-model:value="bucketForm.bucket" :placeholder="bucketForm.vendor === 'cos' ? 'example-1234567890' : 'my-bucket'" />
+              </n-form-item>
+              <n-form-item label="AccessKey">
+                <n-input v-model:value="bucketForm.accessKey" placeholder="AK / SecretId" />
+              </n-form-item>
+              <n-form-item label="SecretKey">
+                <n-input v-model:value="bucketForm.secretKey" type="password" show-password-on="click" placeholder="SK / SecretKey" />
+              </n-form-item>
+              <n-form-item label="访问域名">
+                <n-input v-model:value="bucketForm.publicBase" placeholder="可选：CDN / 自定义域名，如 https://cdn.example.com；留空用桶默认域名" />
+              </n-form-item>
+              <n-form-item v-if="bucketForm.vendor !== 'cos'" label="路径风格">
+                <n-checkbox v-model:checked="bucketForm.pathStyle">Path-Style（MinIO 等自建网关需要）</n-checkbox>
+              </n-form-item>
+            </n-form>
+            <div class="bucket-actions">
+              <n-button size="small" @click="saveBucketConfig">保存配置</n-button>
+              <n-button size="small" type="primary" :loading="bucketTesting" @click="testBucketUpload">测试上传</n-button>
+            </div>
+            <p class="card-hint">前置条件：桶需配置 CORS（允许本页面来源的 PUT）并开启公开读（或绑定 CDN 域名）。厂商临时 URL 的转存在浏览器受厂商 CORS 限制，桌面端无此限制。</p>
           </div>
         </div>
       </section>
@@ -777,6 +859,18 @@ const typeTagType = (type) => ({ '1': 'info', '2': 'success', '3': 'warning' }[S
     padding-top: 12px;
     border-top: 1px dashed var(--cf-border);
   }
+}
+
+.bucket-form {
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px dashed var(--cf-border);
+}
+
+.bucket-actions {
+  display: flex;
+  gap: 10px;
+  justify-content: flex-end;
 }
 
 .field-label {

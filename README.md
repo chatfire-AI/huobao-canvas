@@ -21,7 +21,7 @@ An open-source, node-based AI creation canvas. Chain text, image, and video gene
 - ⚙️ **Settings page** — per-provider API keys, connectivity tests, model enable/disable, custom models
 - 🔑 **BYOK** — your API keys stay in your browser, never touch our servers
 - 💾 **Local-first** — projects persist in IndexedDB (Dexie), no account required
-- ☁️ **Optional media persistence** — pluggable storage provider for generated assets
+- ☁️ **Optional media persistence** — upload generated assets to your own bucket (TOS / COS / S3-compatible, BYOS credentials stay local) or a self-hosted storage service
 - 🔄 **Dual catalog mode** — official-direct (default, standalone) or any ChatFire/OpenAI-compatible gateway
 
 ## Quickstart
@@ -50,7 +50,7 @@ Open the app, go to **Settings** (top-right), paste an API key for any provider,
 |---|---|---|
 | `VITE_API_BASE_URL` | `https://api.chatfire.site` | Inference endpoint (any OpenAI-compatible gateway) |
 | `VITE_UPSTREAM` | `https://api.chatfire.site` | Dev-server proxy target |
-| `VITE_STORAGE_PROVIDER` | `none` | Media persistence: `none` or `http` |
+| `VITE_STORAGE_PROVIDER` | `none` | Default media provider: `none` / `s3` (own bucket, configured in Settings) / `http` (self-hosted service) |
 | `VITE_STORAGE_UPLOAD_URL` | `/storage/upload` | Upload endpoint when provider is `http` |
 
 ## Contributing
