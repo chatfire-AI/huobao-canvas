@@ -35,3 +35,6 @@ apps/storage/data/
 # Desktop (Tauri)
 apps/desktop/src-tauri/target/
 apps/desktop/node_modules/
+
+# canvas server 本地数据（SQLite + 运行产物文件）
+apps/server/data/
