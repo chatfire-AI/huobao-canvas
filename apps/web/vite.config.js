@@ -59,11 +59,6 @@ export default defineConfig({
       "/minimax": { target: upstream, changeOrigin: true, ...stripOrigin },
       "/xai": { target: upstream, changeOrigin: true, ...stripOrigin },
       "/zhipu": { target: upstream, changeOrigin: true, ...stripOrigin },
-      // 可选媒体存储服务（docker-compose storage profile，默认不启用）
-      "/storage": {
-        target: process.env.VITE_STORAGE_UPSTREAM || "http://localhost:16811",
-        changeOrigin: true,
-      },
       // ── 厂商官方 API 直连反代（官方直连模式，剥离 /official/{id} 前缀）──
       "/official/openai": {
         target: "https://api.openai.com", changeOrigin: true, ...stripOrigin,

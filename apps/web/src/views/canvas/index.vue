@@ -2168,12 +2168,6 @@ function fileToBase64(file) {
     color: var(--cf-text-secondary);
   }
 
-  /* 素材 7 天保留期:红色强调 */
-  .tip-danger-text {
-    font-style: normal;
-    color: var(--cf-error);
-  }
-
   svg {
     flex-shrink: 0;
   }

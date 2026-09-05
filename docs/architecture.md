@@ -9,8 +9,6 @@
  ├─ 模型调用栈：useCanvasModelNode → useModelRunner → useRequestPipeline → 协议适配层
  └─ 推理请求：fetch → nginx 反代 / dev proxy → 上游网关（默认 ChatFire 公共 API）
 
-可选：apps/storage（零依赖 Node 服务）
- └─ 生成媒体转存：base64 / 厂商临时 URL → 本地磁盘 → 静态访问
 ```
 
 ## 前端模块（apps/web/src）
@@ -22,7 +20,6 @@
 | `views/playground/composables/` | 模型目录加载、schema 合并、API Key（BYOK 本地存储） |
 | `views/playground/utils/` | 端点路径解析（前缀白名单校验）、schema 合并、聊天协议 |
 | `composables/useRequestPipeline.js` | 统一请求管线：发送、SSE、异步任务轮询（120 次 × 5s） |
-| `composables/useMediaStorage.js` | 生成媒体转存（StorageProvider 抽象） |
 | `api/` | 模型目录客户端（`/sys/model/*`，回退 `/v1/models`）、存储客户端 |
 | `config/` | 运行时配置单一来源（`window.__APP_CONFIG__` > `VITE_*` > 默认） |
 
@@ -44,4 +41,4 @@
 
 PromptDock 收集 prompt+参数+参考图 → `useCanvasModelNode` 解析上游输入（URL/b64/File→dataURL）
 → `useModelRunner`/`useRequestPipeline` 按协议适配器构造请求 → fetch 上游网关
-→ 同步 JSON / SSE / 异步任务轮询 → 结果写回节点 payload →（可选）媒体转存 → Dexie 保存。
+→ 同步 JSON / SSE / 异步任务轮询 → 结果写回节点 payload → Dexie 保存。

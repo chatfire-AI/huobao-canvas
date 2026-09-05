@@ -12,9 +12,6 @@ ChatFire Canvas 的所有可变项都通过环境变量 / 运行时配置注入�
 |---|---|---|---|
 | 推理基地址 | `VITE_API_BASE_URL` / `apiBaseUrl` | dev: 空串（同源代理）；prod: `https://api.chatfire.site` | 模型生成与目录请求基地址，可指向任意 OpenAI 兼容网关 |
 | dev 代理目标 | `VITE_UPSTREAM` | `https://api.chatfire.site` | 仅 dev server 使用 |
-| 存储 Provider | `VITE_STORAGE_PROVIDER` / `storageProvider` | `none` | `none`：生成结果保留厂商原始 URL/base64（临时链接会过期）；`s3`：直传用户自有对象存储桶（设置页配置）；`http`：转存到自建存储服务 |
-| 存储上传地址 | `VITE_STORAGE_UPLOAD_URL` / `storageUploadUrl` | `/storage/upload` | provider 为 `http` 时生效 |
-| 云端媒体域名 | `VITE_CLOUD_MEDIA_DOMAIN` / `cloudMediaDomain` | 空 | 用于识别"已转存"URL 并提示保留期 |
 
 ## Docker 部署环境变量（docker-compose）
 
@@ -22,8 +19,6 @@ ChatFire Canvas 的所有可变项都通过环境变量 / 运行时配置注入�
 |---|---|---|
 | `UPSTREAM` | `https://api.chatfire.site` | nginx 反代的推理上游（容器内） |
 | `API_BASE_URL` | 空 | 写入 `config.js` 的 `apiBaseUrl`，留空 = 同源反代（推荐，规避 CORS） |
-| `STORAGE_PROVIDER` | `none` | 启用 storage profile 时设为 `http` |
-| `STORAGE_PUBLIC_BASE` | `http://localhost:8080/storage` | 存储服务对外访问前缀 |
 | `EXPIRE_DAYS` | `7` | 媒体保留天数提示 |
 
 ## 模型目录模式
@@ -48,15 +43,6 @@ ChatFire Canvas 的所有可变项都通过环境变量 / 运行时配置注入�
 - 若宿主机有代理工具（Clash fake-ip 等）污染容器 DNS：compose 已默认指定公共 DNS（223.5.5.5）；海外厂商若需走本机代理，移除 `dns:` 配置改用宿主机 DNS
 - api.x.ai 等域名存在 DNS 污染，无代理环境直连可能失败
 
-## 媒体转存
-
-设置页「通用 → 媒体转存」三选一（存 localStorage `chatfire_canvas_storage_provider`）：
-
-| 模式 | 说明 |
-|---|---|
-| `none`（默认） | 不转存。base64 结果刷新即失；厂商临时 URL 会过期，过期后节点标记"已过期" |
-| `s3`（对象存储桶） | 直传用户自有桶。**S3 兼容**（AWS S3 / 火山 TOS / MinIO，SigV4 预签名 PUT）与**腾讯云 COS**（原生 q-sign 预签名）。配置（endpoint/region/bucket/AK/SK/访问域名）存 localStorage `chatfire_canvas_bucket_config`，凭证不出浏览器。前置条件：桶需配置 CORS（允许应用来源 PUT）+ 公开读或绑 CDN 域名；MinIO 等自建网关勾选 Path-Style。厂商临时 URL 的转存在浏览器受厂商 CORS 限制（base64 结果无影响），桌面端无此限制 |
-| `http`（自建存储服务） | `docker compose --profile storage up -d` 启动 `apps/storage`（零依赖 Node 服务），base64 ≤30MB / URL 转存 ≤100MB（服务端下载，不受浏览器 CORS 限制，带 SSRF 防护） |
 
 ## API Key（BYOK）
 
