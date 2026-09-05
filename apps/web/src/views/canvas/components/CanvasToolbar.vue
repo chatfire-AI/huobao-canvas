@@ -1,6 +1,7 @@
 <template>
   <div class="canvas-toolbar">
     <div class="toolbar-cluster">
+      <img src="/icons/huobao.png" class="brand-icon" alt="火宝画布" title="火宝画布" />
       <div ref="switcherRef" class="project-switcher">
         <button
           type="button"
@@ -396,6 +397,14 @@ function formatProjectMeta(item) {
 
 .toolbar-actions {
   flex-shrink: 0;
+}
+
+.brand-icon {
+  width: 26px;
+  height: 26px;
+  flex-shrink: 0;
+  user-select: none;
+  -webkit-user-drag: none;
 }
 
 .toolbar-right {
