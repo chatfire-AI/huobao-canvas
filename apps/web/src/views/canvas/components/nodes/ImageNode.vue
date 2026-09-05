@@ -52,9 +52,7 @@ const imageUrl = computed(() => {
 const isLocalImageUnavailable = computed(() => (
   props.data.payload?.sourceType === 'local' && !imageUrl.value
 ))
-const uploading = computed(() => Boolean(props.data.payload?.uploading))
 const displayStatus = computed(() => {
-  if (uploading.value) return 'running'
   return isLocalImageUnavailable.value ? 'expired' : status.value
 })
 const statusClass = computed(() => `is-${displayStatus.value}`)
@@ -62,7 +60,6 @@ const showMedia = computed(() => Boolean(imageUrl.value) && !['unavailable', 'ex
 const modelName = computed(() => props.data.payload?.modelName || '')
 const statusText = computed(() => {
   const notice = props.data.payload?.notice
-  if (uploading.value) return '转存云端中'
   if (isLocalImageUnavailable.value) return '本地素材已失效'
   if (displayStatus.value === 'running') return '运行中'
   if (displayStatus.value === 'waiting') return notice || '等待恢复'

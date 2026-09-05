@@ -30,8 +30,6 @@
 
 ```bash
 docker compose up -d        # http://localhost:8080
-# 启用可选媒体转存：
-docker compose --profile storage up -d
 ```
 
 **本地开发**
@@ -50,8 +48,6 @@ pnpm dev        # http://localhost:8021
 |---|---|---|
 | `VITE_API_BASE_URL` | `https://api.chatfire.site` | 推理端点（任意 OpenAI 兼容网关） |
 | `VITE_UPSTREAM` | `https://api.chatfire.site` | dev server 代理目标 |
-| `VITE_STORAGE_PROVIDER` | `none` | 媒体转存默认 provider：`none` / `s3`（自有桶，设置页配置）/ `http`（自建服务） |
-| `VITE_STORAGE_UPLOAD_URL` | `/storage/upload` | provider 为 `http` 时的上传接口 |
 
 ## 贡献
 

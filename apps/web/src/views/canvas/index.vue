@@ -5,8 +5,7 @@
         <div v-if="showTips || tipsOverride" class="canvas-tip">
           <SvgIcon icon="ph:warning" width="15" height="15" />
           <span>
-            画布数据仅保存在当前浏览器本地（IndexedDB），清除浏览器数据后将无法找回；<br />
-            <em class="tip-danger-text">生成与上传的素材云端仅保留 7 天，过期自动清除且无法恢复，请及时下载保存。</em>
+            画布数据仅保存在当前浏览器本地（IndexedDB），清除浏览器数据后将无法找回；本地未上传的素材刷新后需重新添加。
           </span>
           <button type="button" class="tip-action" title="本次关闭，下次进入仍会提示" @click="dismissTips">关闭提示</button>
           <button type="button" class="tip-action is-strong" title="当前浏览器不再展示该提示" @click="neverShowTips">不再显示</button>
@@ -242,7 +241,6 @@ import { useCanvasModelNode } from './composables/useCanvasModelNode'
 import { usePlaygroundApiKey } from '@/views/playground/composables/usePlaygroundApiKey'
 import { usePlaygroundModel } from '@/views/playground/composables/usePlaygroundModel'
 import { usePlaygroundSchema } from '@/views/playground/composables/usePlaygroundSchema'
-import { uploadMediaBase64 } from '@/api/storage'
 import { listApiKeys } from '@/utils/apiKeySession'
 import { getCatalogMode } from '@/config'
 import ApiKeyManager from '@/components/ApiKeyManager.vue'
@@ -293,7 +291,7 @@ const CONNECTED_NODE_GAP = 96
 const project = ref(null)
 const projects = ref([])
 const isSwitchingProject = ref(false)
-// 提示条(本地存储 + 素材 7 天保留期合并为一条):"关闭提示"仅本次隐藏;
+// 提示条(本地存储):"关闭提示"仅本次隐藏;
 // "不再显示"写入 localStorage,当前浏览器长期生效;工具栏铃铛可临时展开查看
 const STORAGE_TIP_NEVER_KEY = 'chatfire.canvas.storageTipDismissed'
 const MEDIA_TIP_NEVER_KEY = 'chatfire.canvas.mediaTipDismissed'
@@ -425,15 +423,21 @@ const connectedInputs = computed(() => {
   return getIncomingNodes(selectedNode.value.id).map(({ node }) => {
     const payload = node.data?.payload || {}
     const first = payload.parsedResults?.[0]
-    const url = (typeof first === 'string'
-      ? first
-      : first?.url || (first?.b64_json ? `data:image/png;base64,${first.b64_json}` : '')) || payload.url || ''
+    // 仅图片/视频节点的结果可作缩略图 URL；文本节点的 parsedResults 是文本，
+    // 放进 <img src> 会变成裂图（文本内容走 text 字段展示）
+    const isMediaNode = node.type === CANVAS_NODE_TYPES.IMAGE || node.type === CANVAS_NODE_TYPES.VIDEO
+    const url = isMediaNode
+      ? ((typeof first === 'string'
+        ? first
+        : first?.url || (first?.b64_json ? `data:image/png;base64,${first.b64_json}` : '')) || payload.url || '')
+      : ''
+    const text = (!isMediaNode && typeof first === 'string' ? first : '') || payload.prompt || ''
     return {
       id: node.id,
       type: node.type,
       label: node.data?.title || '上游节点',
       url,
-      text: payload.prompt || '',
+      text,
     }
   })
 })
@@ -450,9 +454,13 @@ const mentionableNodes = computed(() => {
     .map((node) => {
       const payload = node.data?.payload || {}
       const first = payload.parsedResults?.[0]
-      const thumb = typeof first === 'string'
-        ? first
-        : first?.url || (first?.b64_json ? `data:image/png;base64,${first.b64_json}` : '') || payload.url || ''
+      // 缩略图仅对图片/视频节点取结果 URL；文本节点的 parsedResults 是文本，不能当图
+      const isMediaNode = node.type === CANVAS_NODE_TYPES.IMAGE || node.type === CANVAS_NODE_TYPES.VIDEO
+      const thumb = isMediaNode
+        ? (typeof first === 'string'
+          ? first
+          : first?.url || (first?.b64_json ? `data:image/png;base64,${first.b64_json}` : '') || payload.url || '')
+        : ''
       return {
         id: node.id,
         type: node.type,
@@ -2034,10 +2042,7 @@ function releaseAssetUrl(nodeId) {
   }
 }
 
-// 上传图片先本地 blob 预览,后台转存 COS 后替换为 CDN URL(随图持久化,刷新不丢);
-// 转存失败保留 localFile 兜底(运行时转 dataURL 注入,仅当前会话有效)
-const ASSET_UPLOAD_MAX_BYTES = 10 * 1024 * 1024
-
+// 上传图片本地 blob 预览 + localFile 兜底（运行时转 dataURL 注入，仅当前会话有效，刷新需重新上传）
 async function handleAssetUpload(file) {
   const node = selectedNode.value
   if (!node || node.type !== CANVAS_NODE_TYPES.IMAGE || !file) return
@@ -2048,28 +2053,7 @@ async function handleAssetUpload(file) {
     localFile: file,
     name: file.name,
     sourceType: 'local',
-    uploading: true,
   }, { userMutation: true })
-
-  if (file.size > ASSET_UPLOAD_MAX_BYTES) {
-    updateNodePayload(node.id, { uploading: false }, { userMutation: true })
-    window.$message?.warning('图片超过 10MB，未转存云端，仅保留在当前会话')
-    return
-  }
-  try {
-    const data = await fileToBase64(file)
-    const res = await uploadMediaBase64(data, file.type || 'image/png')
-    if (!res?.url) throw new Error('云端转存未返回地址')
-    updateNodePayload(node.id, {
-      url: res.url,
-      localFile: null,
-      sourceType: 'cloud',
-      uploading: false,
-    }, { userMutation: true })
-  } catch (error) {
-    updateNodePayload(node.id, { uploading: false }, { userMutation: true })
-    window.$message?.warning('图片云端转存失败，仅保留在当前会话，刷新后需重新上传')
-  }
 }
 
 async function handleSchemaImageUpload(key, { fileList }) {

@@ -9,7 +9,6 @@ import { getAdapter, inferProtocolKey } from '../views/playground/protocols/regi
 import { isCanvasSubmitEndpointMounted, resolveEndpointPath } from '../views/playground/utils/endpointPath.js'
 import { parseSSELine } from '../views/playground/utils/chatProtocol.js'
 import { buildModelRunnerAuthHeaders, errorMessage, sanitizeModelRunnerHeaders } from './useModelRunner.js'
-import { persistMediaResults } from './useMediaStorage.js'
 import { getProviderForModel, getProvider, buildProviderAuthHeaders, applyProviderBaseUrl } from '../config/providers/index.js'
 import { getProviderApiKey } from '../utils/apiKeySession.js'
 import { appFetch } from '../utils/desktopBridge.js'
@@ -339,11 +338,9 @@ export function useRequestPipeline({ getNestedValue, wait = defaultWait }) {
           if (MEDIA_RESULT_TYPES.has(taskLink?.resultType) && extraction.parsedResults.length === 0 && !extraction.unavailableReason) {
             throw taskError('任务已完成，但未返回可用媒体结果', 'terminal')
           }
-          const persisted = await persistMediaResults(extraction.parsedResults, taskLink?.resultType || 'text')
           return {
             result: data, resultType: taskLink?.resultType || 'text',
-            parsedResults: persisted.results, unavailableReason: extraction.unavailableReason,
-            mediaPersisted: persisted.persisted,
+            parsedResults: extraction.parsedResults, unavailableReason: extraction.unavailableReason,
           }
         }
         if (isFailed) throw taskError(errorMessage(data, '任务处理失败'), 'terminal')
@@ -360,12 +357,9 @@ export function useRequestPipeline({ getNestedValue, wait = defaultWait }) {
         if (MEDIA_RESULT_TYPES.has(taskLink?.resultType) && extraction.parsedResults.length === 0 && !extraction.unavailableReason) {
           throw taskError('任务已完成，但未返回可用媒体结果', 'terminal')
         }
-        // base64 结果转存 COS,换取 CDN URL(刷新/重开不失效,桶 7 天生命周期)
-        const persisted = await persistMediaResults(extraction.parsedResults, taskLink?.resultType || 'text')
         return {
           result: data?.result, resultType: taskLink?.resultType || 'text',
-          parsedResults: persisted.results, unavailableReason: extraction.unavailableReason,
-          mediaPersisted: persisted.persisted,
+          parsedResults: extraction.parsedResults, unavailableReason: extraction.unavailableReason,
         }
       }
       if (status === 'FAILED' || status === 'ERROR') throw taskError(errorMessage(data, '任务处理失败'), 'terminal')
@@ -471,9 +465,7 @@ export function useRequestPipeline({ getNestedValue, wait = defaultWait }) {
     }
 
     const requestMeta = buildRequestMeta({ startTime, authHeaders, responseHeaders, contentType, tokenUsage: data?.usage || null })
-    // base64 结果转存 COS,换取 CDN URL(刷新/重开不失效,桶 7 天生命周期)
-    const persistedMedia = await persistMediaResults(extraction.parsedResults, resultType)
-    return { result: data, resultType, parsedResults: persistedMedia.results, unavailableReason: extraction.unavailableReason, requestBody: body, requestMeta, mediaPersisted: persistedMedia.persisted }
+    return { result: data, resultType, parsedResults: extraction.parsedResults, unavailableReason: extraction.unavailableReason, requestBody: body, requestMeta }
   }
 
   return { run, resumeTask }
