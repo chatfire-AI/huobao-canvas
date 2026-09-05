@@ -3,11 +3,12 @@
 ## 总览
 
 ```
-浏览器（apps/web）
+浏览器（apps/web）+ 画布存储/运行服务（apps/server）
  ├─ 画布 UI：Vue 3 + Vue Flow + Naive UI
- ├─ 画布数据：Dexie / IndexedDB（纯本地，不上服务端）
+ ├─ 画布数据：apps/server（SQLite，服务端可用时）→ 兜底 Dexie / IndexedDB（纯本地）
  ├─ 模型调用栈：useCanvasModelNode → useModelRunner → useRequestPipeline → 协议适配层
- └─ 推理请求：fetch → nginx 反代 / dev proxy → 上游网关（默认 ChatFire 公共 API）
+ ├─ 推理请求：fetch → nginx 反代 / dev proxy → 上游网关（默认 ChatFire 公共 API）
+ └─ 画布读写：/api/* → apps/server（node:sqlite，projects/graphs 两表；探测失败回退 IndexedDB，首次连通自动搬迁本地数据）
 
 ```
 
@@ -20,7 +21,7 @@
 | `views/playground/composables/` | 模型目录加载、schema 合并、API Key（BYOK 本地存储） |
 | `views/playground/utils/` | 端点路径解析（前缀白名单校验）、schema 合并、聊天协议 |
 | `composables/useRequestPipeline.js` | 统一请求管线：发送、SSE、异步任务轮询（120 次 × 5s） |
-| `api/` | 模型目录客户端（`/sys/model/*`，回退 `/v1/models`）、存储客户端 |
+| `api/canvasServer.js` | 服务端客户端：画布存储（projects/graphs）、设置镜像（settings）、运行队列（runs：submit/poll/cancel/testProvider） |
 | `config/` | 运行时配置单一来源（`window.__APP_CONFIG__` > `VITE_*` > 默认） |
 
 ## 节点体系

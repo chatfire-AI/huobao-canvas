@@ -2,6 +2,9 @@ import { ref, computed } from 'vue'
 import { getEndpointBehavior, DEFAULT_CHAT_PARAMS, DEFAULT_IMAGE_PARAMS, DEFAULT_VIDEO_PARAMS } from '../constants/index'
 import { endpointCapability, resolveModelEndpoints } from '../utils/modelEndpoints'
 import { mergeEndpointSchema } from '../utils/mergeEndpointSchema.js'
+import { createInputTransformEngine, getNestedValue } from '@/utils/inputTransform.js'
+
+const applyInputTransformEngine = createInputTransformEngine()
 
 export function usePlaygroundSchema() {
   const modelData = ref({})
@@ -144,115 +147,8 @@ export function usePlaygroundSchema() {
     initFormData()
   }
 
-  const applyInputTransform = (transform, data) => {
-    if (!transform) return data
-
-    const getValue = (fieldPath) => {
-      const match = fieldPath.match(/^(\w+)\[(\d+)\]$/)
-      if (match) {
-        const [, arrayKey, index] = match
-        const arr = data[arrayKey]
-        if (Array.isArray(arr)) {
-          return arr[parseInt(index)]
-        }
-        return undefined
-      }
-      return data[fieldPath]
-    }
-
-    const hasValue = (fieldPath) => {
-      const value = getValue(fieldPath)
-      if (value === undefined || value === null || value === '') return false
-      if (Array.isArray(value) && value.length === 0) return false
-      if (value instanceof File) return true
-      return true
-    }
-
-    const replaceTemplate = (obj) => {
-      if (typeof obj === 'string') {
-        const singleMatch = obj.match(/^\$\$\{([\w\[\]]+)\}$/)
-        if (singleMatch) {
-          const value = getValue(singleMatch[1])
-          if (value instanceof File) return value
-          return value !== undefined && value !== '' ? value : ''
-        }
-        return obj.replace(/\$\$\{([\w\[\]]+)\}/g, (match, fieldPath) => {
-          const value = getValue(fieldPath)
-          if (value instanceof File) return ''
-          return value !== undefined && value !== '' ? value : ''
-        })
-      }
-      if (Array.isArray(obj)) {
-        const result = []
-        for (const item of obj) {
-          if (typeof item === 'object' && item !== null && !(item instanceof File) && item['@conditional']) {
-            const condField = item['@conditional']
-            if (hasValue(condField)) {
-              const newItem = { ...item }
-              delete newItem['@conditional']
-              result.push(replaceTemplate(newItem))
-            }
-          } else {
-            const processed = replaceTemplate(item)
-            if (processed instanceof File) {
-              result.push(processed)
-            } else if (typeof processed === 'string') {
-              if (processed !== '') result.push(processed)
-            } else {
-              result.push(processed)
-            }
-          }
-        }
-        return result
-      }
-      if (typeof obj === 'object' && obj !== null) {
-        if (hasOwn(obj, '@value')) {
-          return replaceTemplate(obj['@value'])
-        }
-        const result = {}
-        for (const [key, value] of Object.entries(obj)) {
-          if (key === '@value' || key === '@conditional') continue
-          if (value && typeof value === 'object' && !Array.isArray(value) && !(value instanceof File) && value['@conditional'] && hasOwn(value, '@value')) {
-            if (!hasValue(value['@conditional'])) continue
-            const nextValue = { ...value }
-            delete nextValue['@conditional']
-            const processedConditional = replaceTemplate(nextValue)
-            if (processedConditional === '' || processedConditional === undefined || processedConditional === null) continue
-            result[key] = processedConditional
-            continue
-          }
-          const processed = replaceTemplate(value)
-          if (Array.isArray(processed) && processed.length === 0) {
-            continue
-          }
-          if (processed === '' || processed === undefined || processed === null) {
-            continue
-          }
-          result[key] = processed
-        }
-        // 全部子键被剔除的空包装对象（如 video:{url} 无源视频）整体剔除，
-        // 避免下发 video:{} 这类空对象残壳被厂商 400
-        if (Object.keys(result).length === 0 && Object.keys(obj).some((k) => k !== '@conditional')) {
-          return ''
-        }
-        return result
-      }
-      return obj
-    }
-
-    const transformed = replaceTemplate(transform)
-    return transformed === '' ? {} : transformed
-  }
-
-  const getNestedValue = (obj, path) => {
-    if (!obj || !path) return obj
-    const paths = path.split('.')
-    let value = obj
-    for (const p of paths) {
-      value = value?.[p]
-    }
-    return value
-  }
+  // transform 引擎为纯函数（utils/inputTransform.js，Node 服务端共用），此处绑定返回
+  const applyInputTransform = applyInputTransformEngine
 
   const formatOption = (opt) => {
     if (typeof opt === 'string' || typeof opt === 'number' || typeof opt === 'boolean') {

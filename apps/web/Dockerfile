@@ -16,5 +16,6 @@ COPY 30-app-config.sh /docker-entrypoint.d/30-app-config.sh
 RUN chmod +x /docker-entrypoint.d/30-app-config.sh
 # UPSTREAM 在容器启动时由 envsubst 注入（见 docker-compose）
 ENV UPSTREAM=https://api.chatfire.site
+ENV CANVAS_SERVER=http://server:16812
 EXPOSE 80
 CMD ["nginx", "-g", "daemon off;"]

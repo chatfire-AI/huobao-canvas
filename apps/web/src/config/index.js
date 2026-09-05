@@ -51,4 +51,6 @@ export const setGatewayBaseUrl = (url) => {
   const value = String(url || '').trim().replace(/\/$/, '')
   if (value) window.localStorage.setItem(GATEWAY_BASE_STORAGE, value)
   else window.localStorage.removeItem(GATEWAY_BASE_STORAGE)
+  // 镜像到服务端 settings（服务端执行模式需要网关地址；不可用静默）
+  import('../utils/apiKeySession.js').then(({ setGatewayBaseMirror }) => setGatewayBaseMirror(value)).catch(() => {})
 }

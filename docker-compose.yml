@@ -13,4 +13,21 @@ services:
       UPSTREAM: ${UPSTREAM:-https://api.chatfire.site}
       # 浏览器侧请求基地址：默认空串（同源，走 nginx 反代）
       API_BASE_URL: ${API_BASE_URL:-}
+      # 画布存储服务（SQLite）
+      CANVAS_SERVER: http://server:16812
     restart: unless-stopped
+
+  # 画布存储 + 运行引擎：SQLite 持久化 + 全量模型调用服务端执行（runs 队列）
+  server:
+    build:
+      context: .
+      dockerfile: apps/server/Dockerfile
+    environment:
+      PORT: 16812
+      DATA_DIR: /data
+    volumes:
+      - canvas-data:/data
+    restart: unless-stopped
+
+volumes:
+  canvas-data:

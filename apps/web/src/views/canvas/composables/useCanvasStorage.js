@@ -10,6 +10,7 @@ import {
   MAX_CANVAS_PROJECTS,
   createEmptyGraph,
 } from '../constants/storageKeys.js'
+import { createServerStore, pingCanvasServer } from '@/api/canvasServer.js'
 
 const defineCanvasSchema = (database) => {
   database.version(1).stores({
@@ -121,6 +122,33 @@ function getNextProjectName(projects) {
   return `画布 ${index}`
 }
 
+/**
+ * Dexie（IndexedDB）存储适配器：与 canvasServer.js 的服务端适配器同构。
+ * 方法即存储原语；项目/图的编排逻辑在 useCanvasStorage 内复用。
+ */
+const createDexieStore = (database) => ({
+  getProject: (id) => database.canvas_projects.get(id),
+  putProject: (project) => database.canvas_projects.put(project),
+  updateProject: (id, patch) => database.canvas_projects.update(id, patch),
+  getGraph: (projectId) => database.canvas_graphs.get(projectId),
+  putGraph: (graph) => database.canvas_graphs.put(graph),
+  deleteProjectAndGraph: async (id) => {
+    await database.transaction('rw', database.canvas_projects, database.canvas_graphs, async () => {
+      await database.canvas_projects.delete(id)
+      await database.canvas_graphs.delete(id)
+    })
+  },
+  listProjectsWithCounts: async () => {
+    const projects = await database.canvas_projects.orderBy('updatedAt').reverse().toArray()
+    if (!projects.length) return []
+    const graphs = await database.canvas_graphs.bulkGet(projects.map((project) => project.id))
+    return projects.map((project, index) => ({
+      ...project,
+      nodeCount: graphs[index]?.nodes?.length || 0,
+    }))
+  },
+})
+
 export function useCanvasStorage(options = {}) {
   const database = options.database || db
   const timers = options.timers || globalThis.window
@@ -140,6 +168,43 @@ export function useCanvasStorage(options = {}) {
   )
   const activeProjectId = ref('')
   const { saveTimers, saveStates, storageErrors } = registry
+
+  // ── 存储后端选择：服务端 SQLite 优先，IndexedDB 兜底 ──
+  // 注入 options.database（测试）时固定走 Dexie；否则探测一次 /api/healthz。
+  // 服务端可用且为空、本地有数据时，把 IndexedDB（含旧库迁移结果）一次性搬迁上去。
+  const dexieStore = createDexieStore(database)
+  let storePromise = null
+  let serverStore = null
+  const resolveStore = () => {
+    if (options.database) return Promise.resolve(dexieStore)
+    storePromise ||= (async () => {
+      if (!(await pingCanvasServer())) return dexieStore
+      const server = createServerStore()
+      try {
+        const remoteProjects = await server.listProjectsWithCounts()
+        if (!remoteProjects.length) {
+          await migrateLegacyDatabase()
+          const localProjects = await dexieStore.listProjectsWithCounts()
+          for (const project of localProjects) {
+            await server.putProject(project)
+            const graph = await dexieStore.getGraph(project.id)
+            if (graph) await server.putGraph(graph)
+          }
+          if (localProjects.length) {
+            console.info(`[canvas] 已将 ${localProjects.length} 个本地画布搬迁到服务端存储`)
+          }
+        }
+        serverStore = server
+        return server
+      } catch (error) {
+        console.warn('[canvas] 服务端存储不可用，回退 IndexedDB：', error)
+        return dexieStore
+      }
+    })()
+    return storePromise
+  }
+  /** 当前是否走服务端存储（供界面提示；初始化探测完成前为 false） */
+  const isServerBacked = computed(() => Boolean(serverStore))
 
   const getSaveState = (projectId) => saveStates.get(projectId) || 'idle'
   const getStorageError = (projectId) => storageErrors.get(projectId) || ''
@@ -166,7 +231,8 @@ export function useCanvasStorage(options = {}) {
     if (!projectId) return false
     cancelSaveTimer(projectId)
     try {
-      const graph = await database.canvas_graphs.get(projectId)
+      const store = await resolveStore()
+      const graph = await store.getGraph(projectId)
       if (!graph) return false
       const previous = graph.pendingDeletion?.version === 1
         ? graph.pendingDeletion
@@ -218,7 +284,8 @@ export function useCanvasStorage(options = {}) {
         edgeIds: [...edgeIds],
         nodePatches: [...nodePatches.values()].filter((patch) => !nodeIds.has(patch.id)),
       }
-      return Boolean(await database.canvas_graphs.update(projectId, { pendingDeletion }))
+      await store.putGraph({ ...graph, pendingDeletion })
+      return true
     } catch {
       return false
     }
@@ -265,23 +332,24 @@ export function useCanvasStorage(options = {}) {
   }
 
   const ensureProject = async ({ activate = true } = {}) => {
+    const store = await resolveStore()
     let projectId = storage?.getItem(CANVAS_CURRENT_PROJECT_KEY) || DEFAULT_CANVAS_PROJECT_ID
-    let project = await database.canvas_projects.get(projectId)
+    let project = await store.getProject(projectId)
 
     if (!project) {
       project = createDefaultProject()
       projectId = project.id
-      await database.canvas_projects.put(project)
+      await store.putProject(project)
     }
 
-    let graph = await database.canvas_graphs.get(projectId)
+    let graph = await store.getGraph(projectId)
     if (!graph) {
       graph = {
         projectId,
         ...createEmptyGraph(),
         updatedAt: nowIso(),
       }
-      await database.canvas_graphs.put(graph)
+      await store.putGraph(graph)
     }
 
     if (activate) setActiveProject(projectId)
@@ -289,19 +357,14 @@ export function useCanvasStorage(options = {}) {
   }
 
   const listProjects = async () => {
-    if (database === db) await migrateLegacyDatabase()
-    const projects = await database.canvas_projects.orderBy('updatedAt').reverse().toArray()
-    if (projects.length) {
-      const graphs = await database.canvas_graphs.bulkGet(projects.map((project) => project.id))
-      return projects.map((project, index) => ({
-        ...project,
-        nodeCount: graphs[index]?.nodes?.length || 0,
-      }))
-    }
+    if (database === db && !serverStore) await migrateLegacyDatabase()
+    const store = await resolveStore()
+    const projects = await store.listProjectsWithCounts()
+    if (projects.length) return projects
 
     const project = createDefaultProject()
-    await database.canvas_projects.put(project)
-    await database.canvas_graphs.put({
+    await store.putProject(project)
+    await store.putGraph({
       projectId: project.id,
       ...createEmptyGraph(),
       updatedAt: nowIso(),
@@ -311,17 +374,18 @@ export function useCanvasStorage(options = {}) {
   }
 
   const loadProject = async (projectId, { activate = true } = {}) => {
-    const project = await database.canvas_projects.get(projectId)
+    const store = await resolveStore()
+    const project = await store.getProject(projectId)
     if (!project) return ensureProject({ activate })
 
-    let graph = await database.canvas_graphs.get(projectId)
+    let graph = await store.getGraph(projectId)
     if (!graph) {
       graph = {
         projectId,
         ...createEmptyGraph(),
         updatedAt: nowIso(),
       }
-      await database.canvas_graphs.put(graph)
+      await store.putGraph(graph)
     }
 
     if (activate) setActiveProject(projectId)
@@ -331,63 +395,59 @@ export function useCanvasStorage(options = {}) {
   const createProject = async (name, { activate = true } = {}) => {
     const projects = await listProjects()
     if (projects.length >= MAX_CANVAS_PROJECTS) {
-      throw new Error(`当前浏览器最多创建 ${MAX_CANVAS_PROJECTS} 个画布`)
+      throw new Error(`最多创建 ${MAX_CANVAS_PROJECTS} 个画布`)
     }
 
+    const store = await resolveStore()
     const project = createCanvasProject(name || getNextProjectName(projects))
     const graph = {
       projectId: project.id,
       ...createEmptyGraph(),
       updatedAt: project.updatedAt,
     }
-    await database.transaction('rw', database.canvas_projects, database.canvas_graphs, async () => {
-      await database.canvas_projects.put(project)
-      await database.canvas_graphs.put(graph)
-    })
+    await store.putProject(project)
+    await store.putGraph(graph)
     if (activate) setActiveProject(project.id)
     return { project, graph }
   }
 
   const deleteProject = async (projectId, { activate = true } = {}) => {
     cancelSaveTimer(projectId)
-    let nextProject
+    const store = await resolveStore()
+    await store.deleteProjectAndGraph(projectId)
 
-    await database.transaction('rw', database.canvas_projects, database.canvas_graphs, async () => {
-      await database.canvas_projects.delete(projectId)
-      await database.canvas_graphs.delete(projectId)
+    const remaining = await store.listProjectsWithCounts()
+    let project = remaining[0] || null
+    if (!project) {
+      project = createDefaultProject()
+      await store.putProject(project)
+    }
 
-      let project = await database.canvas_projects.orderBy('updatedAt').reverse().first()
-      if (!project) {
-        project = createDefaultProject()
-        await database.canvas_projects.put(project)
+    let graph = await store.getGraph(project.id)
+    if (!graph) {
+      graph = {
+        projectId: project.id,
+        ...createEmptyGraph(),
+        updatedAt: nowIso(),
       }
-
-      let graph = await database.canvas_graphs.get(project.id)
-      if (!graph) {
-        graph = {
-          projectId: project.id,
-          ...createEmptyGraph(),
-          updatedAt: nowIso(),
-        }
-        await database.canvas_graphs.put(graph)
-      }
-      nextProject = { project, graph }
-    })
+      await store.putGraph(graph)
+    }
 
     saveStates.delete(projectId)
     storageErrors.delete(projectId)
-    if (activate) setActiveProject(nextProject.project.id)
-    return nextProject
+    if (activate) setActiveProject(project.id)
+    return { project, graph }
   }
 
   const renameProject = async (projectId, name) => {
     const trimmed = String(name || '').trim()
     if (!trimmed) throw new Error('画布名称不能为空')
-    const project = await database.canvas_projects.get(projectId)
+    const store = await resolveStore()
+    const project = await store.getProject(projectId)
     if (!project) throw new Error('画布不存在')
     project.name = trimmed
     project.updatedAt = nowIso()
-    await database.canvas_projects.put(project)
+    await store.putProject(project)
     return project
   }
 
@@ -396,17 +456,16 @@ export function useCanvasStorage(options = {}) {
     cancelSaveTimer(projectId)
     saveStates.set(projectId, 'saving')
     try {
+      const store = await resolveStore()
       const updatedAt = nowIso()
-      await database.transaction('rw', database.canvas_projects, database.canvas_graphs, async () => {
-        await database.canvas_graphs.put({
-          projectId,
-          nodes: graph.nodes || [],
-          edges: graph.edges || [],
-          viewport: graph.viewport || createEmptyGraph().viewport,
-          updatedAt,
-        })
-        await database.canvas_projects.update(projectId, { updatedAt })
+      await store.putGraph({
+        projectId,
+        nodes: graph.nodes || [],
+        edges: graph.edges || [],
+        viewport: graph.viewport || createEmptyGraph().viewport,
+        updatedAt,
       })
+      await store.updateProject(projectId, { updatedAt })
       storageErrors.delete(projectId)
       saveStates.set(projectId, 'saved')
     } catch (error) {
@@ -428,17 +487,19 @@ export function useCanvasStorage(options = {}) {
   }
 
   const clearGraph = async (projectId) => {
+    const store = await resolveStore()
     const graph = {
       projectId,
       ...createEmptyGraph(),
       updatedAt: nowIso(),
     }
-    await database.canvas_graphs.put(graph)
+    await store.putGraph(graph)
     return graph
   }
 
   return {
     db: database,
+    isServerBacked,
     saveState,
     storageError,
     saveStates,

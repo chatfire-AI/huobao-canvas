@@ -19,6 +19,7 @@ import {
 } from '@/api/localCatalog'
 import { protocolRegistry } from '@/views/playground/protocols/registry.js'
 import { appFetch } from '@/utils/desktopBridge.js'
+import { isServerRunMode, testProviderOnServer } from '@/api/canvasServer.js'
 import { resolveModelIcon } from '@/utils/tools'
 
 const router = useRouter()
@@ -118,7 +119,7 @@ const saveProviderKey = (id) => {
   }
   providerKeys.value = setProviderApiKey(id, key)
   keyInputs.value[id] = ''
-  window.$message?.success('API Key 已保存（仅存浏览器本地）')
+  window.$message?.success('API Key 已保存')
 }
 
 const clearProviderKey = (id) => {
@@ -158,6 +159,14 @@ const testProvider = async (provider) => {
   }
   testing.value[provider.id] = true
   try {
+    // 服务端执行模式：由 apps/server 代发（用服务端存的 Key）；否则本地经同源反代
+    if (await isServerRunMode()) {
+      const result = await testProviderOnServer(provider.id)
+      testResults.value[provider.id] = result.ok ? 'ok' : (result.status ? `HTTP ${result.status}` : 'fail')
+      if (result.ok) window.$message?.success(`${provider.label} 连通正常`)
+      else window.$message?.warning(`${provider.label} ${result.message || '连通失败'}，请检查 Key`)
+      return
+    }
     const resp = await appFetch(url, { headers: buildProviderAuthHeaders(provider, key) })
     testResults.value[provider.id] = resp.ok ? 'ok' : `HTTP ${resp.status}`
     if (resp.ok) window.$message?.success(`${provider.label} 连通正常`)

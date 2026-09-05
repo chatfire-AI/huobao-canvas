@@ -10,6 +10,7 @@ import { isCanvasSubmitEndpointMounted, resolveEndpointPath } from '../views/pla
 import { parseSSELine } from '../views/playground/utils/chatProtocol.js'
 import { buildModelRunnerAuthHeaders, errorMessage, sanitizeModelRunnerHeaders } from './useModelRunner.js'
 import { getProviderForModel, getProvider, buildProviderAuthHeaders, applyProviderBaseUrl } from '../config/providers/index.js'
+import { isServerRunMode, submitRunToServer, pollServerRun, cancelServerRun } from '../api/canvasServer.js'
 import { getProviderApiKey } from '../utils/apiKeySession.js'
 import { appFetch } from '../utils/desktopBridge.js'
 
@@ -376,6 +377,43 @@ export function useRequestPipeline({ getNestedValue, wait = defaultWait }) {
     applyInputTransform, inputTransformSchema, formDataHint,
     outputSchema, asyncModeSchema,
   }) => {
+    // ── 服务端执行分支：runs 队列（提交即持久化，浏览器刷新凭 runId 恢复）──
+    // Key/transform/协议适配全部在 apps/server 侧完成；此处只提交 + 轮询。
+    // 服务端不可用（探测失败）自动落回下方浏览器链路，行为与纯本地模式一致。
+    if (await isServerRunMode()) {
+      const startTime = performance.now()
+      const { runId } = await submitRunToServer({
+        model: model?.name || '',
+        endpointPath: endpoint?.path || '',
+        formData,
+      })
+      // 提交即持久化：画布把 { runId } 写进节点 payload（WAITING），刷新后可恢复
+      await onTaskSubmitted?.({ runId, taskId: '' })
+      const onAbort = () => { cancelServerRun(runId).catch(() => {}) }
+      signal?.addEventListener('abort', onAbort, { once: true })
+      try {
+        const runResult = await pollServerRun(runId, { signal })
+        if (runResult.status === 'failed') throw taskError(runResult.error || '服务端运行失败', 'terminal')
+        if (runResult.status === 'cancelled') throw new DOMException('Aborted', 'AbortError')
+        const resultType = resolveResultType({ model, selectedEndpoint: endpoint, outputSchema })
+        return {
+          result: runResult.result,
+          resultType,
+          parsedResults: runResult.parsedResults || [],
+          unavailableReason: runResult.unavailableReason || '',
+          requestMeta: {
+            duration: Math.round(performance.now() - startTime),
+            requestHeaders: {},
+            responseHeaders: {},
+            tokenUsage: runResult.result?.usage || null,
+            estimatedCost: null,
+          },
+        }
+      } finally {
+        signal?.removeEventListener('abort', onAbort)
+      }
+    }
+
     const startTime = performance.now()
     const modelName = model?.name || ''
     const provider = getProviderForModel(model || {})

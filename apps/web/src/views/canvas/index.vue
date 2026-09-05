@@ -208,6 +208,7 @@ import { VueFlow, useVueFlow } from '@vue-flow/core'
 import { Background } from '@vue-flow/background'
 import CanvasZoomControls from './components/CanvasZoomControls.vue'
 import CanvasMediaPreview from './components/CanvasMediaPreview.vue'
+import { pollServerRun } from '@/api/canvasServer.js'
 import { MiniMap } from '@vue-flow/minimap'
 import '@vue-flow/core/dist/style.css'
 import '@vue-flow/core/dist/theme-default.css'
@@ -752,11 +753,46 @@ function finishTaskWork(work) {
 async function resumeNodeTask(nodeId, existingWork = null) {
   const node = getNodeById(nodeId)
   const taskLink = node?.data?.payload?.task
-  if (!taskLink?.taskId) return
+  if (!taskLink?.taskId && !taskLink?.runId) return
   if (!existingWork && taskControllers.has(nodeId)) return
 
   const work = existingWork || beginTaskWork(nodeId, projectId.value)
-  work.taskId = taskLink.taskId
+  work.taskId = taskLink.taskId || taskLink.runId
+
+  // 服务端运行恢复：runId 轮询（Key 在服务端，无需本地 Key；刷新/换浏览器均可续）
+  if (taskLink.runId) {
+    try {
+      const runResult = await pollServerRun(taskLink.runId, { signal: work.controller.signal })
+      if (!isCurrentTaskWork(work)) return
+      if (runResult.status === 'cancelled') return
+      if (runResult.status === 'failed') {
+        throw Object.assign(new Error(runResult.error || '服务端运行失败'), { kind: 'terminal' })
+      }
+      materializeCanvasResults(nodeId, {
+        result: runResult.result,
+        parsedResults: runResult.parsedResults || [],
+        unavailableReason: runResult.unavailableReason || '',
+      })
+      await persistCompletedTask(work)
+      if (isCurrentTaskController(work)) window.$message?.success('模型运行完成')
+    } catch (error) {
+      if (error?.name === 'AbortError' || !isCurrentTaskWork(work)) return
+      const currentNode = getNodeById(nodeId)
+      const hasPreviousResult = Boolean(
+        currentNode?.data?.payload?.url || currentNode?.data?.payload?.parsedResults?.length,
+      )
+      updateNodeStatus(nodeId, NODE_STATUS.ERROR, {
+        task: undefined,
+        error: error?.message || '任务处理失败',
+        notice: hasPreviousResult ? '本次失败，当前显示上次成功结果' : '',
+      })
+      await saveGraph(work.projectId, toGraph()).catch(() => {})
+    } finally {
+      finishTaskWork(work)
+    }
+    return
+  }
+
   if (!getApiKey()) {
     updateNodeStatus(nodeId, NODE_STATUS.WAITING, {
       task: taskLink,
@@ -804,7 +840,8 @@ async function resumeNodeTask(nodeId, existingWork = null) {
 
 function recoverWaitingTasks() {
   for (const node of nodes.value) {
-    if (node.data?.status === NODE_STATUS.WAITING && node.data?.payload?.task?.taskId) {
+    const task = node.data?.payload?.task
+    if (node.data?.status === NODE_STATUS.WAITING && (task?.taskId || task?.runId)) {
       void resumeNodeTask(node.id)
     }
   }

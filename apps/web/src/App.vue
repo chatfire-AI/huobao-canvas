@@ -1,10 +1,18 @@
 <script setup>
+import { onMounted } from "vue"
 import { NConfigProvider } from "naive-ui"
 import { zhCN, dateZhCN } from "naive-ui"
 import NaiveProvider from "@/components/common/NaiveProvider/index.vue"
 import { useTheme } from "@/composables/useTheme"
+import { syncSettingsMirror } from "@/api/canvasServer.js"
 
 const { theme, themeOverrides, isDark } = useTheme()
+
+// 服务端设置对账（Key/baseUrl 镜像）：服务端非空则覆盖本地（换浏览器拿到全部 Key），
+// 服务端空且本地有数据则上传。探测失败静默——本地模式行为不变。
+onMounted(() => {
+  syncSettingsMirror().catch(() => {})
+})
 </script>
 
 <template>

@@ -9,7 +9,7 @@ const routes = [
     path: "/canvas",
     name: "Canvas",
     component: () => import("@/views/canvas/index.vue"),
-    meta: { title: "创作画布" },
+    meta: { title: "" },
   },
   {
     path: "/settings",
@@ -26,8 +26,8 @@ const router = createRouter({
 
 router.beforeEach((to, from, next) => {
   document.title = to.meta?.title
-    ? `${to.meta.title} · ChatFire Canvas`
-    : "ChatFire Canvas"
+    ? `${to.meta.title} · 火宝画布`
+    : "火宝画布"
   next()
 })
 

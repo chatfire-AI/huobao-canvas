@@ -59,6 +59,11 @@ export default defineConfig({
       "/minimax": { target: upstream, changeOrigin: true, ...stripOrigin },
       "/xai": { target: upstream, changeOrigin: true, ...stripOrigin },
       "/zhipu": { target: upstream, changeOrigin: true, ...stripOrigin },
+      // 画布存储服务（apps/server，SQLite；未启动时前端自动回退 IndexedDB）
+      "/api": {
+        target: process.env.VITE_CANVAS_SERVER || "http://localhost:16812",
+        changeOrigin: true,
+      },
       // ── 厂商官方 API 直连反代（官方直连模式，剥离 /official/{id} 前缀）──
       "/official/openai": {
         target: "https://api.openai.com", changeOrigin: true, ...stripOrigin,

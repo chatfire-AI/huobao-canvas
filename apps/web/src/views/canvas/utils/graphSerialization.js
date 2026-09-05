@@ -10,6 +10,10 @@ const SENSITIVE_KEYS = new Set([
 
 const SAFE_TASK_KEYS = [
   'taskId',
+  'runId',
+  'providerId',
+  'protocolKey',
+  'query',
   'queryPath',
   'resultType',
   'modelName',
@@ -67,10 +71,17 @@ const isRawMediaValue = (key, value, parentKey, parentValue) => {
 
 const sanitizeTaskLink = (value) => {
   if (!value || typeof value !== 'object') return undefined
-  const task = Object.fromEntries(SAFE_TASK_KEYS
-    .filter((key) => typeof value[key] === 'string' && value[key].trim())
-    .map((key) => [key, value[key].trim()]))
-  return task.taskId ? task : undefined
+  const task = {}
+  for (const key of SAFE_TASK_KEYS) {
+    const entry = value[key]
+    // query 是厂商轮询配置对象（vendorQuery），taskId/runId 是字符串
+    if (entry && typeof entry === 'object' && !Array.isArray(entry)) {
+      task[key] = entry
+    } else if (typeof entry === 'string' && entry.trim()) {
+      task[key] = entry.trim()
+    }
+  }
+  return (task.taskId || task.runId) ? task : undefined
 }
 
 function sanitizeValue(value, key = '', parentKey = '', parentValue = null) {
@@ -185,7 +196,7 @@ export function repairCanvasGraphForLoad(graph = {}) {
       }
       if (![NODE_STATUS.RUNNING, NODE_STATUS.WAITING].includes(status)) return node
       const task = node.data?.payload?.task
-      if (task?.taskId) {
+      if (task?.taskId || task?.runId) {
         return {
           ...node,
           data: { ...node.data, status: NODE_STATUS.WAITING },

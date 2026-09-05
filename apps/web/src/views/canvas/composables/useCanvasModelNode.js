@@ -2,6 +2,7 @@ import { CANVAS_NODE_TYPES } from '../constants/nodeTypes.js'
 import { useModelRunner } from '../../../composables/useModelRunner.js'
 import { getProviderForModel } from '@/config/providers/index.js'
 import { getProviderApiKey } from '@/utils/apiKeySession.js'
+import { isServerRunMode } from '@/api/canvasServer.js'
 import {
   DEFAULT_REFERENCE_IMAGE_LIMIT,
   getReferenceImageLimit,
@@ -221,10 +222,11 @@ export function useCanvasModelNode({
     onTaskSubmitted,
   }) => {
     if (!node) throw new Error('请选择节点')
-    // 官方直连模式的模型按厂商取 Key（设置页配置）；网关模式用全局 Key
+    // 官方直连模式的模型按厂商取 Key（设置页配置）；网关模式用全局 Key。
+    // 服务端执行模式下 Key 在服务端（settings 表），本地无 Key 不拦截
     const nodeProvider = getProviderForModel(modelData || {})
     const nodeProviderKey = nodeProvider ? getProviderApiKey(nodeProvider.id) : ''
-    if (!apiKey && !nodeProviderKey) {
+    if (!apiKey && !nodeProviderKey && !(await isServerRunMode())) {
       throw new Error(nodeProvider
         ? `请先在设置页配置 ${nodeProvider.label} 的 API Key`
         : '请先创建或选择 API Key')
