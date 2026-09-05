@@ -59,7 +59,7 @@ ChatFire Canvas 的所有可变项都通过环境变量 / 运行时配置注入�
 
 自部署画布服务（Node ≥22.13，内置 node:sqlite，零 npm 依赖）：
 
-- **画布数据**：projects/graphs 两表。服务端可用时前端自动走 SQLite；不可用（本地 dev 未起服务 / Tauri 桌面端）回退 IndexedDB，首次连通自动搬迁。
+- **画布数据**：projects/graphs 两表，前端单轨直连（无本地 IndexedDB 兜底；服务端不可用时画布保存/加载呈现错误状态）。本地开发需同时运行 apps/server（`pnpm -C apps/server dev`）。
 - **设置（API Key / baseUrl / 网关地址）**：settings 表。前端所有 Key 写入防抖镜像到服务端；启动时服务端非空则以服务端为准（换浏览器即拿到全部 Key）。**Key 明文存服务端，仅适合内网/可信环境部署，公开站点不要存真实 Key。**
 - **运行队列（runs 表）**：全部模型调用经服务端执行（`POST /api/runs`），复用前端的 providers 配置与协议适配器。提交即持久化 runId 到节点，刷新/换浏览器后自动轮询恢复；异步视频任务由服务端 ticker 轮询（预算 2 小时）。Veo 鉴权视频 / base64 结果落 `data/files/`，经 `/api/files/*` 同源访问。
 - **环境变量**：`PORT`（默认 16812）、`DATA_DIR`（默认 ./data）。compose 内已由 nginx `/api/` 反代同源接入。

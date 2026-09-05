@@ -5,7 +5,7 @@
 ```
 浏览器（apps/web）+ 画布存储/运行服务（apps/server）
  ├─ 画布 UI：Vue 3 + Vue Flow + Naive UI
- ├─ 画布数据：apps/server（SQLite，服务端可用时）→ 兜底 Dexie / IndexedDB（纯本地）
+ ├─ 画布数据：apps/server（SQLite 单轨；服务端不可用时呈现保存错误状态）
  ├─ 模型调用栈：useCanvasModelNode → useModelRunner → useRequestPipeline → 协议适配层
  ├─ 推理请求：fetch → nginx 反代 / dev proxy → 上游网关（默认 ChatFire 公共 API）
  └─ 画布读写：/api/* → apps/server（node:sqlite，projects/graphs 两表；探测失败回退 IndexedDB，首次连通自动搬迁本地数据）
