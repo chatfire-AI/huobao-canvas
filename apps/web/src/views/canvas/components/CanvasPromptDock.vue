@@ -6,7 +6,7 @@
           <svg-icon :icon="dockMeta.icon" />
         </span>
         <strong class="dock-title">{{ node?.data?.title || dockMeta.label }}</strong>
-        <span class="dock-hint">Enter 生成 · @ 引用节点<template v-if="isMediaDock"> · 素材云端保留 {{ MEDIA_EXPIRE_DAYS }} 天</template></span>
+        <span class="dock-hint">Enter 生成 · @ 引用节点</span>
       </div>
 
       <!-- 参考内容区:上传/引用素材(即梦式,支持图文音视频混合) -->
@@ -21,19 +21,34 @@
           </label>
         </div>
         <div v-if="connectedInputs.length" class="reference-strip" aria-label="已连接的参考素材">
-          <div
+          <n-popover
             v-for="(input, inputIndex) in connectedInputs"
             :key="input.id"
-            class="reference-item"
-            :title="input.label"
+            trigger="click"
+            placement="top"
+            :z-index="2700"
+            :disabled="!!input.url"
+            :style="{ maxWidth: '380px' }"
           >
-            <img v-if="input.url" :src="input.url" :alt="input.label" />
-            <span v-else class="reference-fallback">
-              <svg-icon :icon="getCanvasPromptDockMeta(input.type).icon" />
-              <span>{{ input.text || input.label }}</span>
-            </span>
-            <span v-if="input.type !== 'textNode'" class="reference-index">图{{ mediaInputIndex(inputIndex) }}</span>
-          </div>
+            <template #trigger>
+              <div
+                class="reference-item"
+                :class="{ 'is-text-ref': !input.url }"
+                :title="input.url ? input.label : `${input.label}（点击查看全文）`"
+              >
+                <img v-if="input.url" :src="input.url" :alt="input.label" />
+                <span v-else class="reference-fallback">
+                  <svg-icon :icon="getCanvasPromptDockMeta(input.type).icon" />
+                  <span>{{ input.text || input.label }}</span>
+                </span>
+                <span v-if="input.type !== 'textNode'" class="reference-index">图{{ mediaInputIndex(inputIndex) }}</span>
+              </div>
+            </template>
+            <div class="reference-pop">
+              <div class="reference-pop-title">{{ input.label }}</div>
+              <div class="reference-pop-text">{{ input.text || '（该节点暂无生成内容）' }}</div>
+            </div>
+          </n-popover>
         </div>
         <div v-else class="reference-empty">暂无参考素材，可通过 @ 引用画布节点或上传图片</div>
       </div>
@@ -223,7 +238,6 @@ import { computed, nextTick, ref, watch } from 'vue'
 import FieldControl from '@/views/playground/components/FieldControl.vue'
 import ModelPicker from '@/components/ModelPicker.vue'
 import { CANVAS_NODE_TYPES, getCanvasPromptDockMeta } from '../constants/nodeTypes'
-import { MEDIA_EXPIRE_DAYS } from '@/composables/useMediaStorage'
 import { partitionCanvasFields } from '../utils/editorFields'
 
 const props = defineProps({
@@ -254,8 +268,6 @@ const emit = defineEmits([
 
 const prompt = ref('')
 const dockMeta = computed(() => getCanvasPromptDockMeta(props.node?.type))
-// 仅媒体节点展示云端保留期提示(文本结果不做云端转存)
-const isMediaDock = computed(() => [CANVAS_NODE_TYPES.IMAGE, CANVAS_NODE_TYPES.VIDEO].includes(props.node?.type))
 // 节点已有成功结果:按钮切换为「重新生成」(点击后由画布复制副本节点到下方执行,不覆盖原结果)
 const hasResult = computed(() => props.node?.data?.status === 'success'
   && Boolean(props.node?.data?.payload?.parsedResults?.length || props.node?.data?.payload?.url))
@@ -686,6 +698,34 @@ function submit() {
   height: 100%;
   display: block;
   object-fit: cover;
+}
+
+// 文本类引用：可点击弹出全文
+.reference-item.is-text-ref {
+  cursor: pointer;
+  transition: border-color 0.15s ease;
+
+  &:hover {
+    border-color: var(--cf-brand);
+  }
+}
+
+.reference-pop {
+  .reference-pop-title {
+    margin-bottom: 6px;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--cf-text-secondary);
+  }
+
+  .reference-pop-text {
+    max-height: 260px;
+    overflow: auto;
+    font-size: 12.5px;
+    line-height: 1.6;
+    white-space: pre-wrap;
+    word-break: break-word;
+  }
 }
 
 .reference-fallback {
