@@ -141,24 +141,32 @@
       />
     </section>
 
-    <!-- 新建画布：名称输入 -->
+    <!-- 新建画布：名称输入（卡片式） -->
     <n-modal
       v-model:show="createDialogVisible"
-      preset="dialog"
+      preset="card"
       title="新建画布"
-      positive-text="创建"
-      negative-text="取消"
+      class="create-canvas-modal"
       :z-index="3100"
-      @positive-click="confirmCreateProject"
     >
-      <n-input
-        v-model:value="createName"
-        placeholder="输入画布名称"
-        maxlength="50"
-        show-count
-        autofocus
-        @keyup.enter="confirmCreateProject"
-      />
+      <div class="create-canvas-body">
+        <label class="create-canvas-label" for="create-canvas-name">画布名称</label>
+        <n-input
+          id="create-canvas-name"
+          v-model:value="createName"
+          placeholder="输入画布名称"
+          maxlength="50"
+          show-count
+          autofocus
+          @keyup.enter="confirmCreateProject"
+        />
+      </div>
+      <template #footer>
+        <div class="create-canvas-footer">
+          <n-button quaternary @click="createDialogVisible = false">取消</n-button>
+          <n-button type="primary" @click="confirmCreateProject">创建</n-button>
+        </div>
+      </template>
     </n-modal>
   </div>
 </template>
@@ -487,18 +495,28 @@ provide('canvasUpdateNodePayload', (nodeId, patch) => {
   updateNodePayload(nodeId, patch, { userMutation: true })
 })
 
-// 节点拖拽结束后，连接的边短暂显示光条脉冲（参考 LibTV 能量段效果）
+// 节点拖拽时连接的边显示渐变流光（参考 drama-studio GlowEdge）
 const pulsingEdgeIds = ref(new Set())
 provide('canvasPulsingEdges', pulsingEdgeIds)
 let pulseTimer = 0
-function triggerEdgePulse(nodeId) {
-  const connected = edges.value
-    .filter((e) => e.source === nodeId || e.target === nodeId)
-    .map((e) => e.id)
-  if (!connected.length) return
-  clearTimeout(pulseTimer)
-  pulsingEdgeIds.value = new Set(connected)
-  pulseTimer = setTimeout(() => { pulsingEdgeIds.value = new Set() }, 2500)
+const EDGE_GLOW_DURATION_MS = 9_000
+
+function setEdgeGlow(nodeIds) {
+  const ids = new Set(
+    edges.value
+      .filter((e) => nodeIds.includes(e.source) || nodeIds.includes(e.target))
+      .map((e) => e.id),
+  )
+  pulsingEdgeIds.value = ids
+  if (pulseTimer) { clearTimeout(pulseTimer); pulseTimer = 0 }
+}
+
+function scheduleEdgeGlowClear() {
+  if (pulseTimer) clearTimeout(pulseTimer)
+  pulseTimer = setTimeout(() => {
+    pulsingEdgeIds.value = new Set()
+    pulseTimer = 0
+  }, EDGE_GLOW_DURATION_MS)
 }
 
 // ── 模型选择持久化:按节点类型(1=对话/2=图片/3=视频)记住上次选用的模型,
@@ -1322,18 +1340,23 @@ function handlePaneClick() {
   connectionMenu.value = null
 }
 
-function handleNodeDrag() {
-  // 拖拽中只做标记，不触发响应式更新和 position 计算
-  if (!isDragging.value) isDragging.value = true
+function handleNodeDrag(event) {
+  if (!isDragging.value) {
+    isDragging.value = true
+    // 拖拽开始：点亮连接边的渐变流光
+    const dragged = event?.nodes?.length ? event.nodes : (event?.node ? [event.node] : [])
+    const ids = dragged.map((n) => n.id).filter(Boolean)
+    if (ids.length) setEdgeGlow(ids)
+  }
 }
 
-function handleNodeDragStop(event) {
+function handleNodeDragStop() {
   isDragging.value = false
   dragTick.value += 1
   schedulePromptDockPositionUpdate()
   scheduleGraphSave() // 拖拽结束一次性保存
-  const draggedId = event?.node?.id || event?.nodes?.[0]?.id
-  if (draggedId) triggerEdgePulse(draggedId)
+  // 流光延迟熄灭
+  if (pulsingEdgeIds.value.size) scheduleEdgeGlowClear()
 }
 
 function handleMove() {
@@ -1991,6 +2014,48 @@ async function handleAssetUpload(file) {
     height: auto;
     min-height: 100vh;
     flex-direction: column;
+  }
+}
+
+// ── 新建画布弹窗（卡片式；n-modal 内容 teleport 到 body，需 :deep） ──
+:deep(.create-canvas-modal) {
+  width: 440px;
+  max-width: calc(100vw - 48px);
+  border-radius: var(--cf-radius-lg);
+  background: var(--cf-bg-elevated);
+  border: 1px solid var(--cf-border);
+  box-shadow: var(--cf-shadow-lg);
+
+  .n-card-header {
+    padding: 16px 20px 8px;
+    font-size: 15px;
+    font-weight: 650;
+  }
+
+  .n-card__content {
+    padding: 8px 20px 4px;
+  }
+
+  .n-card__footer {
+    padding: 12px 20px 16px;
+  }
+
+  .create-canvas-body {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .create-canvas-label {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--cf-text-secondary);
+  }
+
+  .create-canvas-footer {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
   }
 }
 </style>

@@ -1,128 +1,114 @@
 <template>
-  <g class="canvas-edge" :class="{ 'is-selected': selected, 'is-active': isActive }">
-    <path
-      class="canvas-edge-hit"
-      :d="path"
-      fill="none"
-    />
-    <path
-      class="canvas-edge-line"
-      :d="path"
-      fill="none"
-    />
-    <!-- 节点拖拽后的光条脉冲 -->
-    <path
-      v-if="isPulsing"
-      class="canvas-edge-pulse"
-      :d="path"
-      fill="none"
-      pathLength="100"
-    />
-  </g>
+  <!-- 透明加宽路径：提供点击命中区域 -->
+  <path :d="pathD" fill="none" stroke="transparent" stroke-width="20"
+    class="vue-flow__edge-interaction" />
+
+  <!-- 基础连线 -->
+  <path :d="pathD" fill="none"
+    class="glow-edge-base" :class="{ 'glow-edge-selected': selected }"
+    :marker-end="markerEnd" />
+
+  <defs v-if="shouldGlow">
+    <linearGradient
+      :id="gradientId"
+      gradientUnits="userSpaceOnUse"
+      :x1="sourceX"
+      :y1="sourceY"
+      :x2="targetX"
+      :y2="targetY"
+    >
+      <stop offset="0%" stop-color="#ea580c" stop-opacity="0.02" />
+      <stop offset="25%" stop-color="#f97316" stop-opacity="0.08" />
+      <stop offset="55%" stop-color="#fb923c" stop-opacity="0.28" />
+      <stop offset="80%" stop-color="#fdba74" stop-opacity="0.68" />
+      <stop offset="100%" stop-color="#ffedd5" stop-opacity="1" />
+    </linearGradient>
+  </defs>
+
+  <!-- 单段渐变流光：pathLength 保证整条边始终只有一个光段 -->
+  <path v-if="shouldGlow" :d="pathD" fill="none"
+    pathLength="100"
+    :stroke="`url(#${gradientId})`"
+    class="glow-edge-flow" />
 </template>
 
 <script setup>
 import { computed, inject, ref } from 'vue'
-import { getBezierPath, useVueFlow } from '@vue-flow/core'
+import { getBezierPath } from '@vue-flow/core'
+
+defineOptions({ inheritAttrs: false })
 
 const props = defineProps({
-  id: { type: String, default: '' },
-  source: { type: String, default: '' },
-  target: { type: String, default: '' },
-  sourceX: { type: Number, required: true },
-  sourceY: { type: Number, required: true },
-  targetX: { type: Number, required: true },
-  targetY: { type: Number, required: true },
-  sourcePosition: { type: String, required: true },
-  targetPosition: { type: String, required: true },
-  markerEnd: { type: String, default: '' },
-  selected: { type: Boolean, default: false },
+  id: String,
+  source: String,
+  target: String,
+  sourceX: Number,
+  sourceY: Number,
+  targetX: Number,
+  targetY: Number,
+  sourcePosition: String,
+  targetPosition: String,
+  markerEnd: String,
+  selected: Boolean,
 })
 
-const path = computed(() => getBezierPath(props)[0])
-
-const { findNode } = useVueFlow()
-// 目标节点正在运行/等待时，连线显示流动动画，直观表达数据正在流转
-const isActive = computed(() => {
-  const status = findNode(props.target)?.data?.status
-  return status === 'running' || status === 'waiting'
-})
-
-// 节点拖拽结束后的光条脉冲（由 index.vue 通过 provide 注入）
+// 由 index.vue 通过 provide 注入
 const pulsingEdgeIds = inject('canvasPulsingEdges', ref(new Set()))
-const isPulsing = computed(() => pulsingEdgeIds.value.has(props.id))
+const shouldGlow = computed(() => pulsingEdgeIds.value.has(props.id))
+
+const gradientId = computed(() =>
+  `glow-edge-gradient-${String(props.id ?? '').replace(/[^a-zA-Z0-9_-]/g, '_')}`,
+)
+
+const pathD = computed(() => {
+  const [d] = getBezierPath({
+    sourceX: props.sourceX,
+    sourceY: props.sourceY,
+    targetX: props.targetX,
+    targetY: props.targetY,
+    sourcePosition: props.sourcePosition,
+    targetPosition: props.targetPosition,
+  })
+  return d
+})
 </script>
 
-<style scoped lang="scss">
-.canvas-edge-hit {
-  stroke: transparent;
-  stroke-width: 18;
-  pointer-events: stroke;
-  cursor: pointer;
-}
-
-// 现代工作台风格：细中性色贝塞尔曲线，无箭头；选中/流转时点亮品牌色
-.canvas-edge-line {
+<style>
+.glow-edge-base {
   stroke: var(--cf-border-strong);
-  stroke-width: 1.75;
+  stroke-width: 1.4;
   stroke-linecap: round;
-  stroke-linejoin: round;
-  opacity: 0.8;
-  pointer-events: none;
-  transition: stroke 0.14s ease, opacity 0.14s ease, stroke-width 0.14s ease;
+  vector-effect: non-scaling-stroke;
+  transition: stroke 0.2s;
 }
 
-.canvas-edge:hover .canvas-edge-line {
+.vue-flow__edge:hover .glow-edge-base {
   stroke: var(--cf-text-tertiary);
-  opacity: 1;
 }
 
-.canvas-edge.is-selected .canvas-edge-line {
-  stroke: var(--cf-brand);
-  stroke-width: 2.25;
-  opacity: 1;
+.glow-edge-selected {
+  stroke: var(--cf-brand) !important;
 }
 
-.canvas-edge.is-active .canvas-edge-line {
-  stroke: var(--cf-brand);
-  stroke-width: 2;
-  opacity: 0.95;
-  stroke-dasharray: 7 5;
-  animation: canvas-edge-flow 0.7s linear infinite;
-}
-
-@keyframes canvas-edge-flow {
-  to {
-    stroke-dashoffset: -12;
-  }
-}
-
-// ── 光条脉冲：一小段明亮品牌色沿路径滑行（LibTV 能量段效果）──
-.canvas-edge-pulse {
-  stroke: var(--cf-brand);
-  stroke-width: 3;
+.glow-edge-flow {
+  fill: none;
+  stroke-width: 2.4;
   stroke-linecap: round;
-  stroke-dasharray: 12 88; // 12% 可见光条，88% 间隔
-  opacity: 0;
+  stroke-dasharray: 40 60;
   pointer-events: none;
-  filter: drop-shadow(0 0 6px var(--cf-brand));
-  animation: edge-pulse-travel 1.2s ease-in-out 2; // 滑行 2 次
+  vector-effect: non-scaling-stroke;
+  animation: glow-edge-flow 3s linear infinite;
 }
 
-@keyframes edge-pulse-travel {
-  0% {
-    stroke-dashoffset: 100;
-    opacity: 0;
-  }
-  8% {
-    opacity: 1;
-  }
-  85% {
-    opacity: 1;
-  }
-  100% {
-    stroke-dashoffset: -12;
-    opacity: 0;
+@keyframes glow-edge-flow {
+  to { stroke-dashoffset: -100; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .glow-edge-flow {
+    animation: none;
+    stroke-dasharray: none;
+    opacity: 0.28;
   }
 }
 </style>
