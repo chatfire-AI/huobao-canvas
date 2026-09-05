@@ -25,8 +25,6 @@
         :controls-locked="taskPersistenceLocked"
         :tips-active="tipsOverride"
         :tips-has-hidden="hasHiddenTips"
-        :is-workflow-running="isWorkflowRunning"
-        :workflow-progress="workflowProgress"
         @toggle-tips="tipsOverride = !tipsOverride"
         @select-project="handleProjectSelect"
         @create-project="handleCreateProject"
@@ -38,11 +36,6 @@
         @clear-canvas="requestClearCanvas"
         @delete-project="requestDeleteProject"
         @rename-project="handleRenameProject"
-        @run-workflow="handleRunWorkflow"
-        @stop-workflow="handleStopWorkflow"
-        @open-templates="showTemplatesModal = true"
-        @import-workflow="triggerWorkflowImport"
-        @export-workflow="handleExportWorkflow"
       />
 
       <ApiKeyManager
@@ -50,19 +43,6 @@
         :keys="storedApiKeys"
         @save="handleApiKeySave"
         @delete="handleApiKeyDelete"
-      />
-
-      <WorkflowTemplatesModal
-        v-model:show="showTemplatesModal"
-        @apply-template="handleApplyTemplate"
-      />
-
-      <input
-        ref="workflowFileInputRef"
-        type="file"
-        accept=".json"
-        style="display: none;"
-        @change="handleWorkflowFileChange"
       />
 
       <div v-if="!nodes.length" class="empty-canvas-hint">
@@ -245,9 +225,6 @@ import { usePlaygroundSchema } from '@/views/playground/composables/usePlaygroun
 import { listApiKeys } from '@/utils/apiKeySession'
 import { getCatalogMode } from '@/config'
 import ApiKeyManager from '@/components/ApiKeyManager.vue'
-import WorkflowTemplatesModal from './components/WorkflowTemplatesModal.vue'
-import { useWorkflowEngine } from './composables/useWorkflowEngine'
-import { exportWorkflowToFile, parseWorkflowFile, remapAndMergeWorkflow } from './utils/workflowFile'
 import { useTheme } from '@/composables/useTheme'
 
 const route = useRoute()
@@ -1379,175 +1356,6 @@ async function runNodeFromDock(node) {
       updateNodeStatus(node.id, NODE_STATUS.IDLE)
     }
     if (taskControllers.get(node.id) === work) finishTaskWork(work)
-  }
-}
-
-// 工作流节点的无人值守执行。与 runNodeFromDock（交互路径）刻意分开：
-// 1) 用独立的 usePlaygroundSchema 上下文构建请求快照，不读写 Dock 的选中表单状态，
-//    因此不要求节点处于选中态，也无须 schema 守卫令牌（交互运行与工作流运行互不干扰）
-// 2) 合并工作流引擎的 signal：点「停止」时经由节点自身的取消链路中止在途请求
-// 3) 失败向引擎上抛（引擎标记失败并级联跳过下游），成功不逐节点弹提示，由引擎汇总
-async function runNodeInWorkflow(node, { signal } = {}) {
-  if (!node || node.type === CANVAS_NODE_TYPES.GROUP) return
-  if (!node.data?.payload?.modelName) throw new Error('节点未选择模型')
-  const schemaCtx = usePlaygroundSchema()
-  const work = beginTaskWork(node.id, projectId.value)
-  // 工作流停止 → 联动中止该节点任务（复用节点自身的取消链路，请求/轮询共用 work.controller）
-  if (signal) {
-    if (signal.aborted) work.controller.abort(signal.reason)
-    else signal.addEventListener('abort', () => work.controller.abort(signal.reason), { once: true })
-  }
-  setTaskSetValue(startingNodeIds, node.id, true)
-  updateNodeStatus(node.id, NODE_STATUS.RUNNING, { error: '' })
-  try {
-    const model = await loadSingleModel(node.data.payload.modelName)
-    if (!model) throw new Error(`未找到模型配置：${node.data.payload.modelName}`)
-    schemaCtx.setupModel(model)
-    schemaCtx.selectedEndpointIndex.value = Number(node.data.payload?.endpointIndex || 0)
-    schemaCtx.applyEndpointSchema(schemaCtx.selectedEndpoint.value?.path || '/v1/chat/completions')
-    schemaCtx.formData.value = {
-      ...schemaCtx.formData.value,
-      ...(node.data.payload?.params || {}),
-    }
-
-    const runResult = await runCanvasModelNode({
-      node,
-      apiKey: getApiKey(),
-      apiBaseUrl: getApiBaseUrl(),
-      modelData: schemaCtx.modelData.value,
-      formData: { ...schemaCtx.formData.value },
-      selectedEndpoint: schemaCtx.selectedEndpoint.value,
-      inputTransformSchema: schemaCtx.inputTransformSchema.value,
-      requestTypeSchema: schemaCtx.requestTypeSchema.value,
-      asyncModeSchema: schemaCtx.asyncModeSchema.value,
-      outputSchema: schemaCtx.outputSchema.value,
-      inputBindingsSchema: schemaCtx.inputBindingsSchema.value,
-      videoModes: schemaCtx.videoModesSchema.value,
-      schemaFields: [...schemaCtx.schemaFields.value],
-      applyInputTransform: schemaCtx.applyInputTransform,
-      signal: work.controller.signal,
-      onTaskSubmitted: (taskLink) => persistSubmittedTask(work, taskLink),
-    })
-    if (runResult.pending) {
-      await resumeNodeTask(node.id, work)
-      // resumeNodeTask 自行消化错误（内部置节点 ERROR 后正常返回），这里转成引擎可感知的失败
-      if (getNodeById(node.id)?.data?.status === NODE_STATUS.ERROR) {
-        throw new Error(getNodeById(node.id)?.data?.payload?.error || '任务处理失败')
-      }
-    } else {
-      await persistCompletedTask(work)
-    }
-  } catch (error) {
-    if (error?.name !== 'AbortError' && isCurrentTaskWork(work)) {
-      updateNodeStatus(node.id, NODE_STATUS.ERROR, {
-        task: undefined,
-        error: error?.message || '模型运行失败',
-        notice: node.data?.payload?.parsedResults?.length ? '本次失败，当前显示上次成功结果' : '',
-      })
-      await saveGraph(work.projectId, toGraph()).catch(() => {})
-    }
-    throw error
-  } finally {
-    // 中止/中断且未进入其他状态时，复位 running 视觉
-    if (getNodeById(node.id)?.data?.status === NODE_STATUS.RUNNING && taskControllers.get(node.id) === work) {
-      updateNodeStatus(node.id, NODE_STATUS.IDLE)
-    }
-    if (taskControllers.get(node.id) === work) finishTaskWork(work)
-  }
-}
-
-// ── 工作流引擎与模板/导入导出集成 ──
-const showTemplatesModal = ref(false)
-const workflowFileInputRef = ref(null)
-
-const {
-  isWorkflowRunning,
-  progress: workflowProgress,
-  executeWorkflow,
-  stopWorkflow: stopWorkflowEngine,
-} = useWorkflowEngine()
-
-async function handleRunWorkflow(targetNodeId = null) {
-  if (isWorkflowRunning.value) {
-    stopWorkflowEngine()
-    return
-  }
-
-  const targetIds = typeof targetNodeId === 'string' ? targetNodeId : (selectedNodeId.value || null)
-
-  try {
-    await executeWorkflow({
-      nodes: nodes.value,
-      edges: edges.value,
-      targetNodeIds: targetIds,
-      // 无人值守路径：独立 schema 上下文，不走 Dock 的选中态守卫；
-      // 结果/失败落盘由 runNodeInWorkflow 内的持久化链路负责
-      runNodeFn: (nodeId, { signal }) => runNodeInWorkflow(getNodeById(nodeId), { signal }),
-    })
-  } catch (err) {
-    console.error('工作流执行中断或异常:', err)
-  }
-}
-
-function handleStopWorkflow() {
-  stopWorkflowEngine()
-  window.$message?.info('工作流已手动停止')
-}
-
-async function handleApplyTemplate({ template, replace = false }) {
-  if (!template) return
-  const current = toGraph()
-  const nextGraph = remapAndMergeWorkflow(current, template, {
-    replace,
-    offset: { x: 80, y: 80 },
-  })
-
-  setGraph(nextGraph)
-  await saveGraph(projectId.value, toGraph())
-  nextTick(() => {
-    fitCanvas()
-    window.$message?.success(replace ? `已载入模版: ${template.title}` : `已追加模版: ${template.title}`)
-  })
-}
-
-function handleExportWorkflow() {
-  const current = toGraph()
-  if (!current.nodes?.length) {
-    window.$message?.warning('当前画布为空，无法导出工作流')
-    return
-  }
-  const name = project.value?.name || 'workflow'
-  exportWorkflowToFile(current, name)
-  window.$message?.success('工作流配置已导出')
-}
-
-function triggerWorkflowImport() {
-  if (workflowFileInputRef.value) {
-    workflowFileInputRef.value.value = ''
-    workflowFileInputRef.value.click()
-  }
-}
-
-async function handleWorkflowFileChange(event) {
-  const file = event.target?.files?.[0]
-  if (!file) return
-
-  try {
-    const imported = await parseWorkflowFile(file)
-    const current = toGraph()
-    const nextGraph = remapAndMergeWorkflow(current, imported, {
-      replace: current.nodes.length === 0,
-      offset: { x: 100, y: 100 },
-    })
-
-    setGraph(nextGraph)
-    await saveGraph(projectId.value, toGraph())
-    nextTick(() => {
-      fitCanvas()
-      window.$message?.success(`成功导入工作流: ${imported.name} (${imported.nodes.length} 个节点)`)
-    })
-  } catch (err) {
-    window.$message?.error(`导入失败: ${err?.message || '文件格式不正确'}`)
   }
 }
 
