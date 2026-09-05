@@ -23,14 +23,6 @@ const viduQuery = {
   failedValues: ['failed'],
 }
 
-const viduVideoInput = (withImages) => [
-  promptField('一只猫在夕阳下的沙滩上行走'),
-  ...(withImages ? [{ key: 'images', label: '参考图', type: 'images', max: 3, required: true }] : []),
-  { key: 'duration', label: '时长(秒)', type: 'number', min: 1, max: 16, defaultValue: 5 },
-  { key: 'aspect_ratio', label: '宽高比', type: 'select', defaultValue: '16:9',
-    options: ['16:9', '9:16', '1:1'] },
-]
-
 // 文生视频字段（q3 系列：resolution 540p/720p/1080p，aspect_ratio 含 3:4/4:3）
 const q3Text2VideoInput = () => [
   promptField('一条龙飞过云雾缭绕的群山，细雨飘落'),
@@ -57,6 +49,7 @@ provider.models = [
     name: 'viduq3-pro',
     fullName: 'Vidu Q3 Pro',
     type: '3', typeName: '视频', icon: provider.icon, launchTime: '2025-12-01',
+    // 官方 viduq3-pro 不支持参考生视频（reference2video 调用必失败），无该端点
     endpoints: [
       ep(P, '/ent/v2/text2video', {
         capability: 'VIDEO', responseMode: 'ASYNC', protocolKey: 'async-video',
@@ -66,10 +59,6 @@ provider.models = [
         capability: 'VIDEO', responseMode: 'ASYNC', protocolKey: 'async-video',
         canvasModeLabel: '图生视频', query: viduQuery,
       }),
-      ep(P, '/ent/v2/reference2video', {
-        capability: 'VIDEO', responseMode: 'ASYNC', protocolKey: 'async-video',
-        canvasModeLabel: '参考生视频', query: viduQuery,
-      }),
       ep(P, '/ent/v2/start-end2video', {
         capability: 'VIDEO', responseMode: 'ASYNC', protocolKey: 'async-video',
         canvasModeLabel: '首尾帧视频', query: viduQuery,
@@ -77,7 +66,7 @@ provider.models = [
     ],
     modelSchema: schema({
       protocolKey: 'async-video',
-      input: viduVideoInput(false),
+      input: q3Text2VideoInput(),
       output: { displayType: 'video' },
       endpointSchemas: {
         [`${P}/ent/v2/img2video`]: schema({
@@ -85,16 +74,18 @@ provider.models = [
             promptField(),
             { key: 'image', label: '首帧图', type: 'image', required: true },
             { key: 'duration', label: '时长(秒)', type: 'number', min: 1, max: 16, defaultValue: 5 },
-            { key: 'aspect_ratio', label: '宽高比', type: 'select', defaultValue: '16:9',
-              options: ['16:9', '9:16', '1:1'] },
+            { key: 'resolution', label: '分辨率', type: 'select', defaultValue: '720p',
+              options: ['540p', '720p', '1080p'] },
           ],
           inputBindings: { sourceImage: 'image' },
+          // 官方 img2video 只接受 images 数组（仅 1 张），无 aspect_ratio
+          inputTransform: {
+            prompt: '$${prompt}',
+            images: ['$${image}'],
+            duration: '$${duration}',
+            resolution: '$${resolution}',
+          },
           videoModes: ['first'],
-        }),
-        [`${P}/ent/v2/reference2video`]: schema({
-          input: viduVideoInput(true),
-          inputBindings: { sourceImages: 'images' },
-          videoModes: ['reference'],
         }),
         [`${P}/ent/v2/start-end2video`]: schema({
           input: [
@@ -102,8 +93,17 @@ provider.models = [
             { key: 'image', label: '首帧图', type: 'image', required: true },
             { key: 'last_image', label: '尾帧图', type: 'image', required: true },
             { key: 'duration', label: '时长(秒)', type: 'number', min: 1, max: 16, defaultValue: 5 },
+            { key: 'resolution', label: '分辨率', type: 'select', defaultValue: '720p',
+              options: ['540p', '720p', '1080p'] },
           ],
           inputBindings: { sourceImage: 'image', lastFrameImage: 'last_image' },
+          // 官方 start-end2video 只接受 images: [首帧, 尾帧] 两元素数组
+          inputTransform: {
+            prompt: '$${prompt}',
+            images: ['$${image}', '$${last_image}'],
+            duration: '$${duration}',
+            resolution: '$${resolution}',
+          },
           videoModes: ['firstlast'],
         }),
       },
@@ -144,10 +144,15 @@ provider.models = [
             { key: 'duration', label: '时长(秒)', type: 'number', min: 1, max: 16, defaultValue: 5 },
             { key: 'resolution', label: '分辨率', type: 'select', defaultValue: '720p',
               options: ['540p', '720p', '1080p'] },
-            { key: 'aspect_ratio', label: '宽高比', type: 'select', defaultValue: '16:9',
-              options: ['16:9', '9:16', '3:4', '4:3', '1:1'] },
           ],
           inputBindings: { sourceImage: 'image' },
+          // 官方 img2video 只接受 images 数组（仅 1 张），无 aspect_ratio
+          inputTransform: {
+            prompt: '$${prompt}',
+            images: ['$${image}'],
+            duration: '$${duration}',
+            resolution: '$${resolution}',
+          },
           videoModes: ['first'],
         }),
         [`${P}/ent/v2/reference2video`]: schema({
@@ -165,6 +170,13 @@ provider.models = [
               options: ['540p', '720p', '1080p'] },
           ],
           inputBindings: { sourceImage: 'image', lastFrameImage: 'last_image' },
+          // 官方 start-end2video 只接受 images: [首帧, 尾帧] 两元素数组
+          inputTransform: {
+            prompt: '$${prompt}',
+            images: ['$${image}', '$${last_image}'],
+            duration: '$${duration}',
+            resolution: '$${resolution}',
+          },
           videoModes: ['firstlast'],
         }),
       },
@@ -185,12 +197,12 @@ provider.models = [
     modelSchema: schema({
       protocolKey: 'async-video',
       // 顶层 input 即其唯一端点 reference2video 的默认字段
-      // duration 1–16（pricing 页记为 3–16）；分辨率仅 720p/1080p，无 540p
-      input: q3ReferenceVideoInput({ durationMin: 1, resolutions: ['720p', '1080p'] }),
+      // duration 国内站 API 文档与 pricing 均为 3–16（国际站记 1–16）；分辨率仅 720p/1080p，无 540p
+      input: q3ReferenceVideoInput({ durationMin: 3, resolutions: ['720p', '1080p'] }),
       output: { displayType: 'video' },
       endpointSchemas: {
         [`${P}/ent/v2/reference2video`]: schema({
-          input: q3ReferenceVideoInput({ durationMin: 1, resolutions: ['720p', '1080p'] }),
+          input: q3ReferenceVideoInput({ durationMin: 3, resolutions: ['720p', '1080p'] }),
           inputBindings: { sourceImages: 'images' },
           videoModes: ['reference'],
         }),

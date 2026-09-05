@@ -41,6 +41,21 @@ const defaultWait = (duration, signal) => new Promise((resolve, reject) => {
   signal?.addEventListener('abort', cancelled, { once: true })
 })
 
+// Veo 结果 video.uri 是 generativelanguage 的鉴权下载链接（附 API Key 即可下载，BYOK 本地持有）。
+// 重写为 /official/gemini 同源反代路径携 Key 拉取（与端点请求同一条链路，浏览器直连会跨域），
+// 下载为 blob 转 ObjectURL 供预览；Key 走请求头不进 URL，失败返回 null 由调用方保留原提示。
+const downloadGeminiVideo = async (uri, { apiBaseUrl, authHeaders, signal }) => {
+  const provider = getProvider('gemini')
+  const path = applyProviderBaseUrl(provider, String(uri).replace(/^https:\/\/generativelanguage\.googleapis\.com/, provider.proxyPrefix))
+  try {
+    const response = await appFetch(joinUrl(apiBaseUrl, path), { method: 'GET', headers: authHeaders, signal })
+    if (!response.ok) return null
+    return URL.createObjectURL(await response.blob())
+  } catch {
+    return null
+  }
+}
+
 export function useRequestPipeline({ getNestedValue, wait = defaultWait }) {
   const resolveResultType = ({ model = {}, selectedEndpoint = null, outputSchema = null }) => {
     if (outputSchema?.displayType && outputSchema.displayType !== 'auto') return outputSchema.displayType
@@ -65,8 +80,34 @@ export function useRequestPipeline({ getNestedValue, wait = defaultWait }) {
     return requestBody
   }
 
+  // 扁平 JSON 提交（无 inputTransform 的模型）剔除顶层空值：空串（被清空的 select）
+  // 与空数组（未选参考图的 images 字段）会被厂商严格校验 400；false/0 是合法值必须保留
+  const stripEmptyFields = (body) => {
+    if (!body || typeof body !== 'object' || Array.isArray(body)) return body
+    return Object.fromEntries(Object.entries(body).filter(([, value]) =>
+      value !== '' && value !== undefined && value !== null && (!Array.isArray(value) || value.length > 0)))
+  }
+
   const isFormContentType = (contentType) =>
     contentType === 'formdata' || contentType === 'form' || contentType === 'form_data'
+
+  // 画布上传的图片以 data-URI 字符串存表单；OpenAI 图片编辑等 multipart 端点
+  // 要求 image/image[] 为文件二进制，data-URI 文本会被拒，需在拼 FormData 时转回 Blob
+  const DATA_URI_RE = /^data:([^;,]+);base64,(.+)$/s
+  const dataUriToBlob = (value) => {
+    if (typeof value !== 'string') return null
+    const match = DATA_URI_RE.exec(value)
+    if (!match) return null
+    try {
+      const binary = atob(match[2])
+      const bytes = new Uint8Array(binary.length)
+      for (let i = 0; i < binary.length; i += 1) bytes[i] = binary.charCodeAt(i)
+      const ext = (match[1].split('/')[1] || 'png').replace('jpeg', 'jpg')
+      return { blob: new Blob([bytes], { type: match[1] }), name: `upload.${ext}` }
+    } catch {
+      return null
+    }
+  }
 
   // 流式与非流式分支共用的 requestMeta 构造：JSON 请求才回显 Content-Type（multipart 由浏览器自定 boundary）
   const buildRequestMeta = ({ startTime, authHeaders, responseHeaders, contentType, tokenUsage = null }) => ({
@@ -87,25 +128,53 @@ export function useRequestPipeline({ getNestedValue, wait = defaultWait }) {
     if (useFormData) {
       const fd = new FormData()
       const flat = body || {}
+      // multipart 端点（OpenAI 图像编辑）要求文件二进制：上游注入的云端 http(s) URL
+      // 按文本提交必 400，先拉取转 Blob；跨域拉取失败时给出明确指引而非静默发坏请求
+      const urlToBlob = async (value) => {
+        if (typeof value !== 'string' || !/^https?:\/\//.test(value)) return null
+        try {
+          const res = await appFetch(value, { signal })
+          if (!res.ok) throw new Error(`HTTP ${res.status}`)
+          const blob = await res.blob()
+          const ext = (blob.type?.split('/')[1] || 'png').replace('jpeg', 'jpg')
+          return { blob, name: `upload.${ext}` }
+        } catch (error) {
+          if (error?.name === 'AbortError') throw error
+          throw taskError(`参考图 URL 无法转为文件上传（跨域或已过期）：${value.slice(0, 80)}…请改用本地上传`, 'terminal', error)
+        }
+      }
       // 与旧 runModel 一致：multipart 请求显式携带 model 字段
       if (flat.model !== undefined && flat.model !== null && flat.model !== '') fd.append('model', flat.model)
       for (const [key, value] of Object.entries(flat)) {
         if (Array.isArray(value)) {
-          value.forEach((item, index) => {
-            const fieldName = item instanceof File && key === 'image' ? 'image[]' : `${key}[${index}]`
-            if (item instanceof File) fd.append(fieldName, item, item.name)
-            else if (typeof item === 'object' && item !== null) fd.append(fieldName, JSON.stringify(item))
+          for (let index = 0; index < value.length; index += 1) {
+            const item = value[index]
+            const fileItem = item instanceof Blob
+              ? { blob: item, name: item instanceof File ? item.name : '' }
+              : dataUriToBlob(item) || (key === 'image' ? await urlToBlob(item) : null)
+            const fieldName = fileItem && key === 'image' ? 'image[]' : `${key}[${index}]`
+            if (fileItem) {
+              if (fileItem.name) fd.append(fieldName, fileItem.blob, fileItem.name)
+              else fd.append(fieldName, fileItem.blob)
+            } else if (typeof item === 'object' && item !== null) fd.append(fieldName, JSON.stringify(item))
             else fd.append(fieldName, item)
-          })
-        } else if (value instanceof File) fd.append(key, value, value.name)
-        else if (typeof value === 'object' && value !== null) fd.append(key, JSON.stringify(value))
+          }
+          continue
+        }
+        const fileValue = value instanceof Blob
+          ? { blob: value, name: value instanceof File ? value.name : '' }
+          : dataUriToBlob(value) || (key === 'image' ? await urlToBlob(value) : null)
+        if (fileValue) {
+          if (fileValue.name) fd.append(key, fileValue.blob, fileValue.name)
+          else fd.append(key, fileValue.blob)
+        } else if (typeof value === 'object' && value !== null) fd.append(key, JSON.stringify(value))
         else if (value !== undefined && value !== null && value !== '' && key !== 'model') fd.append(key, value)
       }
       response = await appFetch(joinUrl(apiBaseUrl, endpointPath), { method: 'POST', headers: requestHeaders, body: fd, signal })
     } else {
       requestHeaders['Content-Type'] = 'application/json'
       response = await appFetch(joinUrl(apiBaseUrl, endpointPath), {
-        method: 'POST', headers: requestHeaders, body: JSON.stringify(body), signal,
+        method: 'POST', headers: requestHeaders, body: JSON.stringify(stripEmptyFields(body)), signal,
       })
     }
     const responseHeaders = {}
@@ -247,16 +316,26 @@ export function useRequestPipeline({ getNestedValue, wait = defaultWait }) {
 
       // ── 厂商官方任务状态判定（query.statusPath / completedValues / failedValues / failedPath）──
       if (vendorQuery) {
-        const statusValue = String(getNestedValue?.(data, vendorQuery.statusPath) ?? '')
+        // statusPath 未命中时回退顶层 status（兼容状态平铺的厂商形态）；
+        // 比较大小写不敏感（MiniMax 为 Success/Fail 形态，其余厂商为小写/大写枚举）
+        const rawStatus = getNestedValue?.(data, vendorQuery.statusPath)
+        const statusValue = String(rawStatus ?? getNestedValue?.(data, 'status') ?? '').toLowerCase()
         const failedDetail = vendorQuery.failedPath ? getNestedValue?.(data, vendorQuery.failedPath) : null
-        const isCompleted = (vendorQuery.completedValues || []).map(String).includes(statusValue)
-        const isFailed = !!failedDetail || (vendorQuery.failedValues || []).map(String).includes(statusValue)
+        const isCompleted = (vendorQuery.completedValues || []).map((v) => String(v).toLowerCase()).includes(statusValue)
+        const isFailed = !!failedDetail || (vendorQuery.failedValues || []).map((v) => String(v).toLowerCase()).includes(statusValue)
         if (isCompleted) {
           const adapter = getAdapter(taskLink?.protocolKey)
           const rawExtraction = adapter?.extractMedia?.(data, null, getNestedValue)
-          const extraction = Array.isArray(rawExtraction?.parsedResults)
+          let extraction = Array.isArray(rawExtraction?.parsedResults)
             ? rawExtraction
             : extractMediaResult(data, taskLink?.resultType || 'text', null, getNestedValue)
+          // Veo：video.uri 需携 Key 下载，转 blob 后才能预览（仅 gemini 官方直连任务）
+          if (taskLink?.providerId === 'gemini' && extraction.parsedResults.length === 0 && extraction.protectedUris?.length) {
+            const blobs = (await Promise.all(
+              extraction.protectedUris.map((uri) => downloadGeminiVideo(uri, { apiBaseUrl, authHeaders, signal })),
+            )).filter(Boolean)
+            if (blobs.length) extraction = { ...extraction, parsedResults: blobs, unavailableReason: '' }
+          }
           if (MEDIA_RESULT_TYPES.has(taskLink?.resultType) && extraction.parsedResults.length === 0 && !extraction.unavailableReason) {
             throw taskError('任务已完成，但未返回可用媒体结果', 'terminal')
           }
@@ -337,7 +416,7 @@ export function useRequestPipeline({ getNestedValue, wait = defaultWait }) {
     })
 
     let data
-    if (stream && (contentType !== 'formdata')) {
+    if (stream && !isFormContentType(contentType)) {
       const streamText = await consumeStream({ response, adapter, onStreamChunk })
       return {
         result: streamText, resultType: 'chat', parsedResults: [streamText],

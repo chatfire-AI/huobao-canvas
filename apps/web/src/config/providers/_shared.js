@@ -40,8 +40,8 @@ export const temperatureField = (max = 2) => ({
   description: '采样温度，值越高输出越随机',
 })
 
-export const maxTokensField = (key = 'max_tokens', def = 4096) => ({
-  key, label: 'Max Tokens', type: 'number', min: 1, max: 128000, defaultValue: def,
+export const maxTokensField = (key = 'max_tokens', def = 4096, max = 128000) => ({
+  key, label: 'Max Tokens', type: 'number', min: 1, max, defaultValue: def,
   description: '最大输出 token 数',
 })
 

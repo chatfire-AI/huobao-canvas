@@ -1,4 +1,4 @@
-import { ep, model, messagesField, temperatureField, maxTokensField, openaiChatSchema, schema } from './_shared.js'
+import { ep, model, messagesField, temperatureField, maxTokensField, schema } from './_shared.js'
 
 const provider = {
   id: 'deepseek',
@@ -13,6 +13,29 @@ const provider = {
 
 // 官方另有 Anthropic 兼容端点 /anthropic/v1/messages（文档注明 x-api-key 鉴权；
 // 本厂商 auth 为 bearer，画布以 Bearer 透传，能否被官方接受以实际联调为准）
+
+// 思考模式请求体为 thinking:{type:'enabled'|'disabled'}：模板语言无布尔→字符串转换，
+// thinking 用 select 直存 enabled/disabled，由 inputTransform 包成官方对象；
+// 两端点共用此 schema，thinking 对象在 claude 协议层被忽略（官方默认即开启）
+const chatSchema = schema({
+  protocolKey: 'openai-chat',
+  input: [
+    messagesField,
+    { ...temperatureField(), description: '采样温度，值越高输出越随机；思考模式（默认开启）下不生效' },
+    maxTokensField(),
+    { key: 'thinking', label: '深度思考', type: 'select', defaultValue: 'enabled', options: ['enabled', 'disabled'],
+      description: '官方默认开启思考模式' },
+    { key: 'reasoning_effort', label: '推理力度', type: 'select', defaultValue: 'high', options: ['low', 'high', 'max'] },
+  ],
+  inputTransform: {
+    messages: '$${messages}',
+    temperature: '$${temperature}',
+    max_tokens: '$${max_tokens}',
+    thinking: { type: '$${thinking}' },
+    reasoning_effort: '$${reasoning_effort}',
+  },
+})
+
 provider.models = [
   model(provider, {
     name: 'deepseek-v4-pro',
@@ -22,10 +45,7 @@ provider.models = [
       ep(provider.proxyPrefix, '/v1/chat/completions', { capability: 'CHAT', protocolKey: 'openai-chat' }),
       ep(provider.proxyPrefix, '/anthropic/v1/messages', { capability: 'CHAT', protocolKey: 'claude', canvasModeLabel: 'Claude 协议' }),
     ],
-    modelSchema: schema({
-      protocolKey: 'openai-chat',
-      input: [messagesField, temperatureField(), maxTokensField()],
-    }),
+    modelSchema: chatSchema,
   }),
   model(provider, {
     name: 'deepseek-v4-flash',
@@ -35,7 +55,7 @@ provider.models = [
       ep(provider.proxyPrefix, '/v1/chat/completions', { capability: 'CHAT', protocolKey: 'openai-chat' }),
       ep(provider.proxyPrefix, '/anthropic/v1/messages', { capability: 'CHAT', protocolKey: 'claude', canvasModeLabel: 'Claude 协议' }),
     ],
-    modelSchema: openaiChatSchema(),
+    modelSchema: chatSchema,
   }),
 ]
 

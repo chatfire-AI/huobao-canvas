@@ -30,11 +30,24 @@ export function buildChatRequest(protocol, model, messages, params = {}) {
     const thinkingBudget = Number(options.thinking_budget) || 0
     delete options.thinking
     delete options.thinking_budget
+    // OpenAI 系 schema 的字段在 Anthropic 端点无对应语义：max_completion_tokens
+    // 映射为 max_tokens（MiniMax M2/M3 走 Claude 端点时值不丢失、不泄漏未知字段）；
+    // reasoning_effort 直接丢弃（DeepSeek/MiniMax M3 泄漏会被严格校验 400）
+    const maxTokens = Number(options.max_tokens ?? options.max_completion_tokens) || 4096
+    delete options.max_completion_tokens
+    delete options.reasoning_effort
     if (thinkingType === 'adaptive' || thinkingType === 'disabled') {
       mapped.thinking = { type: thinkingType }
-    } else if (thinkingBudget > 0) {
-      // enabled 必须携带 budget_tokens，缺预算时省略 thinking（等价不思考）
-      mapped.thinking = { type: 'enabled', budget_tokens: thinkingBudget }
+    } else if (thinkingType === true && thinkingBudget > 0) {
+      // schema 表单 thinking 为布尔开关，仅开启时发送；官方要求 budget_tokens < max_tokens
+      const budget = Math.min(thinkingBudget, Math.max(maxTokens - 1, 1024))
+      mapped.thinking = { type: 'enabled', budget_tokens: budget }
+    }
+    // 扩展思考与采样参数互斥（官方要求 temperature 保持默认 1），开启时剥离避免 400
+    if (mapped.thinking?.type === 'enabled') {
+      delete options.temperature
+      delete options.top_p
+      delete options.top_k
     }
     if (options.output_effort) {
       mapped.output_config = { effort: options.output_effort }
@@ -44,7 +57,7 @@ export function buildChatRequest(protocol, model, messages, params = {}) {
       model,
       ...options,
       ...mapped,
-      max_tokens: Number(options.max_tokens) || 4096,
+      max_tokens: maxTokens,
       ...(system ? { system } : {}),
       messages: messages
         .filter((message) => message.role !== 'system')
@@ -62,7 +75,7 @@ export function buildChatRequest(protocol, model, messages, params = {}) {
       temperature: options.temperature,
       topP: options.top_p,
       topK: options.top_k,
-      maxOutputTokens: options.max_output_tokens ?? options.max_tokens,
+      maxOutputTokens: options.maxOutputTokens ?? options.max_output_tokens ?? options.max_tokens,
       stopSequences: typeof options.stop === 'string' ? [options.stop] : options.stop,
       responseMimeType: options.response_mime_type,
       responseModalities: options.response_modalities ?? options.responseModalities,

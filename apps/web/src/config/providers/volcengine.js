@@ -20,13 +20,13 @@ const chatModel = ({ name, fullName, launchTime }) => model(provider, {
   endpoints: [ep(P, '/api/v3/chat/completions', { capability: 'CHAT', protocolKey: 'openai-chat' })],
   modelSchema: schema({
     protocolKey: 'openai-chat',
-    input: [messagesField, temperatureField(1), maxTokensField()],
+    input: [messagesField, temperatureField(1), maxTokensField('max_tokens', 4096, 65536)],
   }),
 })
 
 // ── Seedream 图像（OpenAI 兼容 /images/generations）──
 // extra 用于追加版本特有字段（output_format / aspect_ratio 等）
-const seedreamSchema = ({ sizes, defaultSize, imageMax = 10, imageDesc = '图生图/多图融合', extra = [] }) => schema({
+const seedreamSchema = ({ sizes, defaultSize, imageMax = 14, imageDesc = '图生图/多图融合', extra = [] }) => schema({
   protocolKey: 'openai-image',
   input: [
     promptField('一只坐在窗台上的可爱猫咪'),
@@ -65,25 +65,39 @@ const arkVideoEp = () => ep(P, '/api/v3/contents/generations/tasks', {
 const SEEDANCE_RATIOS = ['adaptive', '16:9', '4:3', '1:1', '3:4', '9:16', '21:9']
 
 // Ark 官方内容任务：content[] 部件（text + 首帧/尾帧 image_url），规格走顶层参数
+// withLastFrame=false 时移除尾帧字段（1.0 Lite 不支持尾帧，传入即报错）
+// withFirstFrame=false 时移除首帧字段（Lite T2V 纯文生视频，官方不接受 image）
 const seedanceSchema = ({ durationMin, durationMax, resolutions, defaultResolution,
-  ratios = SEEDANCE_RATIOS, defaultRatio = 'adaptive', withAudio = false }) => schema({
+  ratios = SEEDANCE_RATIOS, defaultRatio = 'adaptive', withAudio = false, withLastFrame = true, withFirstFrame = true }) => schema({
   protocolKey: 'ark',
   input: [
     promptField('一只猫在夕阳下的沙滩上行走'),
-    { key: 'image', label: '首帧参考图', type: 'image' },
-    { key: 'last_image', label: '尾帧参考图', type: 'image' },
+    ...(withFirstFrame
+      ? [{ key: 'image', label: '首帧参考图', type: 'image' }]
+      : []),
+    ...(withLastFrame && withFirstFrame
+      ? [{ key: 'last_image', label: '尾帧参考图', type: 'image' }]
+      : []),
     { key: 'duration', label: '时长(秒)', type: 'number', min: durationMin, max: durationMax, defaultValue: 5 },
     { key: 'resolution', label: '分辨率', type: 'select', defaultValue: defaultResolution, options: resolutions },
     { key: 'ratio', label: '宽高比', type: 'select', defaultValue: defaultRatio, options: ratios },
   ],
-  inputBindings: { sourceImage: 'image', lastFrameImage: 'last_image' },
-  videoModes: ['firstlast'],
+  inputBindings: !withFirstFrame
+    ? null
+    : withLastFrame
+      ? { sourceImage: 'image', lastFrameImage: 'last_image' }
+      : { sourceImage: 'image' },
+  videoModes: !withFirstFrame ? ['text'] : withLastFrame ? ['firstlast'] : ['first'],
   inputTransform: {
     content: [
       { type: 'text', text: '$${prompt}' },
       // 有首帧/尾帧参考图才保留对应部件（@conditional 是 applyInputTransform 的数组项语法）
-      { type: 'image_url', image_url: { url: '$${image}' }, role: 'first_frame', '@conditional': 'image' },
-      { type: 'image_url', image_url: { url: '$${last_image}' }, role: 'last_frame', '@conditional': 'last_image' },
+      ...(withFirstFrame
+        ? [{ type: 'image_url', image_url: { url: '$${image}' }, role: 'first_frame', '@conditional': 'image' }]
+        : []),
+      ...(withLastFrame && withFirstFrame
+        ? [{ type: 'image_url', image_url: { url: '$${last_image}' }, role: 'last_frame', '@conditional': 'last_image' }]
+        : []),
     ],
     duration: '$${duration}',
     resolution: '$${resolution}',
@@ -109,16 +123,14 @@ provider.models = [
     name: 'doubao-seed-2-1-turbo-260628', fullName: 'Doubao Seed 2.1 Turbo', launchTime: '2026-06-23',
   }),
   chatModel({
-    name: 'doubao-seed-2.0-pro', fullName: 'Doubao Seed 2.0 Pro', launchTime: '2026-02-14',
+    name: 'doubao-seed-2-0-pro-260215', fullName: 'Doubao Seed 2.0 Pro', launchTime: '2026-02-15',
   }),
   chatModel({
-    name: 'doubao-seed-2.0-mini', fullName: 'Doubao Seed 2.0 Mini', launchTime: '2026-02-14',
+    name: 'doubao-seed-2-0-mini-260215', fullName: 'Doubao Seed 2.0 Mini', launchTime: '2026-02-15',
   }),
+  // 官方无 doubao-seed-2.0-lite，不设该模型
   chatModel({
-    name: 'doubao-seed-2.0-lite', fullName: 'Doubao Seed 2.0 Lite', launchTime: '2026-02-14',
-  }),
-  chatModel({
-    name: 'doubao-seed-2.0-code', fullName: 'Doubao Seed 2.0 Code', launchTime: '2026-02-14',
+    name: 'doubao-seed-2-0-code-preview-260215', fullName: 'Doubao Seed 2.0 Code', launchTime: '2026-02-15',
   }),
 
   // ── 图像 ──
@@ -178,8 +190,10 @@ provider.models = [
     schemaOpts: {
       durationMin: 2, durationMax: 12,
       resolutions: ['480p', '720p', '1080p'], defaultResolution: '720p',
-      // Lite 文生视频无 adaptive，默认 16:9；不支持同步音频
+      // Lite 文生视频无 adaptive，默认 16:9；纯文生：官方不接受首帧图，不支持同步音频与尾帧
       ratios: ['16:9', '4:3', '1:1', '3:4', '9:16', '21:9'], defaultRatio: '16:9',
+      withFirstFrame: false,
+      withLastFrame: false,
     },
   }),
   seedanceModel({
@@ -187,8 +201,9 @@ provider.models = [
     schemaOpts: {
       durationMin: 2, durationMax: 12,
       resolutions: ['480p', '720p', '1080p'], defaultResolution: '720p',
-      // 图生视频画幅跟随首帧，默认 adaptive；不支持同步音频
+      // 图生视频画幅跟随首帧，默认 adaptive；不支持同步音频与尾帧
       ratios: ['adaptive', '16:9', '4:3', '1:1', '3:4', '9:16', '21:9'], defaultRatio: 'adaptive',
+      withLastFrame: false,
     },
   }),
   seedanceModel({
@@ -203,6 +218,7 @@ provider.models = [
     name: 'doubao-seedance-2-0-260128', fullName: 'Doubao Seedance 2.0', launchTime: '2026-01-28',
     schemaOpts: {
       durationMin: 4, durationMax: 15,
+      // 4K：官方 REST 枚举未列出，快速入门显示 2.0 标准版支持；实测若返回 400 则移除
       resolutions: ['480p', '720p', '1080p', '4K'], defaultResolution: '720p',
       withAudio: true,
     },
@@ -227,9 +243,9 @@ provider.models = [
   seedanceModel({
     name: 'doubao-seedance-2-5-260628', fullName: 'Doubao Seedance 2.5', launchTime: '2026-08-07',
     schemaOpts: {
-      // 原生 30 秒电影级视频，全模态参考
+      // 原生 30 秒电影级视频，全模态参考；最高 1080p（4K 仅 2.0 标准版）
       durationMin: 4, durationMax: 30,
-      resolutions: ['480p', '720p', '1080p', '4K'], defaultResolution: '720p',
+      resolutions: ['480p', '720p', '1080p'], defaultResolution: '720p',
       withAudio: true,
     },
   }),

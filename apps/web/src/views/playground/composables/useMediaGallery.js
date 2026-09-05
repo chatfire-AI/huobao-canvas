@@ -1,7 +1,9 @@
 import { ref } from 'vue'
 import Dexie from 'dexie'
 
-const DB_NAME = 'playground_gallery'
+const DB_NAME = 'huobao-canvas-gallery'
+// v2.0 独立前与 chatfire-gateway 平台共用的旧库名，仅用于一次性数据迁移（勿删除旧库）
+const LEGACY_DB_NAME = 'playground_gallery'
 const MAX_ITEMS = 200
 // 参数快照中过长的字符串（输入 base64 图片等）不入库，避免膨胀
 const MAX_PARAM_STRING = 300
@@ -10,6 +12,25 @@ const db = new Dexie(DB_NAME)
 db.version(1).stores({
   media_items: 'id, type, modelName, createdAt',
 })
+
+// 一次性迁移：旧库（与 gateway 平台共用名）中的画廊记录拷贝到新库，仅当新库为空时执行
+let legacyMigrationPromise = null
+const migrateLegacyDatabase = () => {
+  legacyMigrationPromise ||= (async () => {
+    try {
+      if (!(await Dexie.exists(LEGACY_DB_NAME))) return
+      if ((await db.media_items.count()) > 0) return
+      const legacy = new Dexie(LEGACY_DB_NAME)
+      legacy.version(1).stores({ media_items: 'id, type, modelName, createdAt' })
+      const items = await legacy.media_items.toArray()
+      legacy.close()
+      if (items.length) await db.media_items.bulkPut(items)
+    } catch (error) {
+      console.warn('[gallery] 旧库数据迁移跳过：', error)
+    }
+  })()
+  return legacyMigrationPromise
+}
 
 const nowIso = () => new Date().toISOString()
 
@@ -166,6 +187,7 @@ export function useMediaGallery() {
   }
 
   async function listItems(type = '') {
+    await migrateLegacyDatabase()
     const collection = type
       ? await db.media_items.where('type').equals(type).toArray()
       : await db.media_items.toArray()

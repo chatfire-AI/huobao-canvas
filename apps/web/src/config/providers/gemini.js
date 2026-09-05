@@ -26,12 +26,12 @@ const chatSchema = () => schema({
 
 // 官方原生格式：contents[].parts[].text + generationConfig.responseModalities
 // imageSizes 为空数组时不声明 imageSize 字段（仅 1K 的档位移除该键，避免下发空串）
-// 参考图：images 字段经 inputTransform 注入为 {image: dataURL} 部件，由 gemini 适配器转 inlineData
-const imageSchema = ({ prompt, aspectRatios, imageSizes = [] }) => schema({
+// 参考图：images 字段经 inputTransform 注入为 {image: dataURL} 部件，由 gemini 适配器转 inlineData（Gemini 3 系支持 14 张，2.5 上限 3 张）
+const imageSchema = ({ prompt, aspectRatios, imageSizes = [], maxImages = 3 }) => schema({
   protocolKey: 'gemini',
   input: [
     promptField(prompt),
-    { key: 'images', label: '参考图', type: 'images', max: 3, description: '图生图/参考生成（可上传或由上游节点传入）' },
+    { key: 'images', label: '参考图', type: 'images', max: maxImages, description: '图生图/参考生成（可上传或由上游节点传入）' },
     { key: 'aspectRatio', label: '宽高比', type: 'select', defaultValue: '1:1',
       options: aspectRatios },
     ...(imageSizes.length
@@ -43,9 +43,9 @@ const imageSchema = ({ prompt, aspectRatios, imageSizes = [] }) => schema({
   inputTransform: {
     contents: [{ parts: [
       { text: '$${prompt}' },
-      { image: '$${images[0]}', '@conditional': 'images[0]' },
-      { image: '$${images[1]}', '@conditional': 'images[1]' },
-      { image: '$${images[2]}', '@conditional': 'images[2]' },
+      ...Array.from({ length: maxImages }, (_, i) => (
+        { image: `$\${images[${i}]}`, '@conditional': `images[${i}]` }
+      )),
     ] }],
     generationConfig: {
       responseModalities: ['TEXT', 'IMAGE'],
@@ -122,6 +122,7 @@ provider.models = [
       prompt: 'A cute cat sitting on a windowsill',
       aspectRatios: ASPECTS_14,
       imageSizes: ['0.5K', '1K', '2K', '4K'],
+      maxImages: 14,
     }),
   }),
   model(provider, {
@@ -133,6 +134,7 @@ provider.models = [
       prompt: 'Da Vinci style anatomical sketch of a butterfly, studio quality',
       aspectRatios: ASPECTS_10,
       imageSizes: ['1K', '2K', '4K'],
+      maxImages: 14,
     }),
   }),
   model(provider, {
@@ -140,10 +142,11 @@ provider.models = [
     fullName: 'Gemini 3.1 Flash Lite Image',
     type: '2', typeName: '图片', icon: provider.icon, launchTime: '2026-06-01',
     endpoints: [ep(P, '/v1beta/models/{model}:generateContent', { capability: 'IMAGE', protocolKey: 'gemini' })],
-    // 仅支持 1K，不下发 imageSize
+    // 仅支持 1K，不下发 imageSize；该型号仅支持 10 种宽高比
     modelSchema: imageSchema({
       prompt: 'A clean app icon for a note-taking app, flat design',
-      aspectRatios: ASPECTS_14,
+      aspectRatios: ASPECTS_10,
+      maxImages: 14,
     }),
   }),
   model(provider, {
@@ -158,7 +161,8 @@ provider.models = [
     }),
   }),
   model(provider, {
-    name: 'veo-3.1',
+    // Gemini API 实际模型 ID 为 veo-3.1-generate-preview（另有 fast/lite 变体）
+    name: 'veo-3.1-generate-preview',
     fullName: 'Veo 3.1',
     type: '3', typeName: '视频', icon: provider.icon, launchTime: '2025-10-20',
     endpoints: [ep(P, '/v1beta/models/{model}:predictLongRunning', {
@@ -179,14 +183,18 @@ provider.models = [
         promptField('A cat walking on the beach at sunset'),
         { key: 'aspectRatio', label: '宽高比', type: 'select', defaultValue: '16:9',
           options: ['16:9', '9:16'] },
+        // 数字枚举：parameters.durationSeconds 官方为 integer，select 存数字避免字符串化下发
         { key: 'durationSeconds', label: '时长(秒)', type: 'select', defaultValue: 8,
           options: [4, 6, 8] },
+        { key: 'resolution', label: '分辨率', type: 'select', defaultValue: '720p',
+          options: ['720p', '1080p', '4k'], description: '1080p/4k 需配 8 秒时长' },
       ],
       inputTransform: {
         instances: [{ prompt: '$${prompt}' }],
         parameters: {
           aspectRatio: '$${aspectRatio}',
           durationSeconds: '$${durationSeconds}',
+          resolution: '$${resolution}',
         },
       },
       output: { displayType: 'video' },

@@ -4,7 +4,7 @@ const provider = {
   id: 'moonshot',
   label: 'Moonshot Kimi',
   icon: 'kimi-color.png',
-  docsUrl: 'https://platform.moonshot.cn/docs/api-reference',
+  docsUrl: 'https://platform.kimi.com/docs',
   baseUrl: 'https://api.moonshot.cn',
   proxyPrefix: '/official/moonshot',
   auth: { type: 'bearer' },
@@ -21,7 +21,7 @@ provider.models = [
     endpoints: [ep(provider.proxyPrefix, '/v1/chat/completions', { capability: 'CHAT', protocolKey: 'openai-chat' })],
     modelSchema: schema({
       protocolKey: 'openai-chat',
-      input: [messagesField, maxTokensField('max_completion_tokens')],
+      input: [messagesField, maxTokensField('max_completion_tokens', 131072, 1048576)],
       chatConfig: { supportImage: true },
     }),
   }),
@@ -32,7 +32,7 @@ provider.models = [
     endpoints: [ep(provider.proxyPrefix, '/v1/chat/completions', { capability: 'CHAT', protocolKey: 'openai-chat' })],
     modelSchema: schema({
       protocolKey: 'openai-chat',
-      input: [messagesField, maxTokensField()],
+      input: [messagesField, maxTokensField('max_completion_tokens')],
       chatConfig: { supportImage: true },
     }),
   }),
@@ -43,7 +43,7 @@ provider.models = [
     endpoints: [ep(provider.proxyPrefix, '/v1/chat/completions', { capability: 'CHAT', protocolKey: 'openai-chat' })],
     modelSchema: schema({
       protocolKey: 'openai-chat',
-      input: [messagesField, maxTokensField()],
+      input: [messagesField, maxTokensField('max_completion_tokens')],
       chatConfig: { supportImage: true },
     }),
   }),

@@ -23,7 +23,8 @@ export const VIDEO_REFERENCE_MODES = [
   { key: 'reference', label: '全能参考' },
 ]
 const FIRST_FRAME_KEYS = ['first_frame', 'image', 'image_url']
-const LAST_FRAME_KEYS = ['last_frame', 'lastFrame']
+// 尾帧键：last_frame（qwen）/ lastFrame（驼峰）/ last_image（volcengine seedance、vidu）
+const LAST_FRAME_KEYS = ['last_frame', 'lastFrame', 'last_image']
 const REFERENCE_KEY_PATTERN = /^(images|input_reference|reference_)/
 
 export const findReferenceImageField = (fields) =>

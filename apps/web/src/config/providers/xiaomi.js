@@ -14,6 +14,9 @@ const provider = {
 // MiMo 开放平台为 OpenAI 兼容协议（/v1/chat/completions，Bearer 鉴权）
 const chatEp = ep(provider.proxyPrefix, '/v1/chat/completions', { capability: 'CHAT', protocolKey: 'openai-chat' })
 
+// 思考模式下 temperature 强制 1.0（官方文档），仅关闭思考时可调
+const mimoTemperatureField = { ...temperatureField(1.5), description: '采样温度，值越高输出越随机；思考模式下强制 1.0' }
+
 provider.models = [
   // 全模态理解：图片/音频/视频输入、深度思考、1M 上下文 / 128K 输出
   model(provider, {
@@ -23,7 +26,7 @@ provider.models = [
     endpoints: [chatEp],
     modelSchema: schema({
       protocolKey: 'openai-chat',
-      input: [messagesField, temperatureField(1), maxTokensField()],
+      input: [messagesField, mimoTemperatureField, maxTokensField('max_completion_tokens', 32768, 131072)],
       chatConfig: { supportImage: true },
     }),
   }),
@@ -35,7 +38,7 @@ provider.models = [
     endpoints: [chatEp],
     modelSchema: schema({
       protocolKey: 'openai-chat',
-      input: [messagesField, temperatureField(1), maxTokensField()],
+      input: [messagesField, mimoTemperatureField, maxTokensField('max_completion_tokens', 32768, 131072)],
     }),
   }),
 ]

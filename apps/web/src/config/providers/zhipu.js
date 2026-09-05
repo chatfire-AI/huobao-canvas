@@ -1,4 +1,4 @@
-import { ep, model, openaiChatSchema, schema, messagesField, temperatureField, maxTokensField } from './_shared.js'
+import { ep, model, schema, messagesField, temperatureField, maxTokensField } from './_shared.js'
 
 const provider = {
   id: 'zhipu',
@@ -19,7 +19,7 @@ provider.models = [
     endpoints: [ep(provider.proxyPrefix, '/api/paas/v4/chat/completions', { capability: 'CHAT', protocolKey: 'openai-chat' })],
     modelSchema: schema({
       protocolKey: 'openai-chat',
-      input: [messagesField, temperatureField(1), maxTokensField()],
+      input: [messagesField, temperatureField(1), maxTokensField('max_tokens', 65536, 131072)],
     }),
   }),
   model(provider, {
@@ -29,7 +29,7 @@ provider.models = [
     endpoints: [ep(provider.proxyPrefix, '/api/paas/v4/chat/completions', { capability: 'CHAT', protocolKey: 'openai-chat' })],
     modelSchema: schema({
       protocolKey: 'openai-chat',
-      input: [messagesField, temperatureField(1), maxTokensField()],
+      input: [messagesField, temperatureField(1), maxTokensField('max_tokens', 65536, 131072)],
     }),
   }),
   model(provider, {
@@ -39,7 +39,7 @@ provider.models = [
     endpoints: [ep(provider.proxyPrefix, '/api/paas/v4/chat/completions', { capability: 'CHAT', protocolKey: 'openai-chat' })],
     modelSchema: schema({
       protocolKey: 'openai-chat',
-      input: [messagesField, temperatureField(1), maxTokensField()],
+      input: [messagesField, temperatureField(1), maxTokensField('max_tokens', 65536, 131072)],
     }),
   }),
   model(provider, {
@@ -49,7 +49,7 @@ provider.models = [
     endpoints: [ep(provider.proxyPrefix, '/api/paas/v4/chat/completions', { capability: 'CHAT', protocolKey: 'openai-chat' })],
     modelSchema: schema({
       protocolKey: 'openai-chat',
-      input: [messagesField, temperatureField(1), maxTokensField()],
+      input: [messagesField, temperatureField(1), maxTokensField('max_tokens', 65536, 131072)],
     }),
   }),
   model(provider, {
@@ -59,7 +59,7 @@ provider.models = [
     endpoints: [ep(provider.proxyPrefix, '/api/paas/v4/chat/completions', { capability: 'CHAT', protocolKey: 'openai-chat' })],
     modelSchema: schema({
       protocolKey: 'openai-chat',
-      input: [messagesField, temperatureField(1), maxTokensField()],
+      input: [messagesField, temperatureField(1), maxTokensField('max_tokens', 65536, 131072)],
     }),
   }),
   // 多模态视觉对话（图像/视频/文件输入），仍走同一 chat 端点
@@ -70,7 +70,7 @@ provider.models = [
     endpoints: [ep(provider.proxyPrefix, '/api/paas/v4/chat/completions', { capability: 'CHAT', protocolKey: 'openai-chat' })],
     modelSchema: schema({
       protocolKey: 'openai-chat',
-      input: [messagesField, temperatureField(1), maxTokensField()],
+      input: [messagesField, temperatureField(1), maxTokensField('max_tokens', 65536, 131072)],
       chatConfig: { supportImage: true },
     }),
   }),
@@ -79,7 +79,11 @@ provider.models = [
     fullName: 'GLM 4.7',
     type: '1', typeName: '对话', icon: provider.icon, launchTime: '2025-09-01',
     endpoints: [ep(provider.proxyPrefix, '/api/paas/v4/chat/completions', { capability: 'CHAT', protocolKey: 'openai-chat' })],
-    modelSchema: openaiChatSchema(),
+    // 官方 temperature 范围 [0,1]，与 glm-5.x 一致显式声明 schema
+    modelSchema: schema({
+      protocolKey: 'openai-chat',
+      input: [messagesField, temperatureField(1), maxTokensField('max_tokens', 65536, 131072)],
+    }),
   }),
 ]
 

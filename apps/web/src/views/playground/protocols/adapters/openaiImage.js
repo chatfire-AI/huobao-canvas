@@ -6,7 +6,9 @@ export const openaiImage = {
   buildRequest({ modelName, formData, inputTransform, endpoint }) {
     const data = inputTransform ? inputTransform(formData) : formData
     const isEdit = /\/images\/edits/.test(endpoint?.path || '')
-    return { body: { model: modelName, ...data }, contentType: isEdit ? 'formdata' : 'json' }
+    // xAI 的 /images/edits 只接受 JSON（image 需 {url} 对象包装），不走 multipart
+    const useFormData = isEdit && !(endpoint?.path || '').includes('/official/xai/')
+    return { body: { model: modelName, ...data }, contentType: useFormData ? 'formdata' : 'json' }
   },
   parseStreamEvent() { return { text: '', imageParts: [], done: true } },
   extractText() { return '' },
@@ -20,6 +22,6 @@ export const openaiImage = {
   parseTaskLink(response, endpoint) {
     const id = readTaskIdFromResponse(response, response)
     if (!id) return null
-    return { taskId: id, resultType: 'video' }
+    return { taskId: id, resultType: 'image' }
   },
 }

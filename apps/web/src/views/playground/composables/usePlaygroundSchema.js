@@ -230,12 +230,18 @@ export function usePlaygroundSchema() {
           }
           result[key] = processed
         }
+        // 全部子键被剔除的空包装对象（如 video:{url} 无源视频）整体剔除，
+        // 避免下发 video:{} 这类空对象残壳被厂商 400
+        if (Object.keys(result).length === 0 && Object.keys(obj).some((k) => k !== '@conditional')) {
+          return ''
+        }
         return result
       }
       return obj
     }
 
-    return replaceTemplate(transform)
+    const transformed = replaceTemplate(transform)
+    return transformed === '' ? {} : transformed
   }
 
   const getNestedValue = (obj, path) => {

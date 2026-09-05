@@ -53,6 +53,11 @@ const isPublicUrl = (value) => {
 const MAX_RESULT_DEPTH = 12
 const MAX_RESULT_NODES = 1000
 
+// Veo（Gemini 异步视频）结果形态：response.generateVideoResponse.generatedSamples[].video.uri
+// 该 uri 是 generativelanguage 的鉴权下载链接（附 API Key 即可下载），
+// 单独收集到 protectedUris，由管道携 Key 下载转 blob 后预览，不计入 protected 判空
+const GEMINI_DOWNLOAD_URI_RE = /^https:\/\/generativelanguage\.googleapis\.com\//
+
 export const extractMediaResult = (result, resultType, outputSchema, getNestedValue) => {
   if (!MEDIA_RESULT_TYPES.has(resultType)) {
     return {
@@ -62,6 +67,7 @@ export const extractMediaResult = (result, resultType, outputSchema, getNestedVa
   }
 
   const parsedResults = []
+  const protectedUris = []
   const resultKeys = new Set()
   const seen = new WeakSet()
   let visitedNodes = 0
@@ -96,6 +102,9 @@ export const extractMediaResult = (result, resultType, outputSchema, getNestedVa
       }
       if ((key === 'file_id' && child) || (parentKey === 'video' && key === 'uri' && child)) {
         protectedResult = true
+        if (parentKey === 'video' && key === 'uri' && typeof child === 'string' && GEMINI_DOWNLOAD_URI_RE.test(child.trim())) {
+          protectedUris.push(child.trim())
+        }
       }
       visit(child, depth + 1, key)
     }
@@ -104,6 +113,7 @@ export const extractMediaResult = (result, resultType, outputSchema, getNestedVa
   visit(result, 0)
   return {
     parsedResults,
+    protectedUris,
     unavailableReason: parsedResults.length === 0 && protectedResult
       ? '任务已完成，但结果需要供应商鉴权，当前无法直接预览'
       : '',

@@ -5,26 +5,58 @@ import {
   CANVAS_DB_NAME,
   DEFAULT_CANVAS_PROJECT_ID,
   DEFAULT_CANVAS_PROJECT_NAME,
+  LEGACY_CANVAS_CURRENT_PROJECT_KEY,
+  LEGACY_CANVAS_DB_NAME,
   MAX_CANVAS_PROJECTS,
   createEmptyGraph,
 } from '../constants/storageKeys.js'
 
+const defineCanvasSchema = (database) => {
+  database.version(1).stores({
+    canvas_projects: 'id, updatedAt',
+    canvas_graphs: 'projectId, updatedAt',
+    canvas_assets: 'id, projectId, nodeId, type, createdAt',
+    canvas_runs: 'id, projectId, nodeId, model, status, createdAt',
+  })
+
+  database.version(2).stores({
+    canvas_projects: 'id, updatedAt',
+    canvas_graphs: 'projectId, updatedAt',
+    canvas_assets: null,
+    canvas_runs: null,
+  })
+}
+
 const db = new Dexie(CANVAS_DB_NAME)
+defineCanvasSchema(db)
 const LEGACY_PENDING_GRAPH_DELETIONS_KEY = `${CANVAS_DB_NAME}:pending-graph-deletions`
 
-db.version(1).stores({
-  canvas_projects: 'id, updatedAt',
-  canvas_graphs: 'projectId, updatedAt',
-  canvas_assets: 'id, projectId, nodeId, type, createdAt',
-  canvas_runs: 'id, projectId, nodeId, model, status, createdAt',
-})
-
-db.version(2).stores({
-  canvas_projects: 'id, updatedAt',
-  canvas_graphs: 'projectId, updatedAt',
-  canvas_assets: null,
-  canvas_runs: null,
-})
+// 一次性迁移：把旧库（与 chatfire-gateway 平台共用名）中的画布数据拷贝到新库。
+// 仅当新库为空时执行；不删除旧库——同一源下 gateway 平台可能仍在使用它。
+let legacyMigrationPromise = null
+const migrateLegacyDatabase = () => {
+  legacyMigrationPromise ||= (async () => {
+    try {
+      if (!(await Dexie.exists(LEGACY_CANVAS_DB_NAME))) return
+      if ((await db.canvas_projects.count()) > 0) return
+      const legacy = new Dexie(LEGACY_CANVAS_DB_NAME)
+      defineCanvasSchema(legacy)
+      const [projects, graphs] = await Promise.all([
+        legacy.canvas_projects.toArray(),
+        legacy.canvas_graphs.toArray(),
+      ])
+      legacy.close()
+      if (!projects.length) return
+      await db.transaction('rw', db.canvas_projects, db.canvas_graphs, async () => {
+        await db.canvas_projects.bulkPut(projects)
+        await db.canvas_graphs.bulkPut(graphs)
+      })
+    } catch (error) {
+      console.warn('[canvas] 旧库数据迁移跳过：', error)
+    }
+  })()
+  return legacyMigrationPromise
+}
 
 const nowIso = () => new Date().toISOString()
 const RESULT_OWNERSHIP_KEYS = [
@@ -95,6 +127,11 @@ export function useCanvasStorage(options = {}) {
   const storage = options.storage || globalThis.localStorage
   try {
     storage?.removeItem(LEGACY_PENDING_GRAPH_DELETIONS_KEY)
+    // 旧 localStorage 键（与 gateway 平台共用）迁移到新键；旧键保留不动
+    if (storage && !storage.getItem(CANVAS_CURRENT_PROJECT_KEY)) {
+      const legacyProjectId = storage.getItem(LEGACY_CANVAS_CURRENT_PROJECT_KEY)
+      if (legacyProjectId) storage.setItem(CANVAS_CURRENT_PROJECT_KEY, legacyProjectId)
+    }
   } catch {}
   const registry = options.registry || (
     options.database || options.timers || options.storage
@@ -252,6 +289,7 @@ export function useCanvasStorage(options = {}) {
   }
 
   const listProjects = async () => {
+    if (database === db) await migrateLegacyDatabase()
     const projects = await database.canvas_projects.orderBy('updatedAt').reverse().toArray()
     if (projects.length) {
       const graphs = await database.canvas_graphs.bulkGet(projects.map((project) => project.id))

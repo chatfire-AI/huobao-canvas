@@ -76,8 +76,8 @@ const resolutionField = (options = ['720P', '1080P'], def = '1080P') => ({
   key: 'resolution', label: '分辨率', type: 'select', defaultValue: def, options,
 })
 
-const ratioField = (options = ['16:9', '9:16', '1:1', '4:3', '3:4']) => ({
-  key: 'ratio', label: '宽高比', type: 'select', defaultValue: '16:9', options,
+const ratioField = (options = ['16:9', '9:16', '1:1', '4:3', '3:4'], def = '16:9') => ({
+  key: 'ratio', label: '宽高比', type: 'select', defaultValue: def, options,
 })
 
 const durationField = (min, max, def = 5, description = '按秒计费') => ({
@@ -161,23 +161,24 @@ provider.models = [
     fullName: 'Qwen Image 3.0',
     type: '2', typeName: '图片', icon: provider.icon, launchTime: '2026-07-21',
     endpoints: [imageEp()],
-    // DashScope 官方原生：input.messages[].content[]（text + 可选 image）+ parameters
+    // DashScope 官方原生：input.messages[].content[]（text + 0~3 张 image）+ parameters
     modelSchema: schema({
       protocolKey: 'dashscope',
       input: [
         promptField('一只坐在窗台上的可爱猫咪'),
-        { key: 'image', label: '参考图/编辑图', type: 'image', description: '可上传或由上游节点传入' },
+        { key: 'images', label: '参考图(0~3张)', type: 'images', max: 3,
+          description: '图生图/图像编辑/多图参考，官方 I2I 最多 3 张' },
         { key: 'size', label: '尺寸', type: 'select', defaultValue: '2048*2048',
-          options: ['2048*2048', '2688*1536', '1536*2688', '2368*1728'] },
+          options: ['2048*2048', '2688*1536', '1536*2688', '2368*1728', '1728*2368'] },
         { key: 'n', label: '数量', type: 'number', min: 1, max: 6, defaultValue: 1 },
         { key: 'negative_prompt', label: '负向提示词', type: 'textarea', defaultValue: '' },
       ],
-      inputBindings: { sourceImage: 'image' },
+      inputBindings: { sourceImages: 'images' },
       inputTransform: {
         input: {
           messages: [{ role: 'user', content: [
             { text: '$${prompt}' },
-            { image: '$${image}', '@conditional': 'image' },
+            ...imageContentItems('images', 3),
           ] }],
         },
         parameters: {
@@ -199,18 +200,19 @@ provider.models = [
       protocolKey: 'dashscope',
       input: [
         promptField('一只坐在窗台上的可爱猫咪'),
-        { key: 'image', label: '参考图/编辑图', type: 'image', description: '可上传或由上游节点传入' },
+        { key: 'images', label: '参考图(0~3张)', type: 'images', max: 3,
+          description: '图生图/图像编辑/多图参考，官方 I2I 最多 3 张' },
         { key: 'size', label: '尺寸', type: 'select', defaultValue: '2048*2048',
-          options: ['2048*2048', '2688*1536', '1536*2688', '2368*1728'] },
+          options: ['2048*2048', '2688*1536', '1536*2688', '2368*1728', '1728*2368'] },
         { key: 'n', label: '数量', type: 'number', min: 1, max: 6, defaultValue: 1 },
         { key: 'negative_prompt', label: '负向提示词', type: 'textarea', defaultValue: '' },
       ],
-      inputBindings: { sourceImage: 'image' },
+      inputBindings: { sourceImages: 'images' },
       inputTransform: {
         input: {
           messages: [{ role: 'user', content: [
             { text: '$${prompt}' },
-            { image: '$${image}', '@conditional': 'image' },
+            ...imageContentItems('images', 3),
           ] }],
         },
         parameters: {
@@ -234,7 +236,7 @@ provider.models = [
         promptField('一只坐在窗台上的可爱猫咪'),
         { key: 'image', label: '参考图/编辑图', type: 'image', description: '可上传或由上游节点传入' },
         { key: 'size', label: '尺寸', type: 'select', defaultValue: '2048*2048',
-          options: ['2048*2048', '2688*1536', '1536*2688', '2368*1728'] },
+          options: ['2048*2048', '2688*1536', '1536*2688', '2368*1728', '1728*2368'] },
         { key: 'n', label: '数量', type: 'number', min: 1, max: 6, defaultValue: 1 },
         { key: 'negative_prompt', label: '负向提示词', type: 'textarea', defaultValue: '' },
       ],
@@ -270,7 +272,7 @@ provider.models = [
         { key: 'size', label: '尺寸', type: 'select', defaultValue: '2K',
           options: ['2K', '1K'], description: '也支持 宽*高（如 1488*704）' },
         { key: 'n', label: '数量', type: 'number', min: 1, max: 4, defaultValue: 1,
-          description: '组图模式 1~12，直接决定费用' },
+          description: '1~4 张，直接决定费用' },
         { key: 'enable_sequential', label: '组图模式', type: 'switch', defaultValue: false },
         { key: 'thinking_mode', label: '思考模式', type: 'switch', defaultValue: true,
           description: '仅文生图且非组图时生效' },
@@ -308,7 +310,7 @@ provider.models = [
         { key: 'size', label: '尺寸', type: 'select', defaultValue: '2K',
           options: ['4K', '2K', '1K'], description: '4K 仅文生图非组图可用' },
         { key: 'n', label: '数量', type: 'number', min: 1, max: 4, defaultValue: 1,
-          description: '组图模式 1~12，直接决定费用' },
+          description: '1~4 张，直接决定费用' },
         { key: 'enable_sequential', label: '组图模式', type: 'switch', defaultValue: false },
         { key: 'thinking_mode', label: '思考模式', type: 'switch', defaultValue: true,
           description: '仅文生图且非组图时生效' },
@@ -360,34 +362,37 @@ provider.models = [
     fullName: 'Wan 3.0 Video',
     type: '3', typeName: '视频', icon: provider.icon, launchTime: '2026-08-06',
     endpoints: [videoEp()],
-    // 万相 3.0 All-in-One：文生 / 首帧图生 / 参考生视频一体，最长 30 秒
+    // 万相 3.0 All-in-One：文生 / 首帧图生 / 参考生视频一体，最长 30 秒；
+    // 官方首帧图与参考图互斥（同传必报错），@conditional 不支持"另一字段为空"的反向条件，
+    // 无法在 inputTransform 层自动互斥，仅在描述中标注，需用户保证只填其一
     modelSchema: schema({
       protocolKey: 'dashscope',
       input: [
         promptField('一只猫在夕阳下的沙滩上行走'),
-        { key: 'image', label: '首帧图', type: 'image', description: '传入后按图生视频' },
-        { key: 'images', label: '参考图(0~5张)', type: 'images', max: 5,
-          description: '参考生视频素材，prompt 中以「图1/图2」按顺序引用' },
-        resolutionField(),
-        ratioField(),
+        { key: 'image', label: '首帧图', type: 'image',
+          description: '传入后按图生视频；与参考图互斥，二者只能填其一' },
+        { key: 'images', label: '参考图(0~10张)', type: 'images', max: 10,
+          description: '参考生视频素材，prompt 中以「图1/图2」按顺序引用；与首帧图互斥' },
+        resolutionField(['1080P', '720P', '480P']),
+        // 官方默认 adaptive（画幅跟随素材/提示词）
+        ratioField(['adaptive', '16:9', '9:16', '1:1', '4:3', '3:4'], 'adaptive'),
         durationField(2, 30),
-        promptExtendField,
       ],
       inputBindings: { sourceImage: 'image', sourceImages: 'images' },
       videoModes: ['first', 'reference'],
+      // 官方未定义 prompt_extend，勿传
       inputTransform: {
         input: {
           prompt: '$${prompt}',
           media: [
             { type: 'first_frame', url: '$${image}', '@conditional': 'image' },
-            ...mediaItems('reference_image', 'images', 5),
+            ...mediaItems('reference_image', 'images', 10),
           ],
         },
         parameters: {
           resolution: '$${resolution}',
           ratio: '$${ratio}',
           duration: '$${duration}',
-          prompt_extend: '$${prompt_extend}',
         },
       },
       output: { displayType: 'video' },

@@ -22,7 +22,27 @@ const chatEndpoints = () => [
 // M2.x 系列官方 schema：temperature [0,2] 默认 1；max_tokens 已弃用，官方建议 max_completion_tokens
 const m2ChatSchema = () => schema({
   protocolKey: 'openai-chat',
-  input: [messagesField, temperatureField(), maxTokensField('max_completion_tokens', 8192)],
+  input: [messagesField, { ...temperatureField(), defaultValue: 1 }, maxTokensField('max_completion_tokens', 8192)],
+})
+
+// M3 同 M2.x 基础字段，另给 /v1/responses 配端点字段组：
+// Responses API 只认 max_output_tokens（max_completion_tokens 会原样透传失效）；
+// temperature 限定 (0,1]；reasoning_effort 为官方枚举（默认 none，适配器映射到 reasoning.effort）
+const m3ChatSchema = () => schema({
+  protocolKey: 'openai-chat',
+  input: [messagesField, { ...temperatureField(), defaultValue: 1 }, maxTokensField('max_completion_tokens', 8192)],
+  endpointSchemas: {
+    [`${P}/v1/responses`]: schema({
+      input: [
+        messagesField,
+        { key: 'temperature', label: 'Temperature', type: 'slider',
+          min: 0.05, max: 1, step: 0.05, defaultValue: 0.7, description: '采样温度，值越高输出越随机' },
+        maxTokensField('max_output_tokens', 8192),
+        { key: 'reasoning_effort', label: '推理力度', type: 'select', defaultValue: 'none',
+          options: ['none', 'minimal', 'low', 'medium', 'high'] },
+      ],
+    }),
+  },
 })
 
 provider.models = [
@@ -35,7 +55,7 @@ provider.models = [
       ...chatEndpoints(),
       ep(P, '/v1/responses', { capability: 'CHAT', protocolKey: 'openai-responses', canvasModeLabel: 'Responses 协议' }),
     ],
-    modelSchema: m2ChatSchema(),
+    modelSchema: m3ChatSchema(),
   }),
   model(provider, {
     name: 'MiniMax-M2.7',
@@ -85,13 +105,15 @@ provider.models = [
     type: '3', typeName: '视频', icon: provider.icon, launchTime: '2026-01-01',
     endpoints: [ep(P, '/v2/video_generation', {
       capability: 'VIDEO', responseMode: 'ASYNC', protocolKey: 'async-video',
+      // 状态值同时覆盖两种形态：v2 小写 succeeded/failed 与 v1 大写 Success/Fail
+      //（管线按大小写不敏感比较，statusPath 未命中时回退顶层 status）；路径形态以实测为准
       query: {
         path: `${P}/v2/query/video_generation/{taskId}`,
         method: 'GET',
         taskIdPath: 'task_id',
         statusPath: 'task.status',
-        completedValues: ['succeeded'],
-        failedValues: ['failed', 'cancelled', 'expired'],
+        completedValues: ['succeeded', 'success'],
+        failedValues: ['failed', 'fail', 'cancelled'],
       },
     })],
     // 官方 v2 视频生成：content[] 多模态数组（text 必填 + 可选首帧 image_url）
@@ -112,7 +134,7 @@ provider.models = [
         content: [
           { type: 'text', text: '$${prompt}' },
           // 有首帧参考图才保留该部件（@conditional 是 applyInputTransform 的数组项语法）
-          { type: 'image_url', url: '$${image}', '@conditional': 'image' },
+          { type: 'image_url', image_url: { url: '$${image}' }, role: 'first_frame', '@conditional': 'image' },
         ],
         duration: '$${duration}',
         resolution: '$${resolution}',

@@ -87,7 +87,8 @@ export function usePlaygroundRunner({
         model: modelData.value,
         formData: formData.value,
         endpoint: selectedEndpoint.value,
-        protocolKey: (modelData.value.modelSchema?.protocolKey) || undefined,
+        // 不传模型级 protocolKey：modelSchema 是 JSON 字符串（此前 ?.protocolKey 恒为 undefined），
+        // 适配器选择走管线的 端点显式 protocolKey > 路径推断 兜底链
         apiKey: getApiKey(),
         apiBaseUrl: getApiBaseUrl(),
         stream: false,

@@ -98,6 +98,58 @@
     </div>
 
     <div class="toolbar-actions">
+      <button
+        v-if="!isWorkflowRunning"
+        type="button"
+        class="workflow-run-btn"
+        title="一键运行整条工作流（按 DAG 依赖分层串行执行；节点失败自动跳过其下游；选中节点时仅运行其上游依赖链）"
+        :disabled="controlsLocked"
+        @click="$emit('run-workflow')"
+      >
+        <svg-icon icon="tabler:player-play-filled" />
+        <span>运行工作流</span>
+      </button>
+      <button
+        v-else
+        type="button"
+        class="workflow-stop-btn"
+        title="停止当前正在执行的工作流"
+        @click="$emit('stop-workflow')"
+      >
+        <svg-icon icon="tabler:player-stop-filled" />
+        <span>停止 ({{ workflowProgress.current }}/{{ workflowProgress.total }})</span>
+      </button>
+      <button
+        type="button"
+        class="workflow-action-btn"
+        title="精选工作流模版库"
+        :disabled="controlsLocked"
+        @click="$emit('open-templates')"
+      >
+        <svg-icon icon="tabler:template" />
+        <span>模版</span>
+      </button>
+      <button
+        type="button"
+        class="workflow-action-btn"
+        title="导入工作流 JSON"
+        :disabled="controlsLocked"
+        @click="$emit('import-workflow')"
+      >
+        <svg-icon icon="tabler:file-import" />
+        <span>导入</span>
+      </button>
+      <button
+        type="button"
+        class="workflow-action-btn"
+        title="导出工作流 JSON"
+        :disabled="controlsLocked"
+        @click="$emit('export-workflow')"
+      >
+        <svg-icon icon="tabler:file-export" />
+        <span>导出</span>
+      </button>
+      <span class="action-divider" aria-hidden="true"></span>
       <button type="button" title="自动布局" @click="$emit('auto-layout')">
         <svg-icon icon="tabler:hierarchy-2" />
         <span>自动布局</span>
@@ -202,6 +254,8 @@ const props = defineProps({
   tipsActive: { type: Boolean, default: false },
   tipsHasHidden: { type: Boolean, default: false },
   showApiKeyControl: { type: Boolean, default: true },
+  isWorkflowRunning: { type: Boolean, default: false },
+  workflowProgress: { type: Object, default: () => ({ current: 0, total: 0, percent: 0, statusText: '' }) },
 })
 
 const emit = defineEmits([
@@ -216,6 +270,11 @@ const emit = defineEmits([
   'clear-canvas',
   'delete-project',
   'rename-project',
+  'run-workflow',
+  'stop-workflow',
+  'open-templates',
+  'import-workflow',
+  'export-workflow',
 ])
 
 const renamingId = ref('')
@@ -516,6 +575,35 @@ button {
 .toolbar-actions .danger-action:hover:not(:disabled) {
   background: var(--cf-error-soft);
   color: var(--cf-error);
+}
+
+.toolbar-actions .workflow-run-btn {
+  background: var(--cf-brand, #3b82f6) !important;
+  color: #ffffff !important;
+  border-color: transparent !important;
+  font-weight: 800;
+
+  &:hover:not(:disabled) {
+    background: var(--cf-brand-hover, #2563eb) !important;
+    color: #ffffff !important;
+  }
+}
+
+.toolbar-actions .workflow-stop-btn {
+  background: var(--cf-error, #ef4444) !important;
+  color: #ffffff !important;
+  border-color: transparent !important;
+  font-weight: 800;
+  animation: pulse-stop 1.5s infinite;
+
+  &:hover {
+    background: #dc2626 !important;
+  }
+}
+
+@keyframes pulse-stop {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.85; }
 }
 
 .action-divider {
