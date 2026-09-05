@@ -61,16 +61,6 @@
                 >
                   <svg-icon icon="tabler:pencil" />
                 </button>
-                <button
-                  v-if="projectOptions.length > 1"
-                  type="button"
-                  class="project-action-btn danger"
-                  title="删除"
-                  :disabled="controlsLocked"
-                  @click="$emit('delete-project', item.value)"
-                >
-                  <svg-icon icon="tabler:trash" />
-                </button>
               </span>
             </div>
           </div>
@@ -106,21 +96,6 @@
       <button type="button" title="适配画布" @click="$emit('fit-canvas')">
         <svg-icon icon="tabler:focus-centered" />
         <span>适配画布</span>
-      </button>
-      <span class="action-divider" aria-hidden="true"></span>
-      <button type="button" class="danger-action" title="清空画布" @click="$emit('clear-canvas')">
-        <svg-icon icon="tabler:eraser" />
-        <span>清空</span>
-      </button>
-      <button
-        type="button"
-        class="danger-action"
-        title="删除画布"
-        :disabled="!projectId"
-        @click="$emit('delete-project')"
-      >
-        <svg-icon icon="tabler:trash" />
-        <span>删除</span>
       </button>
     </div>
 
@@ -201,8 +176,6 @@ const emit = defineEmits([
   'open-settings',
   'auto-layout',
   'fit-canvas',
-  'clear-canvas',
-  'delete-project',
   'rename-project',
 ])
 
@@ -497,17 +470,6 @@ button {
   }
 }
 
-.toolbar-actions .danger-action:hover:not(:disabled) {
-  background: var(--cf-error-soft);
-  color: var(--cf-error);
-}
-
-.action-divider {
-  width: 1px;
-  height: 16px;
-  background: var(--cf-border);
-}
-
 // ── 保存状态 chip ──
 .save-state {
   max-width: 200px;
@@ -753,11 +715,6 @@ button {
   &:hover:not(:disabled) {
     background: var(--cf-bg-subtle);
     color: var(--cf-text-primary);
-  }
-
-  &.danger:hover:not(:disabled) {
-    background: var(--cf-error-soft);
-    color: var(--cf-error);
   }
 }
 

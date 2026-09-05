@@ -19,8 +19,6 @@
         @open-settings="router.push('/settings')"
         @auto-layout="handleAutoLayout"
         @fit-canvas="fitCanvas"
-        @clear-canvas="requestClearCanvas"
-        @delete-project="requestDeleteProject"
         @rename-project="handleRenameProject"
       />
 
@@ -323,7 +321,6 @@ const {
   addConnectedNode,
   getIncomingNodes,
   materializeCanvasResults,
-  clearCanvas,
   fitCanvas,
   fitSelected,
 } = useCanvasGraph()
@@ -339,7 +336,6 @@ const {
   listProjects,
   loadProject,
   createProject,
-  deleteProject,
   renameProject,
   saveGraph,
   scheduleSaveGraph,
@@ -490,6 +486,20 @@ provide('canvasPreview', ({ url, type }) => {
 provide('canvasUpdateNodePayload', (nodeId, patch) => {
   updateNodePayload(nodeId, patch, { userMutation: true })
 })
+
+// 节点拖拽结束后，连接的边短暂显示光条脉冲（参考 LibTV 能量段效果）
+const pulsingEdgeIds = ref(new Set())
+provide('canvasPulsingEdges', pulsingEdgeIds)
+let pulseTimer = 0
+function triggerEdgePulse(nodeId) {
+  const connected = edges.value
+    .filter((e) => e.source === nodeId || e.target === nodeId)
+    .map((e) => e.id)
+  if (!connected.length) return
+  clearTimeout(pulseTimer)
+  pulsingEdgeIds.value = new Set(connected)
+  pulseTimer = setTimeout(() => { pulsingEdgeIds.value = new Set() }, 2500)
+}
 
 // ── 模型选择持久化:按节点类型(1=对话/2=图片/3=视频)记住上次选用的模型,
 // 新建节点默认恢复;存的模型已下架或未开放时回退到第一个可用模型 ──
@@ -1072,38 +1082,6 @@ async function handleApiKeySelect(value) {
   for (const nodeId of waitingNodeIds) void resumeNodeTask(nodeId)
 }
 
-function requestDeleteProject(targetId) {
-  const deletingProjectId = targetId || projectId.value
-  if (!deletingProjectId) return
-  const isCurrent = deletingProjectId === projectId.value
-  const hasActiveTask = isCurrent && (startingNodeIds.value.size > 0 ||
-    nodes.value.some((node) => ['running', 'waiting'].includes(node.data?.status)))
-  window.$dialog.warning({
-    title: '删除画布',
-    content: hasActiveTask
-      ? '任务可能继续计费且无法恢复。删除后也不会找回任务结果，是否继续？'
-      : '删除后无法恢复，是否继续？',
-    positiveText: '删除',
-    negativeText: '取消',
-    onPositiveClick: async () => {
-      const request = beginProjectRequest()
-      if (isCurrent) abortProjectTasks(deletingProjectId)
-      try {
-        const loaded = await deleteProject(deletingProjectId, { activate: false })
-        if (!isCurrentProjectRequest(request)) return
-        if (isCurrent && !await applyLoadedProject(loaded, { request })) return
-        if (!await refreshProjects(request)) return
-        recoverWaitingTasks()
-      } catch (error) {
-        if (isCurrentProjectRequest(request)) {
-          recoverWaitingTasks()
-          window.$message?.error(error?.message || '删除画布失败')
-        }
-      }
-    },
-  })
-}
-
 function updatePromptDockPosition() {
   if (!selectedNodeId.value) {
     promptDockStyle.value = { left: '-9999px', top: '-9999px' }
@@ -1349,11 +1327,13 @@ function handleNodeDrag() {
   if (!isDragging.value) isDragging.value = true
 }
 
-function handleNodeDragStop() {
+function handleNodeDragStop(event) {
   isDragging.value = false
   dragTick.value += 1
   schedulePromptDockPositionUpdate()
   scheduleGraphSave() // 拖拽结束一次性保存
+  const draggedId = event?.node?.id || event?.nodes?.[0]?.id
+  if (draggedId) triggerEdgePulse(draggedId)
 }
 
 function handleMove() {
@@ -1590,35 +1570,6 @@ function handleAutoLayout() {
   if (!applyAutoLayout()) return
   scheduleGraphSave()
   nextTick(fitCanvas)
-}
-
-function requestClearCanvas() {
-  if (!nodes.value.length && !edges.value.length) return
-  const hasActiveTask = startingNodeIds.value.size > 0 ||
-    nodes.value.some((node) => ['running', 'waiting'].includes(node.data?.status))
-  window.$dialog.warning({
-    title: '清空画布',
-    content: hasActiveTask
-      ? '任务可能继续计费且无法恢复。清空后也不会找回任务结果，是否继续？'
-      : '清空后无法恢复，是否继续？',
-    positiveText: '清空',
-    negativeText: '取消',
-    onPositiveClick: async () => {
-      const currentProjectId = projectId.value
-      const beforeGraph = toGraph()
-      abortProjectTasks(currentProjectId)
-      clearCanvas()
-      const afterGraph = toGraph()
-      const deletionIntentSaved = await recordPendingGraphDeletion(currentProjectId, beforeGraph, afterGraph)
-      try {
-        await saveGraph(currentProjectId, afterGraph)
-      } catch (error) {
-        window.$message?.error(deletionIntentSaved
-          ? '清空结果暂未写入主存储，刷新后仍会保持清空'
-          : (error?.message || '清空保存失败，请暂勿刷新并重试'))
-      }
-    },
-  })
 }
 
 async function requestDeleteSelection() {

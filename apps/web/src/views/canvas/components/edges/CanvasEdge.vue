@@ -10,11 +10,19 @@
       :d="path"
       fill="none"
     />
+    <!-- 节点拖拽后的光条脉冲 -->
+    <path
+      v-if="isPulsing"
+      class="canvas-edge-pulse"
+      :d="path"
+      fill="none"
+      pathLength="100"
+    />
   </g>
 </template>
 
 <script setup>
-import { computed } from 'vue'
+import { computed, inject, ref } from 'vue'
 import { getBezierPath, useVueFlow } from '@vue-flow/core'
 
 const props = defineProps({
@@ -39,6 +47,10 @@ const isActive = computed(() => {
   const status = findNode(props.target)?.data?.status
   return status === 'running' || status === 'waiting'
 })
+
+// 节点拖拽结束后的光条脉冲（由 index.vue 通过 provide 注入）
+const pulsingEdgeIds = inject('canvasPulsingEdges', ref(new Set()))
+const isPulsing = computed(() => pulsingEdgeIds.value.has(props.id))
 </script>
 
 <style scoped lang="scss">
@@ -82,6 +94,35 @@ const isActive = computed(() => {
 @keyframes canvas-edge-flow {
   to {
     stroke-dashoffset: -12;
+  }
+}
+
+// ── 光条脉冲：一小段明亮品牌色沿路径滑行（LibTV 能量段效果）──
+.canvas-edge-pulse {
+  stroke: var(--cf-brand);
+  stroke-width: 3;
+  stroke-linecap: round;
+  stroke-dasharray: 12 88; // 12% 可见光条，88% 间隔
+  opacity: 0;
+  pointer-events: none;
+  filter: drop-shadow(0 0 6px var(--cf-brand));
+  animation: edge-pulse-travel 1.2s ease-in-out 2; // 滑行 2 次
+}
+
+@keyframes edge-pulse-travel {
+  0% {
+    stroke-dashoffset: 100;
+    opacity: 0;
+  }
+  8% {
+    opacity: 1;
+  }
+  85% {
+    opacity: 1;
+  }
+  100% {
+    stroke-dashoffset: -12;
+    opacity: 0;
   }
 }
 </style>
