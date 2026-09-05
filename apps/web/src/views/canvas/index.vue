@@ -1,17 +1,6 @@
 <template>
   <div class="ai-canvas-page">
     <section class="canvas-workspace">
-      <div class="canvas-tips">
-        <div v-if="showTips || tipsOverride" class="canvas-tip">
-          <SvgIcon icon="ph:warning" width="15" height="15" />
-          <span>
-            画布数据仅保存在当前浏览器本地（IndexedDB），清除浏览器数据后将无法找回；本地未上传的素材刷新后需重新添加。
-          </span>
-          <button type="button" class="tip-action" title="本次关闭，下次进入仍会提示" @click="dismissTips">关闭提示</button>
-          <button type="button" class="tip-action is-strong" title="当前浏览器不再展示该提示" @click="neverShowTips">不再显示</button>
-        </div>
-      </div>
-
       <CanvasToolbar
         :project-id="projectId"
         :project-name="project?.name || '默认画布'"
@@ -23,9 +12,6 @@
         :save-state="saveState"
         :storage-error="storageError"
         :controls-locked="taskPersistenceLocked"
-        :tips-active="tipsOverride"
-        :tips-has-hidden="hasHiddenTips"
-        @toggle-tips="tipsOverride = !tipsOverride"
         @select-project="handleProjectSelect"
         @create-project="handleCreateProject"
         @select-api-key="handleApiKeySelect"
@@ -243,10 +229,10 @@ const backgroundPatternColor = ref('#d6dae1')
 
 // MiniMap 节点按类型着色（与节点卡片的 --node-accent 一致）
 const CANVAS_NODE_ACCENTS = {
-  [CANVAS_NODE_TYPES.TEXT]: '#3b82f6',
-  [CANVAS_NODE_TYPES.IMAGE]: '#8b5cf6',
+  [CANVAS_NODE_TYPES.TEXT]: 'rgba(255,255,255,0.35)',
+  [CANVAS_NODE_TYPES.IMAGE]: 'rgba(255,255,255,0.45)',
   [CANVAS_NODE_TYPES.VIDEO]: '#f97316',
-  [CANVAS_NODE_TYPES.GROUP]: 'var(--cf-text-tertiary)',
+  [CANVAS_NODE_TYPES.GROUP]: 'rgba(255,255,255,0.2)',
 }
 const minimapNodeColor = (node) => CANVAS_NODE_ACCENTS[node?.type] || 'var(--cf-text-tertiary)'
 const minimapMaskColor = 'transparent'
@@ -267,32 +253,6 @@ const CONNECTED_NODE_GAP = 96
 const project = ref(null)
 const projects = ref([])
 const isSwitchingProject = ref(false)
-// 提示条(本地存储):"关闭提示"仅本次隐藏;
-// "不再显示"写入 localStorage,当前浏览器长期生效;工具栏铃铛可临时展开查看
-const STORAGE_TIP_NEVER_KEY = 'chatfire.canvas.storageTipDismissed'
-const MEDIA_TIP_NEVER_KEY = 'chatfire.canvas.mediaTipDismissed'
-const tipsNeverShow = ref(false)
-try {
-  // 兼容历史:两个主题都点过"不再显示"才默认隐藏;只关过一个的,合并条仍会展示
-  tipsNeverShow.value = localStorage.getItem(STORAGE_TIP_NEVER_KEY) === '1'
-    && localStorage.getItem(MEDIA_TIP_NEVER_KEY) === '1'
-} catch {}
-const tipsDismissed = ref(false)
-const tipsOverride = ref(false)
-const showTips = computed(() => !tipsNeverShow.value && !tipsDismissed.value)
-const hasHiddenTips = computed(() => !showTips.value && !tipsOverride.value)
-function dismissTips() {
-  tipsDismissed.value = true
-  tipsOverride.value = false
-}
-function neverShowTips() {
-  tipsNeverShow.value = true
-  tipsOverride.value = false
-  try {
-    localStorage.setItem(STORAGE_TIP_NEVER_KEY, '1')
-    localStorage.setItem(MEDIA_TIP_NEVER_KEY, '1')
-  } catch {}
-}
 const projectId = computed(() => project.value?.id || '')
 const projectOptions = computed(() => projects.value.map((item) => ({
   label: `${item.name || '未命名画布'}${unsavedProjectIds.value.has(item.id) ? ' · 未保存' : ''}`,
@@ -1929,70 +1889,6 @@ async function handleAssetUpload(file) {
     background:
       radial-gradient(860px 400px at 16% -4%, color-mix(in srgb, var(--cf-brand) 5%, transparent), transparent 62%),
       radial-gradient(720px 360px at 92% 104%, color-mix(in srgb, var(--cf-brand) 4%, transparent), transparent 60%);
-  }
-}
-
-.canvas-tips {
-  position: absolute;
-  top: 66px;
-  left: 50%;
-  z-index: 5;
-  transform: translateX(-50%);
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 8px;
-  max-width: min(680px, calc(100% - 32px));
-}
-.canvas-tip {
-  display: flex;
-  align-items: center;
-  gap: 9px;
-  width: 100%;
-  padding: 8px 12px;
-  border: 1px solid color-mix(in srgb, var(--cf-warning) 24%, transparent);
-  border-radius: 12px;
-  background: color-mix(in srgb, var(--cf-bg-elevated) 95%, transparent);
-  box-shadow: var(--cf-shadow-md);
-  color: var(--cf-warning);
-  font-size: 12px;
-  font-weight: 650;
-
-  span {
-    min-width: 0;
-    flex: 1;
-    color: var(--cf-text-secondary);
-  }
-
-  svg {
-    flex-shrink: 0;
-  }
-
-  .tip-action {
-    flex-shrink: 0;
-    padding: 3px 8px;
-    border: 1px solid var(--cf-border);
-    border-radius: 7px;
-    background: transparent;
-    color: var(--cf-text-tertiary);
-    font-size: 11px;
-    font-weight: 650;
-    white-space: nowrap;
-    cursor: pointer;
-    transition: color 0.12s ease, border-color 0.12s ease, background 0.12s ease;
-
-    &:hover {
-      color: var(--cf-text-primary);
-      border-color: var(--cf-border-strong);
-    }
-    &.is-strong {
-      color: var(--cf-warning);
-
-      &:hover {
-        background: color-mix(in srgb, var(--cf-warning) 12%, transparent);
-        border-color: color-mix(in srgb, var(--cf-warning) 40%, transparent);
-      }
-    }
   }
 }
 

@@ -45,17 +45,16 @@ export function useTheme() {
             warningColor: "#fbbf24",
             errorColor: "#f87171",
             infoColor: "#60a5fa",
-            // 浮层/表面对齐设计稿暗色令牌（variables.scss html.dark）：
-            // naive darkTheme 的中性灰浮层与设计稿深海军蓝差异明显，逐层覆盖
-            bodyColor: "#0b0f16",
-            cardColor: "#182230", // n-modal preset="card"（全站无 n-card 页面用法）
-            modalColor: "#182230",
-            popoverColor: "#182230", // n-select 下拉 / n-popover / n-tooltip 浮层
-            inputColor: "rgba(148, 163, 184, .08)", // = --cf-bg-subtle
-            actionColor: "rgba(148, 163, 184, .08)",
-            hoverColor: "rgba(148, 163, 184, .12)",
-            borderColor: "rgba(148, 163, 184, .14)",
-            dividerColor: "rgba(148, 163, 184, .14)",
+            // 浮层/表面对齐中性深灰令牌（variables.scss html.dark）
+            bodyColor: "#0a0a0a",
+            cardColor: "#1a1a1a",
+            modalColor: "#1a1a1a",
+            popoverColor: "#1a1a1a",
+            inputColor: "rgba(255, 255, 255, .05)",
+            actionColor: "rgba(255, 255, 255, .05)",
+            hoverColor: "rgba(255, 255, 255, .08)",
+            borderColor: "rgba(255, 255, 255, .08)",
+            dividerColor: "rgba(255, 255, 255, .08)",
           },
           DataTable: dataTable,
         }

@@ -4,22 +4,10 @@
   display: flex;
   flex-direction: column;
   color: var(--cf-text-primary);
-  // 每类节点的标识色，供类型图标 chip 与状态点使用
+  // 选中态光晕用品牌色，类型图标统一中性灰（参考 LibTV 极简风格）
   --node-accent: var(--cf-brand);
   // 卡片外标题的高度，用于连接桩垂直对位到卡片中心
   --node-head-h: 28px;
-}
-
-.text-node {
-  --node-accent: #3b82f6;
-}
-
-.image-node {
-  --node-accent: #8b5cf6;
-}
-
-.video-node {
-  --node-accent: var(--cf-brand);
 }
 
 // ── 卡片外标题（liblib 风格：图标 + 名称浮于卡片左上方）──
@@ -43,8 +31,8 @@
   justify-content: center;
   flex-shrink: 0;
   border-radius: 7px;
-  background: color-mix(in srgb, var(--node-accent) 12%, transparent);
-  color: var(--node-accent);
+  background: var(--cf-bg-subtle);
+  color: var(--cf-text-tertiary);
   font-size: 13px;
 }
 

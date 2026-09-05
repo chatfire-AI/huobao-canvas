@@ -170,16 +170,6 @@
         <svg-icon icon="tabler:settings" />
         <span>设置</span>
       </button>
-      <button
-        type="button"
-        class="tips-toggle"
-        :class="{ 'is-active': tipsActive }"
-        :title="tipsActive ? '收起提示' : '展开提示（本地存储 / 素材 7 天保留期）'"
-        @click="$emit('toggle-tips')"
-      >
-        <svg-icon icon="tabler:bell" />
-        <span v-if="tipsHasHidden" class="tips-toggle-dot" aria-hidden="true"></span>
-      </button>
     </div>
   </div>
 </template>
@@ -200,8 +190,6 @@ const props = defineProps({
   saveState: { type: String, default: 'idle' },
   storageError: { type: String, default: '' },
   controlsLocked: { type: Boolean, default: false },
-  tipsActive: { type: Boolean, default: false },
-  tipsHasHidden: { type: Boolean, default: false },
   showApiKeyControl: { type: Boolean, default: true },
 })
 
@@ -211,7 +199,6 @@ const emit = defineEmits([
   'select-api-key',
   'manage-api-keys',
   'open-settings',
-  'toggle-tips',
   'auto-layout',
   'fit-canvas',
   'clear-canvas',
@@ -377,7 +364,7 @@ function formatProjectMeta(item) {
   }
 }
 
-// ── 提示开关(本地存储 / 素材保留期提示的展开入口) ──
+// ── 图标按钮（主题切换等） ──
 .tips-toggle {
   position: relative;
   width: 30px;
@@ -403,17 +390,6 @@ function formatProjectMeta(item) {
     color: var(--cf-brand);
     border-color: color-mix(in srgb, var(--cf-brand) 45%, transparent);
     background: var(--cf-brand-soft);
-  }
-
-  .tips-toggle-dot {
-    position: absolute;
-    top: -3px;
-    right: -3px;
-    width: 8px;
-    height: 8px;
-    border-radius: 50%;
-    background: var(--cf-error);
-    border: 2px solid var(--cf-bg-page, #14161c);
   }
 }
 

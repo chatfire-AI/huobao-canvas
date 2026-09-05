@@ -335,9 +335,9 @@ const mentionItems = computed(() => {
 })
 
 const MENTION_TYPE_META = {
-  [CANVAS_NODE_TYPES.TEXT]: { icon: 'tabler:text-caption', label: '文本', accent: '#3b82f6' },
-  [CANVAS_NODE_TYPES.IMAGE]: { icon: 'tabler:photo', label: '图片', accent: '#8b5cf6' },
-  [CANVAS_NODE_TYPES.VIDEO]: { icon: 'tabler:video', label: '视频', accent: 'var(--cf-brand)' },
+  [CANVAS_NODE_TYPES.TEXT]: { icon: 'tabler:text-caption', label: '文本' },
+  [CANVAS_NODE_TYPES.IMAGE]: { icon: 'tabler:photo', label: '图片' },
+  [CANVAS_NODE_TYPES.VIDEO]: { icon: 'tabler:video', label: '视频' },
 }
 
 const mentionIcon = (type) => MENTION_TYPE_META[type]?.icon || 'tabler:circle'
@@ -345,10 +345,10 @@ const mentionTypeLabel = (type) => MENTION_TYPE_META[type]?.label || '节点'
 // 媒体参考序号:只数图片/视频节点(与请求 images[] 注入顺序一致)
 const mediaInputIndex = (index) =>
   (props.connectedInputs || []).slice(0, index + 1).filter((input) => input.type !== 'textNode').length
-const mentionIconStyle = (type) => {
-  const accent = MENTION_TYPE_META[type]?.accent || 'var(--cf-brand)'
-  return { color: accent, background: `color-mix(in srgb, ${accent} 13%, transparent)` }
-}
+const mentionIconStyle = () => ({
+  color: 'var(--cf-text-tertiary)',
+  background: 'var(--cf-bg-subtle)',
+})
 
 function handlePromptInput(event) {
   const el = event.target
@@ -519,18 +519,8 @@ function submit() {
   flex-shrink: 0;
   border-radius: 8px;
   font-size: 14px;
-  // 与节点卡片一致的类型标识色
-  --dock-accent: var(--cf-brand);
-  background: color-mix(in srgb, var(--dock-accent) 13%, transparent);
-  color: var(--dock-accent);
-
-  &.is-text {
-    --dock-accent: #3b82f6;
-  }
-
-  &.is-image {
-    --dock-accent: #8b5cf6;
-  }
+  background: var(--cf-bg-subtle);
+  color: var(--cf-text-tertiary);
 }
 
 .dock-title {

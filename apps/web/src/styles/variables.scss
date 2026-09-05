@@ -52,15 +52,16 @@
 // ============ Design Tokens (dark) ============
 html.dark {
   color-scheme: dark;
-  --cf-bg-page: #0b0f16;
-  --cf-bg-surface: #131a24;
-  --cf-bg-elevated: #182230;
-  --cf-bg-subtle: rgba(148, 163, 184, .08);
-  --cf-border: rgba(148, 163, 184, .14);
-  --cf-border-strong: rgba(148, 163, 184, .28);
-  --cf-text-primary: #f1f5f9;
-  --cf-text-secondary: rgba(226, 232, 240, .65);
-  --cf-text-tertiary: #8b94a3;
+  // 中性深灰基调（参考 LibTV），不用蓝紫色倾向的 slate 色系
+  --cf-bg-page: #0a0a0a;
+  --cf-bg-surface: #141414;
+  --cf-bg-elevated: #1a1a1a;
+  --cf-bg-subtle: rgba(255, 255, 255, .05);
+  --cf-border: rgba(255, 255, 255, .08);
+  --cf-border-strong: rgba(255, 255, 255, .16);
+  --cf-text-primary: #f5f5f5;
+  --cf-text-secondary: rgba(255, 255, 255, .55);
+  --cf-text-tertiary: rgba(255, 255, 255, .35);
   --cf-text-on-brand: #2a1503;
   --cf-brand: #ffb076;
   --cf-brand-hover: #ffc194;
