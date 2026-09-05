@@ -94,6 +94,7 @@
 // ── 媒体铺满 ──
 .media-card {
   height: 172px;
+  overflow: hidden; // 裁剪 shimmer 光条
 }
 
 .node-media-fill {
@@ -168,8 +169,7 @@
   overflow: hidden;
   padding: 3px 9px;
   border-radius: 999px;
-  background: rgba(18, 18, 20, 0.58);
-  backdrop-filter: blur(8px) saturate(1.2);
+  background: rgba(18, 18, 20, 0.85);
   color: rgba(255, 255, 255, 0.94);
   font-size: 10.5px;
   font-weight: 700;
@@ -204,25 +204,29 @@
   background: rgba(20, 20, 22, 0.55);
 }
 
-// ── 运行中 shimmer 扫光 ──
+// ── 运行中 shimmer 扫光（transform 实现，合成属性不触发 paint）──
+// ::after 本身就是光条（窄条），通过 translateX 扫过卡片
 .canvas-node.is-running .media-card::after,
 .canvas-node.is-waiting .media-card::after {
   content: '';
   position: absolute;
-  inset: 0;
+  top: 0;
+  left: 0;
+  width: 40%;
+  height: 100%;
   z-index: 1;
-  background: linear-gradient(105deg, transparent 42%, rgba(255, 255, 255, 0.16) 50%, transparent 58%);
-  background-size: 240% 100%;
+  background: linear-gradient(105deg, transparent, rgba(255, 255, 255, 0.14), transparent);
   animation: node-shimmer 1.4s linear infinite;
+  will-change: transform;
   pointer-events: none;
 }
 
 @keyframes node-shimmer {
   from {
-    background-position: 190% 0;
+    transform: translateX(-100%);
   }
   to {
-    background-position: -90% 0;
+    transform: translateX(350%);
   }
 }
 

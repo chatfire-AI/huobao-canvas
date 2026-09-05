@@ -48,8 +48,7 @@ defineProps({
   padding: 4px 10px 4px 8px;
   border: 1px solid var(--cf-border);
   border-radius: 999px;
-  background: color-mix(in srgb, var(--cf-bg-elevated) 88%, transparent);
-  backdrop-filter: blur(8px);
+  background: color-mix(in srgb, var(--cf-bg-elevated) 95%, transparent);
   color: var(--cf-text-secondary);
   box-shadow: var(--cf-shadow-sm);
 }

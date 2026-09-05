@@ -53,8 +53,7 @@ const toggleLock = () => {
   padding: 3px;
   border: 1px solid var(--cf-border);
   border-radius: 10px;
-  background: color-mix(in srgb, var(--cf-bg-elevated) 88%, transparent);
-  backdrop-filter: blur(12px) saturate(1.3);
+  background: color-mix(in srgb, var(--cf-bg-elevated) 95%, transparent);
   box-shadow: var(--cf-shadow-lg, 0 8px 24px rgba(0, 0, 0, 0.28));
 }
 

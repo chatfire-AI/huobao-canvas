@@ -93,8 +93,7 @@ function handleDownload(event) {
   padding: 4px 5px;
   border: 1px solid var(--cf-border);
   border-radius: 11px;
-  background: color-mix(in srgb, var(--cf-bg-elevated) 90%, transparent);
-  backdrop-filter: blur(14px) saturate(1.3);
+  background: color-mix(in srgb, var(--cf-bg-elevated) 95%, transparent);
   box-shadow: var(--cf-shadow-lg);
   transform: translateX(-50%);
   transition: opacity 0.14s ease, border-color 0.14s ease;

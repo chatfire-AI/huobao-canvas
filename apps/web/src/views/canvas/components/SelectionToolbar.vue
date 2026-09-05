@@ -87,8 +87,7 @@ onMounted(updatePosition)
   padding: 4px 5px 4px 12px;
   border: 1px solid var(--cf-border);
   border-radius: 11px;
-  background: color-mix(in srgb, var(--cf-bg-elevated) 90%, transparent);
-  backdrop-filter: blur(14px) saturate(1.3);
+  background: color-mix(in srgb, var(--cf-bg-elevated) 95%, transparent);
   box-shadow: var(--cf-shadow-lg);
   color: var(--cf-text-primary);
   transform: translateX(-50%);

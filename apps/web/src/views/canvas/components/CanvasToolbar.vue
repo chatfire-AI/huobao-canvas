@@ -322,8 +322,7 @@ function formatProjectMeta(item) {
   gap: 12px;
   padding: 0 16px;
   border-bottom: 1px solid var(--cf-border);
-  background: color-mix(in srgb, var(--cf-bg-surface) 84%, transparent);
-  backdrop-filter: blur(14px) saturate(1.35);
+  background: color-mix(in srgb, var(--cf-bg-surface) 95%, transparent);
 }
 
 .toolbar-cluster,
@@ -655,8 +654,7 @@ button {
   padding: 8px;
   border: 1px solid var(--cf-border);
   border-radius: 14px;
-  background: color-mix(in srgb, var(--cf-bg-elevated) 94%, transparent);
-  backdrop-filter: blur(16px) saturate(1.3);
+  background: color-mix(in srgb, var(--cf-bg-elevated) 97%, transparent);
   box-shadow: var(--cf-shadow-lg);
 }
 

@@ -113,92 +113,58 @@
         </div>
 
         <div class="primary-controls">
-          <!-- 每个生成参数一个独立下拉 chip:比例 / 分辨率 / 时长 …(即梦式) -->
+          <!-- LibTV 式：一个汇总 chip，点击展开统一参数面板 -->
           <n-popover
-            v-for="field in sizeFields"
-            :key="field.key"
+            v-if="sizeFields.length || countField"
             trigger="click"
             placement="top-start"
             :show-arrow="false"
             :disabled="running"
+            :z-index="2700"
             raw
           >
             <template #trigger>
-              <button type="button" class="param-chip" :disabled="running">
-                <span class="param-name">{{ field.label || field.key }}</span>
-                <span class="param-value">{{ fieldValueLabel(field) }}</span>
-                <svg-icon icon="tabler:chevron-down" />
+              <button type="button" class="param-summary-chip" :disabled="running">
+                <span class="param-summary-text">{{ paramsSummary }}</span>
+                <svg-icon icon="tabler:chevron-up" />
               </button>
             </template>
-            <div class="field-popover param-popover">
-              <FieldControl
-                :field="field"
-                :value="formData[field.key]"
-                compact
-                :format-options="formatOptions"
-                :get-image-file-list="getImageFileList"
-                :get-images-file-list="getImagesFileList"
-                :disabled="running"
-                @update:value="updateFormField(field.key, $event)"
-                @image-upload="(...args) => $emit('image-upload', ...args)"
-                @images-upload="(...args) => $emit('images-upload', ...args)"
-                @file-upload="(...args) => $emit('file-upload', ...args)"
-              />
-            </div>
-          </n-popover>
-
-          <div v-if="countField" class="count-control">
-            <div class="count-segments" role="group" aria-label="张数">
-              <button
-                v-for="option in countOptions"
-                :key="String(option.value)"
-                type="button"
-                class="count-option"
-                :class="{ active: String(formData[countField.key]) === String(option.value) }"
-                :disabled="running"
-                @click="updateFormField(countField.key, option.value)"
-              >
-                {{ option.label }}
-              </button>
-            </div>
-          </div>
-
-          <n-popover v-if="showMore" trigger="click" placement="top-end" :show-arrow="false" :z-index="2700" raw>
-            <template #trigger>
-              <button type="button" class="more-trigger">
-                <svg-icon icon="tabler:adjustments-horizontal" />
-                更多
-                <span v-if="partitionedFields.more.length" class="more-badge">{{ partitionedFields.more.length }}</span>
-              </button>
-            </template>
-            <div class="more-popover">
-              <div class="connection-controls">
-                <label v-if="canUploadAsset" class="asset-upload">
-                  <span>节点图片</span>
-                  <input type="file" accept="image/*" :disabled="running" @change="handleFileChange" />
-                  <span class="asset-upload-button">
-                    <svg-icon icon="tabler:photo-plus" />
-                    选择图片
-                  </span>
-                </label>
+            <div class="params-panel">
+              <div v-for="field in sizeFields" :key="field.key" class="params-group">
+                <div class="params-group-label">{{ field.label || field.key }}</div>
+                <div
+                  class="params-group-options"
+                  :class="{ 'is-ratio-grid': isRatioField(field) }"
+                >
+                  <button
+                    v-for="option in props.formatOptions(field.options || field.enum || [])"
+                    :key="String(option.value)"
+                    type="button"
+                    class="params-option"
+                    :class="{ active: String(formData[field.key]) === String(option.value) }"
+                    :disabled="running"
+                    @click="updateFormField(field.key, option.value)"
+                  >
+                    <span v-if="isRatioField(field)" class="ratio-icon" :style="ratioIconStyle(option.value)" />
+                    {{ option.label }}
+                  </button>
+                </div>
               </div>
-
-              <div v-if="partitionedFields.more.length" class="more-fields" :class="{ 'is-disabled': running }">
-                <FieldControl
-                  v-for="field in partitionedFields.more"
-                  :key="field.key"
-                  :field="field"
-                  :value="formData[field.key]"
-                  compact
-                  :format-options="formatOptions"
-                  :get-image-file-list="getImageFileList"
-                  :get-images-file-list="getImagesFileList"
-                  :disabled="running"
-                  @update:value="updateFormField(field.key, $event)"
-                  @image-upload="(...args) => $emit('image-upload', ...args)"
-                  @images-upload="(...args) => $emit('images-upload', ...args)"
-                  @file-upload="(...args) => $emit('file-upload', ...args)"
-                />
+              <div v-if="countField" class="params-group">
+                <div class="params-group-label">{{ countField.label || '数量' }}</div>
+                <div class="params-group-options">
+                  <button
+                    v-for="option in countOptions"
+                    :key="String(option.value)"
+                    type="button"
+                    class="params-option"
+                    :class="{ active: String(formData[countField.key]) === String(option.value) }"
+                    :disabled="running"
+                    @click="updateFormField(countField.key, option.value)"
+                  >
+                    {{ option.label }}张
+                  </button>
+                </div>
               </div>
             </div>
           </n-popover>
@@ -234,9 +200,8 @@
 
 <script setup>
 import { computed, nextTick, ref, watch } from 'vue'
-import FieldControl from '@/views/playground/components/FieldControl.vue'
 import ModelPicker from '@/components/ModelPicker.vue'
-import { CANVAS_NODE_TYPES, getCanvasPromptDockMeta } from '../constants/nodeTypes'
+import { CANVAS_NODE_TYPES, NODE_MODEL_TYPE_MAP, getCanvasPromptDockMeta } from '../constants/nodeTypes'
 import { partitionCanvasFields } from '../utils/editorFields'
 
 const props = defineProps({
@@ -259,9 +224,6 @@ const emit = defineEmits([
   'update-prompt',
   'update-form-data',
   'asset-upload',
-  'image-upload',
-  'images-upload',
-  'file-upload',
   'mention-node',
 ])
 
@@ -279,7 +241,7 @@ const dockTypeClass = computed(() => ({
   [CANVAS_NODE_TYPES.IMAGE]: 'is-image',
   [CANVAS_NODE_TYPES.VIDEO]: 'is-video',
 }[props.node?.type] || ''))
-const partitionedFields = computed(() => partitionCanvasFields(props.schemaFields))
+const partitionedFields = computed(() => partitionCanvasFields(props.schemaFields, NODE_MODEL_TYPE_MAP[props.node?.type]))
 const countField = computed(() => partitionedFields.value.primary.find((field) => (
   ['n', 'count', 'image_count'].includes(field.key)
 )) || null)
@@ -296,15 +258,7 @@ const countOptions = computed(() => {
     return { label: String(value), value }
   })
 })
-const sizeSummary = computed(() => {
-  const values = sizeFields.value.map((field) => {
-    const value = props.formData[field.key]
-    const options = props.formatOptions(field.options || field.enum || [])
-    return options.find((option) => String(option.value) === String(value))?.label ?? value
-  }).filter((value) => value !== undefined && value !== null && value !== '')
-  return values.length ? values.join(' · ') : '尺寸'
-})
-// 单个参数 chip 的当前值文案(即梦式"比例 9:16 / 分辨率 480P / 时长 15s")
+// 单个参数的当前值文案
 const fieldValueLabel = (field) => {
   const value = props.formData[field.key]
   if (value === undefined || value === null || value === '') return '默认'
@@ -312,14 +266,38 @@ const fieldValueLabel = (field) => {
   const matched = options.find((option) => String(option.value) === String(value))
   return matched?.label ?? value
 }
+
+// LibTV 式汇总：所有主栏参数当前值用 " · " 连接
+const paramsSummary = computed(() => {
+  const parts = sizeFields.value.map((field) => fieldValueLabel(field))
+  if (countField.value) {
+    const countVal = props.formData[countField.value.key]
+    if (countVal != null && countVal !== '') parts.push(`${countVal}张`)
+  }
+  return parts.filter(Boolean).join(' · ') || '参数设置'
+})
+
+// 比例类字段：面板中用网格+矩形图标展示
+const RATIO_FIELD_KEYS = new Set(['ratio', 'aspect_ratio', 'aspectRatio'])
+const isRatioField = (field) => RATIO_FIELD_KEYS.has(field.key)
+
+// 比例值 → 矩形图标尺寸（如 "16:9" → 宽矩形）
+const ratioIconStyle = (value) => {
+  const str = String(value || '')
+  const match = str.match(/(\d+)\s*[:：]\s*(\d+)/)
+  if (!match) return { width: '16px', height: '16px' }
+  const [, w, h] = match.map(Number)
+  const ratio = w / h
+  if (ratio >= 1) {
+    return { width: '18px', height: `${Math.max(6, Math.round(18 / ratio))}px` }
+  }
+  return { width: `${Math.max(6, Math.round(18 * ratio))}px`, height: '18px' }
+}
 const hasNodeImage = computed(() => {
   const payload = props.node?.data?.payload || {}
   return Boolean(payload.url || payload.parsedResults?.length)
 })
 const canUploadAsset = computed(() => props.node?.type === CANVAS_NODE_TYPES.IMAGE && !hasNodeImage.value)
-const showMore = computed(() => (
-  partitionedFields.value.more.length > 0 || canUploadAsset.value
-))
 const modelSelectPlaceholder = computed(() => (
   props.modelOptions.length ? dockMeta.value.modelPlaceholder : `暂无${dockMeta.value.label}模型`
 ))
@@ -493,27 +471,18 @@ function submit() {
 </script>
 
 <style scoped lang="scss">
-// ── 提示词码头：底部居中悬浮命令条（即梦/剪映式工作台）──
+// ── 提示词码头：底部居中悬浮命令条 ──
 .canvas-prompt-dock {
-  // --pg-* 变量被 playground 的 FieldControl 消费，这里映射到 --cf-* 令牌以支持亮/暗主题
-  --pg-accent: var(--cf-brand);
-  --pg-accent-2: var(--cf-brand);
-  --pg-text: var(--cf-text-primary);
-  --pg-muted: var(--cf-text-secondary);
-  --pg-subtle: var(--cf-text-tertiary);
-  --pg-line: var(--cf-border);
-  --pg-line-strong: var(--cf-border-strong);
   position: absolute;
   z-index: 8;
   width: min(720px, calc(100% - 300px));
-  min-height: 138px;
+  min-height: 184px; // dock-head(~40) + textarea(90) + footer(~50) + padding(24)
   box-sizing: border-box;
   margin: 0;
   padding: 12px 14px;
   border: 1px solid var(--cf-border);
   border-radius: 16px;
-  background: color-mix(in srgb, var(--cf-bg-elevated) 88%, transparent);
-  backdrop-filter: blur(16px) saturate(1.35);
+  background: color-mix(in srgb, var(--cf-bg-elevated) 95%, transparent);
   box-shadow: var(--cf-shadow-lg);
   color: var(--cf-text-primary);
   transform: translateX(-50%);
@@ -527,7 +496,7 @@ function submit() {
 }
 
 .desktop-editor {
-  min-height: 112px;
+  min-height: 158px; // 比外层 min-height 少 26px（上下 padding + border）
   display: flex;
   flex-direction: column;
 }
@@ -767,8 +736,7 @@ function submit() {
   padding: 6px;
   border: 1px solid var(--cf-border);
   border-radius: 12px;
-  background: color-mix(in srgb, var(--cf-bg-elevated) 94%, transparent);
-  backdrop-filter: blur(16px);
+  background: color-mix(in srgb, var(--cf-bg-elevated) 97%, transparent);
   box-shadow: var(--cf-shadow-lg);
 }
 
@@ -842,7 +810,7 @@ function submit() {
 
 .prompt-input {
   width: 100%;
-  min-height: 44px;
+  min-height: 90px; // 4行 × 22.5px(14.5px × 1.55)
   flex: 1;
   box-sizing: border-box;
   padding: 0;
@@ -927,6 +895,7 @@ function submit() {
 }
 
 .primary-controls {
+  flex: 1;
   min-width: 0;
   display: flex;
   align-items: center;
@@ -935,47 +904,26 @@ function submit() {
   scrollbar-width: none;
 }
 
-.size-trigger,
-.more-trigger,
-.param-chip {
+// ── LibTV 式：汇总 chip + 统一参数面板 ──
+.param-summary-chip {
   flex-shrink: 0;
   display: inline-flex;
   align-items: center;
   justify-content: center;
   gap: 5px;
   height: 30px;
+  padding: 0 10px;
   box-sizing: border-box;
   border: 1px solid var(--cf-border);
   border-radius: 9px;
+  background: var(--cf-bg-subtle);
+  color: var(--cf-text-primary);
   font: inherit;
+  font-size: 11.5px;
+  font-weight: 750;
+  white-space: nowrap;
   cursor: pointer;
-}
-
-.size-trigger,
-.more-trigger {
-  padding: 0 10px;
-  background: var(--cf-bg-subtle);
-  color: var(--cf-text-secondary);
-  font-size: 11.5px;
-  font-weight: 750;
-  white-space: nowrap;
-  transition: border-color 0.14s ease, color 0.14s ease, background 0.14s ease;
-
-  svg {
-    width: 13px;
-    height: 13px;
-  }
-}
-
-// ── 单个参数 chip(比例 9:16 / 分辨率 480P / 时长 15s) ──
-.param-chip {
-  padding: 0 9px;
-  background: var(--cf-bg-subtle);
-  color: var(--cf-text-secondary);
-  font-size: 11.5px;
-  font-weight: 750;
-  white-space: nowrap;
-  transition: border-color 0.14s ease, color 0.14s ease;
+  transition: border-color 0.14s ease, background 0.14s ease;
 
   svg {
     width: 12px;
@@ -985,7 +933,7 @@ function submit() {
 
   &:hover:not(:disabled) {
     border-color: var(--cf-border-strong);
-    color: var(--cf-text-primary);
+    background: var(--cf-bg-elevated);
   }
 
   &:disabled {
@@ -994,94 +942,96 @@ function submit() {
   }
 }
 
-.param-name {
-  color: var(--cf-text-tertiary);
+.param-summary-text {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+// 参数面板：分组 + 选项按钮
+.params-panel {
+  min-width: 280px;
+  max-width: 360px;
+  max-height: 400px;
+  overflow-y: auto;
+  padding: 14px;
+  border: 1px solid var(--cf-border);
+  border-radius: 12px;
+  background: color-mix(in srgb, var(--cf-bg-elevated) 97%, transparent);
+  box-shadow: var(--cf-shadow-lg);
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.params-group-label {
+  margin-bottom: 8px;
+  color: var(--cf-text-secondary);
+  font-size: 12px;
   font-weight: 700;
 }
 
-.param-value {
-  color: var(--cf-text-primary);
-  font-weight: 800;
-}
+.params-group-options {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
 
-.size-trigger:hover,
-.more-trigger:hover {
-  border-color: var(--cf-border-strong);
-  background: var(--cf-bg-subtle);
-  color: var(--cf-text-primary);
-}
-
-.size-trigger:disabled {
-  cursor: not-allowed;
-  opacity: 0.45;
-}
-
-.size-trigger:disabled:hover {
-  border-color: var(--cf-border);
-  color: var(--cf-text-secondary);
-}
-
-.count-control {
-  flex-shrink: 0;
-}
-
-.count-segments {
-  display: inline-flex;
-  align-items: center;
-  gap: 2px;
-  height: 30px;
-  padding: 2px;
-  border: 1px solid var(--cf-border);
-  border-radius: 9px;
-  background: var(--cf-bg-subtle);
-}
-
-.count-option {
-  height: 24px;
-  min-width: 30px;
-  padding: 0 8px;
-  border: 0;
-  border-radius: 7px;
-  background: transparent;
-  color: var(--cf-text-tertiary);
-  font-size: 11.5px;
-  font-weight: 750;
-  cursor: pointer;
-  transition: background 0.13s ease, color 0.13s ease;
-
-  &:hover:not(:disabled) {
-    color: var(--cf-text-primary);
+  &.is-ratio-grid {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 6px;
   }
 }
 
-.count-option.active {
-  background: var(--cf-bg-elevated);
-  color: var(--cf-brand);
-  box-shadow: var(--cf-shadow-sm);
-}
-
-.count-option:disabled {
-  cursor: not-allowed;
-  opacity: 0.45;
-}
-
-.more-trigger {
-  position: relative;
-}
-
-.more-badge {
-  min-width: 15px;
-  height: 15px;
+.params-option {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  padding: 0 4px;
-  border-radius: 999px;
-  background: var(--cf-brand);
-  color: var(--cf-text-on-brand);
-  font-size: 10px;
-  font-weight: 800;
-  line-height: 1;
+  gap: 4px;
+  min-width: 52px;
+  height: 32px;
+  padding: 4px 10px;
+  box-sizing: border-box;
+  border: 1px solid var(--cf-border);
+  border-radius: 9px;
+  background: var(--cf-bg-subtle);
+  color: var(--cf-text-secondary);
+  font: inherit;
+  font-size: 11px;
+  font-weight: 700;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: border-color 0.13s ease, color 0.13s ease, background 0.13s ease;
+
+  // 比例字段：图标在上文字在下
+  .is-ratio-grid & {
+    flex-direction: column;
+    height: 44px;
+    padding: 4px 6px;
+  }
+
+  &:hover:not(:disabled) {
+    border-color: var(--cf-border-strong);
+    color: var(--cf-text-primary);
+  }
+
+  &.active {
+    border-color: var(--cf-brand);
+    background: color-mix(in srgb, var(--cf-brand) 12%, transparent);
+    color: var(--cf-brand);
+  }
+
+  &:disabled {
+    cursor: not-allowed;
+    opacity: 0.45;
+  }
+}
+
+.ratio-icon {
+  display: block;
+  border: 1.5px solid currentColor;
+  border-radius: 2px;
+  opacity: 0.7;
 }
 
 .footer-end {
@@ -1140,70 +1090,6 @@ function submit() {
   cursor: not-allowed;
   opacity: 0.45;
   box-shadow: none;
-}
-
-// ── 弹出面板 ──
-.field-popover,
-.more-popover {
-  padding: 10px;
-  border: 1px solid var(--cf-border);
-  border-radius: 12px;
-  background: color-mix(in srgb, var(--cf-bg-elevated) 94%, transparent);
-  backdrop-filter: blur(16px);
-  box-shadow: var(--cf-shadow-lg);
-}
-
-.field-popover {
-  min-width: 220px;
-  max-width: 340px;
-}
-
-.size-popover {
-  min-width: 240px;
-}
-
-.more-popover {
-  width: 300px;
-}
-
-.connection-controls {
-  margin-bottom: 6px;
-}
-
-.asset-upload {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 10px;
-  padding: 8px 9px;
-  border-radius: 9px;
-  background: var(--cf-bg-subtle);
-  color: var(--cf-text-secondary);
-  font-size: 12px;
-  font-weight: 750;
-  cursor: pointer;
-
-  input {
-    display: none;
-  }
-}
-
-.asset-upload-button {
-  display: inline-flex;
-  align-items: center;
-  gap: 5px;
-  padding: 4px 9px;
-  border: 1px solid var(--cf-border-strong);
-  border-radius: 7px;
-  background: var(--cf-bg-elevated);
-  color: var(--cf-text-primary);
-  font-size: 11.5px;
-  font-weight: 750;
-}
-
-.more-fields.is-disabled {
-  opacity: 0.5;
-  pointer-events: none;
 }
 
 // ── 桌面端提示 ──

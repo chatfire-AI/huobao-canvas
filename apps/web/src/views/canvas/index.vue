@@ -64,6 +64,7 @@
         :edge-types="edgeTypes"
         :default-edge-options="defaultEdgeOptions"
         :is-valid-connection="isValidConnection"
+        only-render-visible-elements
         connection-mode="loose"
         :connection-radius="72"
         :selection-key-code="true"
@@ -151,9 +152,6 @@
         @update-prompt="handlePromptUpdate"
         @update-form-data="handleFormDataUpdate"
         @asset-upload="handleAssetUpload"
-        @image-upload="handleSchemaImageUpload"
-        @images-upload="handleSchemaImagesUpload"
-        @file-upload="handleSchemaFileUpload"
         @mention-node="handleMentionNode"
         @submit="handlePromptDockSubmit"
       />
@@ -322,6 +320,7 @@ const nodeToolbarStyle = ref({ left: '-9999px', top: '-9999px' })
 const connectionMenu = ref(null)
 const pendingConnection = ref(null)
 const dragTick = ref(0)
+const isDragging = ref(false)
 const { screenToFlowCoordinate } = useVueFlow()
 let removeFallbackConnectionListeners = null
 let promptDockPositionFrame = 0
@@ -988,7 +987,8 @@ watch(() => [connectedInputs.value.length, schemaFields.value.length], async () 
 function scheduleGraphSave() {
   if (isSwitchingProject.value) return
   if (!projectId.value) return
-  scheduleSaveGraph(projectId.value, toGraph())
+  if (isDragging.value) return // 拖拽中跳过，drag-stop 再存
+  scheduleSaveGraph(projectId.value, () => toGraph())
 }
 
 function handleVisibilitySave() {
@@ -1385,18 +1385,20 @@ function handlePaneClick() {
 }
 
 function handleNodeDrag() {
-  dragTick.value += 1
-  requestPromptDockPositionUpdate()
+  // 拖拽中只做标记，不触发响应式更新和 position 计算
+  if (!isDragging.value) isDragging.value = true
 }
 
 function handleNodeDragStop() {
+  isDragging.value = false
   dragTick.value += 1
   schedulePromptDockPositionUpdate()
-  scheduleGraphSave()
+  scheduleGraphSave() // 拖拽结束一次性保存
 }
 
 function handleMove() {
-  requestPromptDockPositionUpdate()
+  // promptDock 固定在底部居中，平移/缩放不需要更新位置
+  // nodeToolbar 跟随节点，move-end 统一更新一次
 }
 
 function handleMoveEnd() {
@@ -1405,9 +1407,7 @@ function handleMoveEnd() {
 }
 
 function schedulePromptDockPositionUpdate() {
-  updatePromptDockPosition()
-  window.setTimeout(updatePromptDockPosition, 120)
-  window.setTimeout(updatePromptDockPosition, 320)
+  requestPromptDockPositionUpdate()
 }
 
 function requestPromptDockPositionUpdate() {
@@ -1901,54 +1901,6 @@ async function handleAssetUpload(file) {
   }, { userMutation: true })
 }
 
-async function handleSchemaImageUpload(key, { fileList }) {
-  const nodeId = selectedNode.value?.id
-  if (!nodeId || formDataOwnerNodeId.value !== nodeId) return
-  detachResultOwnership(nodeId)
-  const schemaRequest = beginSchemaRequest(nodeId)
-  const file = fileList?.[0]?.file
-  if (!file) {
-    if (!isCurrentSchemaRequest(schemaRequest) || formDataOwnerNodeId.value !== nodeId) return
-    formData.value = { ...formData.value, [key]: '' }
-    return
-  }
-  const value = await fileToBase64(file)
-  if (!isCurrentSchemaRequest(schemaRequest) || formDataOwnerNodeId.value !== nodeId) return
-  formData.value = { ...formData.value, [key]: value }
-}
-
-async function handleSchemaImagesUpload(key, { fileList }) {
-  const nodeId = selectedNode.value?.id
-  if (!nodeId || formDataOwnerNodeId.value !== nodeId) return
-  detachResultOwnership(nodeId)
-  const schemaRequest = beginSchemaRequest(nodeId)
-  const files = (fileList || []).map((item) => item.file).filter(Boolean)
-  const values = await Promise.all(files.map(fileToBase64))
-  if (!isCurrentSchemaRequest(schemaRequest) || formDataOwnerNodeId.value !== nodeId) return
-  formData.value = { ...formData.value, [key]: values }
-}
-
-async function handleSchemaFileUpload(key, { fileList }) {
-  const nodeId = selectedNode.value?.id
-  if (!nodeId || formDataOwnerNodeId.value !== nodeId) return
-  detachResultOwnership(nodeId)
-  const schemaRequest = beginSchemaRequest(nodeId)
-  const file = fileList?.[0]?.file
-  if (!isCurrentSchemaRequest(schemaRequest) || formDataOwnerNodeId.value !== nodeId) return
-  // 统一存 data-URI 而非裸 File：JSON 端点（如 xAI 视频编辑 video:{url}）需要可序列化字符串，
-  // multipart 端点（OpenAI 图像编辑）由管线 dataUriToBlob 转回 Blob，两条链路通用
-  if (file) formData.value = { ...formData.value, [key]: await fileToBase64(file) }
-}
-
-function fileToBase64(file) {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader()
-    reader.onload = () => resolve(reader.result)
-    reader.onerror = reject
-    reader.readAsDataURL(file)
-  })
-}
-
 </script>
 
 <style scoped lang="scss">
@@ -2000,8 +1952,7 @@ function fileToBase64(file) {
   padding: 8px 12px;
   border: 1px solid color-mix(in srgb, var(--cf-warning) 24%, transparent);
   border-radius: 12px;
-  background: color-mix(in srgb, var(--cf-bg-elevated) 86%, transparent);
-  backdrop-filter: blur(12px) saturate(1.3);
+  background: color-mix(in srgb, var(--cf-bg-elevated) 95%, transparent);
   box-shadow: var(--cf-shadow-md);
   color: var(--cf-warning);
   font-size: 12px;
@@ -2078,8 +2029,7 @@ function fileToBase64(file) {
   overflow: hidden;
   border: 1px solid var(--cf-border);
   border-radius: 10px;
-  background: color-mix(in srgb, var(--cf-bg-elevated) 88%, transparent);
-  backdrop-filter: blur(10px);
+  background: color-mix(in srgb, var(--cf-bg-elevated) 95%, transparent);
   box-shadow: var(--cf-shadow-md);
 }
 
@@ -2100,8 +2050,7 @@ function fileToBase64(file) {
   overflow: hidden;
   border: 1px solid var(--cf-border);
   border-radius: 10px;
-  background: color-mix(in srgb, var(--cf-bg-elevated) 88%, transparent);
-  backdrop-filter: blur(10px);
+  background: color-mix(in srgb, var(--cf-bg-elevated) 95%, transparent);
   box-shadow: var(--cf-shadow-md);
 }
 
@@ -2122,8 +2071,7 @@ function fileToBase64(file) {
   padding: 30px 38px;
   border: 1px solid var(--cf-border);
   border-radius: 18px;
-  background: color-mix(in srgb, var(--cf-bg-elevated) 82%, transparent);
-  backdrop-filter: blur(14px) saturate(1.3);
+  background: color-mix(in srgb, var(--cf-bg-elevated) 95%, transparent);
   box-shadow: var(--cf-shadow-lg);
   pointer-events: none;
   color: var(--cf-text-tertiary);

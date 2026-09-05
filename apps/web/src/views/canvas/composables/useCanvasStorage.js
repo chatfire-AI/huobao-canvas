@@ -353,12 +353,14 @@ export function useCanvasStorage(options = {}) {
     }
   }
 
-  const scheduleSaveGraph = (projectId, graph, delay = 450) => {
+  // graphOrFn 支持传函数：延迟到防抖回调里才执行序列化，避免拖拽/打字每帧全图 sanitize
+  const scheduleSaveGraph = (projectId, graphOrFn, delay = 450) => {
     if (!projectId) return
     cancelSaveTimer(projectId)
     saveStates.set(projectId, 'saving')
     const timer = timers?.setTimeout(() => {
       saveTimers.delete(projectId)
+      const graph = typeof graphOrFn === 'function' ? graphOrFn() : graphOrFn
       saveGraph(projectId, graph).catch(() => {})
     }, delay)
     saveTimers.set(projectId, timer)
