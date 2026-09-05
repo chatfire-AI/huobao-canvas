@@ -17,13 +17,13 @@
 import { mkdirSync, writeFileSync } from 'node:fs'
 import { randomUUID } from 'node:crypto'
 import path from 'node:path'
-import { getProvider, getProviderForModel, buildProviderAuthHeaders, applyProviderBaseUrl, providerTestUrl, collectModels } from '../web/src/config/providers/index.js'
-import { setKeyStoreBackend, getCurrentApiKey, getProviderApiKey, getProviderConfig } from '../web/src/utils/apiKeySession.js'
-import { getAdapter } from '../web/src/views/playground/protocols/registry.js'
-import { TASK_ID_HEADER, extractMediaResult, normalizeTaskId, MEDIA_RESULT_TYPES } from '../web/src/views/playground/protocols/adapter.js'
-import { resolveEndpointPath, isCanvasSubmitEndpointMounted } from '../web/src/views/playground/utils/endpointPath.js'
-import { createInputTransformEngine, getNestedValue } from '../web/src/utils/inputTransform.js'
-import { mergeEndpointSchema } from '../web/src/views/playground/utils/mergeEndpointSchema.js'
+import { getProvider, getProviderForModel, buildProviderAuthHeaders, applyProviderBaseUrl, providerTestUrl, collectModels } from '../../web/src/config/providers/index.js'
+import { setKeyStoreBackend, getCurrentApiKey, getProviderApiKey, getProviderConfig } from '../../web/src/utils/apiKeySession.js'
+import { getAdapter } from '../../web/src/views/playground/protocols/registry.js'
+import { TASK_ID_HEADER, extractMediaResult, normalizeTaskId, MEDIA_RESULT_TYPES } from '../../web/src/views/playground/protocols/adapter.js'
+import { resolveEndpointPath, isCanvasSubmitEndpointMounted } from '../../web/src/views/playground/utils/endpointPath.js'
+import { createInputTransformEngine, getNestedValue } from '../../web/src/utils/inputTransform.js'
+import { mergeEndpointSchema } from '../../web/src/views/playground/utils/mergeEndpointSchema.js'
 
 const applyInputTransform = createInputTransformEngine()
 
@@ -41,12 +41,12 @@ const nowIso = () => new Date().toISOString()
  * 引擎装配：注入 db 句柄与 settings 读写
  * @param {{ prepare:(sql:string)=>{run:Function,get:Function,all:Function}, exec? }} db node:sqlite DatabaseSync
  */
-export function createRunEngine({ db, dataDir }) {
+export function createRunEngine({ db, statements, dataDir }) {
   const filesDir = path.join(dataDir, 'files')
   mkdirSync(filesDir, { recursive: true })
 
   // ── Key 存储后端注入：apiKeySession → settings 表（localStorage 语义）──
-  const qSetting = db.prepare('SELECT value FROM settings WHERE name = ?')
+  const qSetting = statements.getSetting
   setKeyStoreBackend({
     readRaw: (name) => {
       const row = qSetting.get(String(name))
@@ -475,6 +475,23 @@ export function createRunEngine({ db, dataDir }) {
       return id
     },
     getRun: (id) => q.getRun.get(id),
+    /** run 行 → API 出参（result/parsedResults 反序列化） */
+    presentRun: (run) => {
+      let parsedResults = null
+      let unavailableReason = ''
+      try {
+        const parsed = JSON.parse(run.parsedResults || 'null')
+        parsedResults = parsed?.parsedResults ?? null
+        unavailableReason = parsed?.unavailableReason || ''
+      } catch {}
+      let result = null
+      try { result = JSON.parse(run.result || 'null') } catch {}
+      return {
+        id: run.id, projectId: run.projectId, nodeId: run.nodeId,
+        status: run.status, result, parsedResults, unavailableReason,
+        error: run.error || '', createdAt: run.createdAt, updatedAt: run.updatedAt,
+      }
+    },
     listActiveRuns: () => q.listActiveRuns.all(),
     cancelRun: (id) => {
       controllers.get(id)?.abort()

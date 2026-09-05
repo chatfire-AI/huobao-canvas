@@ -3,7 +3,8 @@
 # 因此 build context 为仓库根目录，按相同相对路径 COPY 闭包。
 FROM node:24-alpine
 WORKDIR /app
-COPY apps/server/server.js apps/server/engine.js apps/server/
+COPY apps/server/package.json apps/server/README.md apps/server/
+COPY apps/server/src/ apps/server/src/
 COPY apps/web/src/config/providers/ apps/web/src/config/providers/
 COPY apps/web/src/utils/apiKeySession.js apps/web/src/utils/inputTransform.js apps/web/src/utils/
 COPY apps/web/src/views/playground/protocols/ apps/web/src/views/playground/protocols/
@@ -11,4 +12,4 @@ COPY apps/web/src/views/playground/utils/endpointPath.js apps/web/src/views/play
 ENV PORT=16812
 ENV DATA_DIR=/data
 EXPOSE 16812
-CMD ["node", "apps/server/server.js"]
+CMD ["node", "apps/server/src/index.js"]

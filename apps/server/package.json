@@ -1,0 +1,14 @@
+{
+  "name": "canvas-server",
+  "private": true,
+  "version": "0.1.0",
+  "description": "火宝画布服务端：SQLite 画布存储 + 设置（Key）镜像 + 模型调用运行队列",
+  "type": "module",
+  "scripts": {
+    "start": "node src/index.js",
+    "dev": "node --watch src/index.js"
+  },
+  "engines": {
+    "node": ">=22.13"
+  }
+}
