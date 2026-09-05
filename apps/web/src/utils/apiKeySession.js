@@ -58,15 +58,15 @@ const write = (storageKey, value) => {
 }
 
 // ── 服务端镜像（fire-and-forget，防抖合并）──
-const MIRROR_KEYS = [KEY_LIST_STORAGE, PROVIDER_KEYS_STORAGE]
 let mirrorTimer = null
 
-/** 当前可镜像的设置快照（Key 明文；仅发给自部署的 apps/server） */
+/** 当前可镜像的设置快照（Key/模型目录覆盖明文；仅发给自部署的 apps/server） */
 export const exportMirrorSnapshot = () => ({
   [KEY_LIST_STORAGE]: read(KEY_LIST_STORAGE, []),
   [CURRENT_KEY_STORAGE]: backend.readRaw(CURRENT_KEY_STORAGE) || '',
   [PROVIDER_KEYS_STORAGE]: read(PROVIDER_KEYS_STORAGE, {}),
   [GATEWAY_BASE_STORAGE]: backend.readRaw(GATEWAY_BASE_STORAGE) || '',
+  'chatfire_canvas_catalog': read('chatfire_canvas_catalog', {}),
 })
 
 /** 把快照写回本地（服务端权威时使用；跳过空值避免抹掉本地） */
@@ -97,6 +97,9 @@ const mirrorToServer = () => {
     }
   }, 300)
 }
+
+/** 供非 apiKeySession 模块触发镜像（如模型目录覆盖 localCatalog） */
+export const mirrorSettingsToServer = () => mirrorToServer()
 
 /** 列出本地保存的 Key（按创建时间倒序） */
 export const listApiKeys = () => read(KEY_LIST_STORAGE, [])

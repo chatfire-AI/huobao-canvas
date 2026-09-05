@@ -59,7 +59,13 @@ src/
 | GET | `/api/settings` | — | 全部设置 `{ name: value }`（provider keys / 全局 Key / 网关地址） |
 | PUT | `/api/settings` | `{ name: value, ... }` | 合并写入（按 name 覆盖）。**Key 为明文，仅内网/可信环境部署** |
 
-键名与浏览器 localStorage 对齐：`chatfire_canvas_provider_keys`、`chatfire_canvas_api_keys`、`chatfire_canvas_current_key`、`chatfire_canvas_gateway_base`。
+键名与浏览器 localStorage 对齐：`chatfire_canvas_provider_keys`、`chatfire_canvas_api_keys`、`chatfire_canvas_current_key`、`chatfire_canvas_gateway_base`、`chatfire_canvas_catalog`（模型目录覆盖）。
+
+### 模型目录
+
+| 方法 | 路径 | 说明 |
+|---|---|---|
+| GET | `/api/catalog` | 生效中的模型目录：`{ models, overrides }`——预设（110 模型）叠加 settings 表里的用户覆盖（启停/隐藏/自定义/编辑预设），引擎执行与浏览器目录同源 |
 
 ### 运行队列（全量服务端执行）
 

@@ -6,20 +6,20 @@
           <svg-icon :icon="dockMeta.icon" />
         </span>
         <strong class="dock-title">{{ node?.data?.title || dockMeta.label }}</strong>
-        <span class="dock-hint">Enter 生成 · @ 引用节点</span>
-      </div>
-
-      <!-- 参考内容区:上传/引用素材(即梦式,支持图文音视频混合) -->
-      <div class="reference-section">
-        <div class="reference-head">
-          <span class="reference-title">参考内容</span>
-          <span class="reference-note">上传或 @ 引用素材，自由组合图、文、音、视频</span>
+        <span class="reference-title">参考内容</span>
+        <span class="reference-note">上传或 @ 引用素材</span>
+        <div class="dock-head-right">
           <label v-if="canUploadAsset" class="reference-add" :class="{ 'is-disabled': running }">
             <svg-icon icon="tabler:plus" />
             添加参考
             <input type="file" accept="image/*" :disabled="running" @change="handleFileChange" />
           </label>
+          <span class="dock-hint">Enter 生成 · @ 引用节点</span>
         </div>
+      </div>
+
+      <!-- 参考内容区:已连接的素材缩略图 -->
+      <div class="reference-section">
         <div v-if="connectedInputs.length" class="reference-strip" aria-label="已连接的参考素材">
           <n-popover
             v-for="(input, inputIndex) in connectedInputs"
@@ -50,7 +50,6 @@
             </div>
           </n-popover>
         </div>
-        <div v-else class="reference-empty">暂无参考素材，可通过 @ 引用画布节点或上传图片</div>
       </div>
 
       <div class="prompt-area">
@@ -576,29 +575,29 @@ function submit() {
 }
 
 .dock-hint {
-  margin-left: auto;
   flex-shrink: 0;
   color: var(--cf-text-tertiary);
   font-size: 10.5px;
 }
 
-// ── 参考内容区(即梦式:分区标题 + 上传/引用提示) ──
-.reference-section {
-  padding: 8px 0 2px;
-}
-
-.reference-head {
+.dock-head-right {
+  margin-left: auto;
   display: flex;
   align-items: center;
   gap: 8px;
-  margin-bottom: 7px;
+  flex-shrink: 0;
+}
+
+// ── 参考内容区(缩略图条) ──
+.reference-section {
+  padding: 4px 0 2px;
 }
 
 .reference-title {
   flex-shrink: 0;
-  color: var(--cf-text-primary);
-  font-size: 11.5px;
-  font-weight: 800;
+  color: var(--cf-text-secondary);
+  font-size: 11px;
+  font-weight: 700;
 }
 
 .reference-note {
@@ -606,7 +605,7 @@ function submit() {
   flex: 1;
   overflow: hidden;
   color: var(--cf-text-tertiary);
-  font-size: 10.5px;
+  font-size: 10px;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
@@ -647,18 +646,12 @@ function submit() {
   }
 }
 
-.reference-empty {
-  padding: 6px 0;
-  color: var(--cf-text-tertiary);
-  font-size: 11px;
-}
-
 .reference-strip {
   min-height: 36px;
   display: flex;
   align-items: flex-start;
   gap: 6px;
-  padding-top: 8px;
+  padding-top: 4px;
   overflow-x: auto;
   scrollbar-width: none;
 }

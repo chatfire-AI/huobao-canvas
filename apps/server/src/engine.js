@@ -92,6 +92,18 @@ export function createRunEngine({ db, statements, dataDir }) {
     try { return JSON.parse(qSetting.get('chatfire_canvas_current_key')?.value || '""') || '' } catch { return '' }
   }
 
+  /** 模型目录覆盖（启停/隐藏/自定义/编辑预设）：settings 表驱动，服务端与浏览器一致 */
+  const catalogOverrides = () => {
+    try { return JSON.parse(qSetting.get('chatfire_canvas_catalog')?.value || '{}') } catch { return {} }
+  }
+  const effectiveModels = () => collectModels(catalogOverrides())
+
+  // ── 模型目录接口：服务端计算（预设 + 覆盖），前端/外部可直接消费 ──
+  const getCatalog = () => ({
+    models: effectiveModels(),
+    overrides: catalogOverrides(),
+  })
+
   /** 相对端点路径 → 绝对 URL + 鉴权头（厂商官方优先，网关前缀回退） */
   const resolveTarget = (provider, endpointPath) => {
     let target = endpointPath
@@ -267,8 +279,8 @@ export function createRunEngine({ db, statements, dataDir }) {
     const { signal } = controller
     try {
       const formData = JSON.parse(run.formData || '{}')
-      const model = collectModels({}).find((m) => m.name === run.model)
-      if (!model) throw new Error(`模型不存在：${run.model}`)
+      const model = effectiveModels().find((m) => m.name === run.model)
+      if (!model) throw new Error(`模型不存在或已停用：${run.model}`)
       const provider = getProviderForModel(model)
 
       const parsedSchema = JSON.parse(model.modelSchema || '{}')
@@ -336,7 +348,7 @@ export function createRunEngine({ db, statements, dataDir }) {
         q.updateRunStatus.run('cancelled', nowIso(), id)
         return { status: 'cancelled' }
       }
-      q.failRun.run(error?.message || '运行失败', nowIso(), nowIso())
+      q.failRun.run(error?.message || '运行失败', nowIso(), nowIso(), id)
       return { status: 'failed', error: error?.message }
     } finally {
       controllers.delete(id)
@@ -348,7 +360,7 @@ export function createRunEngine({ db, statements, dataDir }) {
     const taskLink = JSON.parse(run.taskLink || '{}')
     const taskId = normalizeTaskId(taskLink.taskId)
     if (!taskId) {
-      q.failRun.run('任务标识无效', nowIso(), nowIso())
+      q.failRun.run('任务标识无效', nowIso(), nowIso(), run.id)
       return
     }
     const provider = taskLink.providerId ? getProvider(taskLink.providerId) : null
@@ -377,11 +389,11 @@ export function createRunEngine({ db, statements, dataDir }) {
           return
         }
         if ([400, 404].includes(resp.status)) {
-          q.failRun.run(String(message), nowIso(), nowIso())
+          q.failRun.run(String(message), nowIso(), nowIso(), run.id)
           return
         }
         if (!RETRYABLE_HTTP_STATUSES.has(resp.status) && resp.status < 500) {
-          q.failRun.run(String(message), nowIso(), nowIso())
+          q.failRun.run(String(message), nowIso(), nowIso(), run.id)
           return
         }
       } else if (vendorQuery) {
@@ -395,7 +407,7 @@ export function createRunEngine({ db, statements, dataDir }) {
           return
         }
         if (isFailed) {
-          q.failRun.run(data?.error?.message || data?.message || '任务处理失败', nowIso(), nowIso())
+          q.failRun.run(data?.error?.message || data?.message || '任务处理失败', nowIso(), nowIso(), run.id)
           return
         }
         // 未识别状态视为处理中，继续轮询
@@ -406,7 +418,7 @@ export function createRunEngine({ db, statements, dataDir }) {
           return
         }
         if (status === 'FAILED' || status === 'ERROR') {
-          q.failRun.run(data?.error?.message || data?.message || '任务处理失败', nowIso(), nowIso())
+          q.failRun.run(data?.error?.message || data?.message || '任务处理失败', nowIso(), nowIso(), run.id)
           return
         }
       }
@@ -415,7 +427,7 @@ export function createRunEngine({ db, statements, dataDir }) {
       // 网络抖动等下一轮
     }
     if (attempts + 1 >= POLL_MAX_ATTEMPTS) {
-      q.failRun.run('任务超时（约 2 小时）仍未完成', nowIso(), nowIso())
+      q.failRun.run('任务超时（约 2 小时）仍未完成', nowIso(), nowIso(), run.id)
     }
   }
 
@@ -426,7 +438,7 @@ export function createRunEngine({ db, statements, dataDir }) {
       providerId: taskLink.providerId, authHeaders, signal: undefined,
     })
     if (MEDIA_RESULT_TYPES.has(taskLink.resultType) && parsedResults.length === 0 && !unavailableReason) {
-      q.failRun.run('任务已完成，但未返回可用媒体结果', nowIso(), nowIso())
+      q.failRun.run('任务已完成，但未返回可用媒体结果', nowIso(), nowIso(), run.id)
       return
     }
     q.completeRun.run(JSON.stringify(data || {}), JSON.stringify({ parsedResults, unavailableReason }), nowIso(), nowIso(), run.id)
@@ -460,7 +472,7 @@ export function createRunEngine({ db, statements, dataDir }) {
   // 启动时恢复：上次进程中断遗留的 queued/running 转失败（等待中的任务继续轮询）
   for (const row of q.listActiveRuns.all()) {
     if (row.status === 'queued' || row.status === 'running') {
-      q.failRun.run('服务重启导致运行中断，请重新发起', nowIso(), nowIso())
+      q.failRun.run('服务重启导致运行中断，请重新发起', nowIso(), nowIso(), row.id)
     }
   }
 
@@ -514,6 +526,7 @@ export function createRunEngine({ db, statements, dataDir }) {
         return { ok: false, message: error?.message || String(error) }
       }
     },
+    getCatalog,
     filesDir,
   }
 }

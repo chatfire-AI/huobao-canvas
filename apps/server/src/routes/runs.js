@@ -6,6 +6,13 @@ import { sendJson, readJson, HttpError } from '../http.js'
 export function runsRoutes({ engine }) {
   return [
     {
+      method: 'GET',
+      pattern: /^\/api\/catalog$/,
+      async handler(req, res) {
+        sendJson(res, 200, engine.getCatalog())
+      },
+    },
+    {
       method: 'POST',
       pattern: /^\/api\/runs$/,
       async handler(req, res) {

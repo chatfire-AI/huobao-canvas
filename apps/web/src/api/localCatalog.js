@@ -3,9 +3,12 @@
  *
  * 数据源 = 厂商预设（config/providers）+ 用户覆盖（localStorage chatfire_canvas_catalog）：
  *   { disabledModels: [], hiddenProviders: [], customModels: [] }
+ * 覆盖与 Key 同款镜像：写入时防抖同步到 apps/server settings 表，启动时服务端优先
+ * （syncSettingsMirror 统一拉取，chatfire_canvas_catalog 已在镜像快照内）。
  * 输出结构与主仓 /sys/model/* 同构，供 usePlaygroundModel 无感消费。
  */
 import { providerPresets, collectModels } from '@/config/providers'
+import { mirrorSettingsToServer } from '@/utils/apiKeySession.js'
 
 const CATALOG_STORAGE = 'chatfire_canvas_catalog'
 
@@ -21,6 +24,7 @@ export const readCatalogOverrides = () => {
 
 export const writeCatalogOverrides = (overrides) => {
   window.localStorage.setItem(CATALOG_STORAGE, JSON.stringify(overrides || {}))
+  mirrorSettingsToServer()
 }
 
 /** 等价于 getModelTypes()：{ "1": "对话", ... } */
