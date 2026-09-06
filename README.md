@@ -9,7 +9,7 @@ An open-source, node-based AI creation canvas. Chain text, image, and video gene
 ![Vue](https://img.shields.io/badge/Vue-3.5-4FC08D?logo=vue.js)
 ![Vite](https://img.shields.io/badge/Vite-5-646CFF?logo=vite)
 ![Docker](https://img.shields.io/badge/Docker-compose-2496ED?logo=docker)
-![License](https://img.shields.io/badge/License-MIT-blue)
+[![License](https://img.shields.io/badge/License-CC%20BY--NC--SA%204.0-lightgrey.svg)](https://creativecommons.org/licenses/by-nc-sa/4.0/)
 
 > **v2.0 rewrite in progress**: this branch contains the rewritten monorepo version (12 providers with official API adaptation). The v1 code and docs are preserved on the [`legacy/v1`](../../tree/legacy/v1) branch.
 
@@ -60,4 +60,8 @@ Issues and Pull Requests are welcome!
 
 ## License
 
-[MIT](./LICENSE)
+This project is licensed under **[CC BY-NC-SA 4.0](./LICENSE)** (Attribution-NonCommercial-ShareAlike 4.0 International).
+
+- Personal use, learning, and non-commercial projects are welcome
+- Modifications and redistribution allowed under the same license with attribution
+- **Commercial use is prohibited** without prior written permission from the author

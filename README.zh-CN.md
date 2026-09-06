@@ -9,7 +9,7 @@
 ![Vue](https://img.shields.io/badge/Vue-3.5-4FC08D?logo=vue.js)
 ![Vite](https://img.shields.io/badge/Vite-5-646CFF?logo=vite)
 ![Docker](https://img.shields.io/badge/Docker-compose-2496ED?logo=docker)
-![License](https://img.shields.io/badge/License-MIT-blue)
+[![License](https://img.shields.io/badge/License-CC%20BY--NC--SA%204.0-lightgrey.svg)](https://creativecommons.org/licenses/by-nc-sa/4.0/)
 
 > **v2.0 全面重构中**：本分支为重构版（monorepo + 12 家厂商官方适配）。v1 旧版代码与文档保留在 [`legacy/v1`](../../tree/legacy/v1) 分支。
 
@@ -67,4 +67,8 @@ pnpm dev        # http://localhost:8021
 
 ## 许可证
 
-[MIT](./LICENSE)
+本项目采用 **[CC BY-NC-SA 4.0](./LICENSE)**（署名-非商业性使用-相同方式共享 4.0 国际）许可证。
+
+- 欢迎个人使用、学习与非商业项目
+- 允许在相同许可证下修改与再分发（需署名）
+- **禁止商业用途**——未经作者书面许可，不得将本项目整体或部分用于任何商业目的（包括付费服务、商业部署或转售）
