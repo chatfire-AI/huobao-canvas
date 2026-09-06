@@ -49,16 +49,28 @@ const props = defineProps({
   screenX: { type: Number, required: true },
   screenY: { type: Number, required: true },
   sourceType: { type: String, default: '' },
+  // 选框句柄批量拉线：选区内所有节点类型（与 sourceType 互斥，优先）
+  sourceTypes: { type: Array, default: () => [] },
   side: { type: String, default: 'right' },
 })
 
 const emit = defineEmits(['select', 'close'])
 
 const items = computed(() => {
+  if (props.sourceTypes.length) {
+    const union = new Set()
+    for (const type of props.sourceTypes) {
+      for (const connectable of getConnectableNodeTypes(type, props.side)) union.add(connectable)
+    }
+    return [...union].map(getCanvasNodeMeta)
+  }
   return getConnectableNodeTypes(props.sourceType, props.side).map(getCanvasNodeMeta)
 })
 
 const title = computed(() => {
+  if (props.sourceTypes.length) {
+    return props.side === 'left' ? '添加输入节点' : '引用选中节点生成'
+  }
   if (!props.sourceType) return '添加节点'
   return props.side === 'left' ? '添加输入节点' : '引用该节点生成'
 })

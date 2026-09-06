@@ -418,6 +418,47 @@ export function useCanvasGraph() {
     selectedEdgeId.value = ''
   }
 
+  // 分组节点作为连接端点时，展开为组内所有可连线子节点的批量连接
+  const expandGroupConnection = (connection) => {
+    const sourceNode = getNodeById(connection.source)
+    const targetNode = getNodeById(connection.target)
+    if (!sourceNode || !targetNode) return [connection]
+
+    const isSourceGroup = sourceNode.type === CANVAS_NODE_TYPES.GROUP
+    const isTargetGroup = targetNode.type === CANVAS_NODE_TYPES.GROUP
+    if (!isSourceGroup && !isTargetGroup) return [connection]
+
+    if (isSourceGroup && isTargetGroup) return [] // 组→组不支持
+
+    if (isSourceGroup) {
+      // 组 → 节点：组内所有可与目标类型连线的子节点 → 目标
+      const children = nodes.value.filter((node) =>
+        node.parentNode === sourceNode.id &&
+        node.type !== CANVAS_NODE_TYPES.GROUP &&
+        isConnectionAllowed(node.type, targetNode.type),
+      )
+      return children.map((child) => ({
+        source: child.id,
+        target: connection.target,
+        sourceHandle: 'right',
+        targetHandle: connection.targetHandle || 'left',
+      }))
+    }
+
+    // 节点 → 组：源 → 组内所有可与源类型连线的子节点
+    const children = nodes.value.filter((node) =>
+      node.parentNode === targetNode.id &&
+      node.type !== CANVAS_NODE_TYPES.GROUP &&
+      isConnectionAllowed(sourceNode.type, node.type),
+    )
+    return children.map((child) => ({
+      source: connection.source,
+      target: child.id,
+      sourceHandle: connection.sourceHandle || 'right',
+      targetHandle: 'left',
+    }))
+  }
+
   const isValidConnection = (rawConnection) => {
     if (!isCanvasConnectionDirectionAllowed(rawConnection)) return false
 
@@ -428,6 +469,12 @@ export function useCanvasGraph() {
     const sourceNode = getNodeById(connection.source)
     const targetNode = getNodeById(connection.target)
     if (!sourceNode || !targetNode) return false
+
+    // 分组节点参与连接时，只要组内有可连线的子节点即有效
+    if (sourceNode.type === CANVAS_NODE_TYPES.GROUP || targetNode.type === CANVAS_NODE_TYPES.GROUP) {
+      return expandGroupConnection(connection).length > 0
+    }
+
     if (!isConnectionAllowed(sourceNode.type, targetNode.type)) return false
 
     return !edges.value.some((edge) =>
@@ -466,8 +513,77 @@ export function useCanvasGraph() {
     return edge
   }
 
+  // 多选批量连接：选中多个节点时，从任一选中节点拉线 → 所有兼容的选中节点都连上
+  const expandSelectionConnection = (connection) => {
+    const selected = new Set(selectedNodeIds.value)
+    if (selected.size < 2) return null // 单选不走批量
+
+    const sourceNode = getNodeById(connection.source)
+    const targetNode = getNodeById(connection.target)
+    if (!sourceNode || !targetNode) return null
+
+    // 组连接优先（expandGroupConnection 已处理）
+    if (sourceNode.type === CANVAS_NODE_TYPES.GROUP || targetNode.type === CANVAS_NODE_TYPES.GROUP) return null
+
+    // 源在多选中：所有兼容的选中节点 → 目标
+    if (selected.has(connection.source)) {
+      const compatible = [...selected]
+        .filter((id) => id !== connection.target)
+        .map((id) => getNodeById(id))
+        .filter((node) => node && node.type !== CANVAS_NODE_TYPES.GROUP &&
+          isConnectionAllowed(node.type, targetNode.type))
+      if (compatible.length > 1) {
+        return compatible.map((node) => ({
+          source: node.id,
+          target: connection.target,
+          sourceHandle: 'right',
+          targetHandle: connection.targetHandle || 'left',
+        }))
+      }
+    }
+
+    // 目标在多选中：源 → 所有兼容的选中节点
+    if (selected.has(connection.target)) {
+      const compatible = [...selected]
+        .filter((id) => id !== connection.source)
+        .map((id) => getNodeById(id))
+        .filter((node) => node && node.type !== CANVAS_NODE_TYPES.GROUP &&
+          isConnectionAllowed(sourceNode.type, node.type))
+      if (compatible.length > 1) {
+        return compatible.map((node) => ({
+          source: connection.source,
+          target: node.id,
+          sourceHandle: connection.sourceHandle || 'right',
+          targetHandle: 'left',
+        }))
+      }
+    }
+
+    return null
+  }
+
   const onConnect = (connection) => {
-    return appendEdge(connection)
+    // 优先：多选批量连接
+    const selectionExpanded = expandSelectionConnection(connection)
+    if (selectionExpanded) {
+      let first = null
+      for (const conn of selectionExpanded) {
+        const edge = appendEdge(conn)
+        if (edge && !first) first = edge
+      }
+      return first
+    }
+
+    // 其次：分组展开连接
+    const groupExpanded = expandGroupConnection(connection)
+    if (!groupExpanded.length) return null
+    if (groupExpanded.length === 1) return appendEdge(groupExpanded[0])
+    let first = null
+    for (const conn of groupExpanded) {
+      const edge = appendEdge(conn)
+      if (edge && !first) first = edge
+    }
+    return first
   }
 
   const addConnectedNode = ({ sourceNodeId, side = 'right', type, position }) => {
@@ -828,6 +944,7 @@ export function useCanvasGraph() {
     pasteCopied,
     clearCanvas,
     isValidConnection,
+    expandGroupConnection,
     onConnect,
     appendEdge,
     addConnectedNode,

@@ -116,6 +116,8 @@ function handlePointerDown(event) {
 .node-handle-plus__button {
   width: 19px;
   height: 19px;
+  // 父级 Handle 宽仅 1px，flex 默认会沿主轴压缩子项（圆钮被压成椭圆），禁止收缩
+  flex-shrink: 0;
   display: inline-flex;
   align-items: center;
   justify-content: center;
