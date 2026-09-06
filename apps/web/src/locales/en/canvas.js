@@ -120,9 +120,9 @@ export default {
   },
   promptDock: {
     referenceTitle: 'References',
-    referenceNote: 'Upload or @-mention assets',
+    referenceNote: "Upload or {'@'}-mention assets",
     addReference: 'Add',
-    hint: 'Enter to generate · @ to reference connected assets',
+    hint: "Enter to generate · {'@'} to reference connected assets",
     referenceAria: 'Connected reference assets',
     clickToView: '{label} (click to view full text)',
     imageRef: 'Image {n}',

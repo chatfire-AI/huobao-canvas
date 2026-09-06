@@ -120,9 +120,9 @@ export default {
   },
   promptDock: {
     referenceTitle: '参考内容',
-    referenceNote: 'アップロードまたは @ で素材を参照',
+    referenceNote: "アップロードまたは {'@'} で素材を参照",
     addReference: '参考を追加',
-    hint: 'Enter で生成 · @ で接続済み素材を参照',
+    hint: "Enter で生成 · {'@'} で接続済み素材を参照",
     referenceAria: '接続済みの参考素材',
     clickToView: '{label}（クリックで全文表示）',
     imageRef: '画像{n}',

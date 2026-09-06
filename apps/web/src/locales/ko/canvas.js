@@ -120,9 +120,9 @@ export default {
   },
   promptDock: {
     referenceTitle: '참조 콘텐츠',
-    referenceNote: '업로드하거나 @로 에셋 참조',
+    referenceNote: "업로드하거나 {'@'}로 에셋 참조",
     addReference: '참조 추가',
-    hint: 'Enter로 생성 · @로 연결된 에셋 참조',
+    hint: "Enter로 생성 · {'@'}로 연결된 에셋 참조",
     referenceAria: '연결된 참조 에셋',
     clickToView: '{label}(클릭하여 전문 보기)',
     imageRef: '이미지 {n}',

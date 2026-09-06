@@ -120,9 +120,9 @@ export default {
   },
   promptDock: {
     referenceTitle: '参考内容',
-    referenceNote: '上传或 @ 引用素材',
+    referenceNote: "上传或 {'@'} 引用素材",
     addReference: '添加参考',
-    hint: 'Enter 生成 · @ 引用已连接素材',
+    hint: "Enter 生成 · {'@'} 引用已连接素材",
     referenceAria: '已连接的参考素材',
     clickToView: '{label}（点击查看全文）',
     imageRef: '图{n}',
