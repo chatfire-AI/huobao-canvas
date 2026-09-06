@@ -12,6 +12,8 @@
         :save-state="saveState"
         :storage-error="storageError"
         :controls-locked="taskPersistenceLocked"
+        :can-undo="canvasHistory.canUndo.value"
+        :can-redo="canvasHistory.canRedo.value"
         @select-project="handleProjectSelect"
         @create-project="handleCreateProject"
         @select-api-key="handleApiKeySelect"
@@ -19,7 +21,10 @@
         @open-settings="router.push('/settings')"
         @auto-layout="handleAutoLayout"
         @fit-canvas="fitCanvas"
+        @undo="performUndo"
+        @redo="performRedo"
         @rename-project="handleRenameProject"
+        @delete-project="requestDeleteProject"
       />
 
       <ApiKeyManager
@@ -94,6 +99,7 @@
         :screen-x="connectionMenu.screenX"
         :screen-y="connectionMenu.screenY"
         :source-type="connectionMenu.sourceType"
+        :source-types="connectionMenu.selectionTypes || []"
         :side="connectionMenu.side"
         @select="handleConnectionMenuSelect"
         @close="connectionMenu = null"
@@ -108,6 +114,14 @@
         @layout-horizontal="handleGroupLayout('horizontal')"
         @layout-vertical="handleGroupLayout('vertical')"
         @delete="requestDeleteSelection"
+      />
+
+      <SelectionHandles
+        :nodes="selectionToolbarNodes"
+        :drag-tick="dragTick"
+        :can-connect="canSelectionConnectTo"
+        @connect="handleSelectionHandleConnect"
+        @connect-blank="handleSelectionConnectBlank"
       />
 
       <CanvasNodeToolbar
@@ -136,7 +150,6 @@
         @update-prompt="handlePromptUpdate"
         @update-form-data="handleFormDataUpdate"
         @asset-upload="handleAssetUpload"
-        @mention-node="handleMentionNode"
         @submit="handlePromptDockSubmit"
       />
     </section>
@@ -147,6 +160,7 @@
       preset="card"
       title="新建画布"
       class="create-canvas-modal"
+      style="width: 440px; max-width: calc(100vw - 48px)"
       :z-index="3100"
     >
       <div class="create-canvas-body">
@@ -188,7 +202,9 @@ import CanvasPromptDock from './components/CanvasPromptDock.vue'
 import CanvasNodeToolbar from './components/CanvasNodeToolbar.vue'
 import ConnectionDropMenu from './components/ConnectionDropMenu.vue'
 import SelectionToolbar from './components/SelectionToolbar.vue'
+import SelectionHandles from './components/SelectionHandles.vue'
 import CanvasEdge from './components/edges/CanvasEdge.vue'
+import { useCanvasHistory } from './composables/useCanvasHistory'
 import TextNode from './components/nodes/TextNode.vue'
 import ImageNode from './components/nodes/ImageNode.vue'
 import VideoNode from './components/nodes/VideoNode.vue'
@@ -333,6 +349,29 @@ const {
   fitSelected,
 } = useCanvasGraph()
 
+// ── 撤销/重做：任务运行中或项目切换中的图变更视为系统变更，不产生撤销步 ──
+const isSystemGraphMutation = () => (
+  isSwitchingProject.value ||
+  startingNodeIds.value.size > 0 ||
+  pendingTaskPersistence.value.size > 0 ||
+  taskControllers.size > 0 ||
+  nodes.value.some((node) => [NODE_STATUS.RUNNING, NODE_STATUS.WAITING].includes(node.data?.status))
+)
+const canvasHistory = useCanvasHistory({
+  nodes,
+  edges,
+  setGraph,
+  isSystemMutation: isSystemGraphMutation,
+})
+
+function performUndo() {
+  if (canvasHistory.undo()) nextTick(scheduleGraphSave)
+}
+
+function performRedo() {
+  if (canvasHistory.redo()) nextTick(scheduleGraphSave)
+}
+
 const {
   getSaveState,
   getStorageError,
@@ -345,6 +384,7 @@ const {
   loadProject,
   createProject,
   renameProject,
+  deleteProject,
   saveGraph,
   scheduleSaveGraph,
 } = useCanvasStorage()
@@ -383,40 +423,24 @@ const connectedInputs = computed(() => {
   })
 })
 
-// @ 引用候选：可按连线规则作为当前节点上游、且尚未连接的节点
+// @ 引用候选：已连线接入当前节点的媒体（图片/视频）素材，
+// 编号与「参考内容」条上的 图1/图2… 一致；选中仅插入「图N」位置标记，不再新建连线
 const mentionableNodes = computed(() => {
-  const target = selectedNode.value
-  if (!target || target.type === CANVAS_NODE_TYPES.GROUP) return []
-  const incoming = new Set(connectedInputs.value.map((item) => item.id))
-  return nodes.value
-    .filter((node) => node.id !== target.id)
-    .filter((node) => isConnectionAllowed(node.type, target.type))
-    .filter((node) => !incoming.has(node.id))
-    .map((node) => {
-      const payload = node.data?.payload || {}
-      const first = payload.parsedResults?.[0]
-      // 缩略图仅对图片/视频节点取结果 URL；文本节点的 parsedResults 是文本，不能当图
-      const isMediaNode = node.type === CANVAS_NODE_TYPES.IMAGE || node.type === CANVAS_NODE_TYPES.VIDEO
-      const thumb = isMediaNode
-        ? (typeof first === 'string'
-          ? first
-          : first?.url || (first?.b64_json ? `data:image/png;base64,${first.b64_json}` : '') || payload.url || '')
-        : ''
+  let mediaIndex = 0
+  return connectedInputs.value
+    .filter((input) => input.type !== CANVAS_NODE_TYPES.TEXT)
+    .map((input) => {
+      mediaIndex += 1
       return {
-        id: node.id,
-        type: node.type,
-        label: node.data?.title || '节点',
-        thumb,
-        snippet: String(payload.prompt || payload.text || payload.modelName || '').slice(0, 24),
+        id: input.id,
+        type: input.type,
+        label: input.label,
+        thumb: input.url,
+        snippet: String(input.text || '').slice(0, 24),
+        mediaIndex,
       }
     })
 })
-
-function handleMentionNode(sourceId) {
-  const target = selectedNode.value
-  if (!target || running.value || !sourceId) return
-  onConnect({ source: sourceId, target: target.id, sourceHandle: 'right', targetHandle: 'left' })
-}
 
 const {
   apiKeyOptions,
@@ -1006,6 +1030,7 @@ async function applyLoadedProject(loaded, { request = null, epoch = pageEpoch } 
     connectionMenu.value = null
     recoveredGraph = applyPendingGraphDeletion(loaded.graph)
     setGraph(repairCanvasGraphForLoad(recoveredGraph))
+    canvasHistory.reset() // 切换/新建/删除画布后，以新图为撤销基线
   } finally {
     isSwitchingProject.value = previousSwitchingState
   }
@@ -1083,6 +1108,46 @@ async function handleRenameProject({ id, name }) {
   } catch (error) {
     window.$message?.warning(error?.message || '重命名失败')
   }
+}
+
+// 列表删除：确认后删除；删的是当前画布时自动切到剩余的第一个
+function requestDeleteProject(item) {
+  if (!item?.value) return
+  if (taskPersistenceLocked.value) {
+    window.$message?.warning('任务信息正在保存，暂时不能删除画布')
+    return
+  }
+  const name = String(item.label || '').replace(' · 未保存', '')
+  const nodeCount = item.nodeCount || 0
+  window.$dialog.error({
+    title: `删除画布「${name}」`,
+    content: nodeCount > 0
+      ? `包含 ${nodeCount} 个节点，删除后无法恢复，是否继续？`
+      : '删除后无法恢复，是否继续？',
+    positiveText: '删除',
+    negativeText: '取消',
+    positiveButtonProps: { type: 'error' },
+    negativeButtonProps: { quaternary: true },
+    onPositiveClick: async () => {
+      const request = beginProjectRequest()
+      try {
+        const deletedId = item.value
+        const wasCurrent = deletedId === projectId.value
+        const loaded = await deleteProject(deletedId, { activate: false })
+        if (!isCurrentProjectRequest(request)) return
+        if (wasCurrent) {
+          abortProjectTasks(deletedId)
+          if (!await applyLoadedProject(loaded, { request })) return
+        }
+        await refreshProjects(request)
+        window.$message?.success('画布已删除')
+      } catch (error) {
+        if (isCurrentProjectRequest(request)) {
+          window.$message?.error(error?.message || '删除画布失败')
+        }
+      }
+    },
+  })
 }
 
 async function handleApiKeySelect(value) {
@@ -1539,6 +1604,32 @@ function handleConnectionMenuSelect(type) {
   if (!connectionMenu.value) return
 
   const menu = connectionMenu.value
+
+  // 选框句柄批量连接：新建节点 → 选区内所有兼容节点一起连上
+  if (menu.selectionTypes?.length) {
+    const position = {
+      x: menu.side === 'right' ? menu.flow.x : menu.flow.x - CANVAS_NODE_WIDTH,
+      y: menu.flow.y - 58,
+    }
+    // 新建节点不抢占选中态，等批量连接完成后再选中它
+    const newNode = addNode(type, position, { select: false })
+    const representative = selectedConnectableNodes().find((node) => (
+      menu.side === 'right'
+        ? isConnectionAllowed(node.type, type)
+        : isConnectionAllowed(type, node.type)
+    ))
+    if (representative) {
+      onConnect(menu.side === 'right'
+        ? { source: representative.id, target: newNode.id, sourceHandle: 'right', targetHandle: 'left' }
+        : { source: newNode.id, target: representative.id, sourceHandle: 'right', targetHandle: 'left' })
+    }
+    clearSelection()
+    selectNode(newNode.id)
+    connectionMenu.value = null
+    nextTick(scheduleGraphSave)
+    return
+  }
+
   const gap = menu.anchorToSource ? CONNECTED_NODE_GAP : 0
   const position = menu.sourceNodeId
     ? {
@@ -1570,6 +1661,48 @@ function handleConnectionMenuSelect(type) {
 function handleDuplicateSelected() {
   duplicateSelected()
   nextTick(scheduleGraphSave)
+}
+
+// ── 选框句柄：从选区包围盒边缘批量拉线 ──
+function selectedConnectableNodes() {
+  return selectionToolbarNodes.value.filter((node) => node.type !== CANVAS_NODE_TYPES.GROUP)
+}
+
+function canSelectionConnectTo(side, targetNodeId) {
+  const selected = selectedConnectableNodes()
+  if (selected.some((node) => node.id === targetNodeId)) return false
+  const target = nodes.value.find((node) => node.id === targetNodeId)
+  if (!target) return false
+  return selected.some((node) => side === 'right'
+    ? isConnectionAllowed(node.type, target.type)
+    : isConnectionAllowed(target.type, node.type))
+}
+
+function handleSelectionHandleConnect({ side, targetNodeId }) {
+  const representative = selectedConnectableNodes()[0]
+  if (!representative) return
+  // 代表节点在多选中，onConnect 的 expandSelectionConnection 会展开成整组批量连接
+  const connection = side === 'right'
+    ? { source: representative.id, target: targetNodeId, sourceHandle: 'right', targetHandle: 'left' }
+    : { source: targetNodeId, target: representative.id, sourceHandle: 'right', targetHandle: 'left' }
+  const edge = onConnect(connection)
+  if (edge) nextTick(scheduleGraphSave)
+}
+
+// 选框句柄拉到空白处：打开节点选择菜单，新建节点后批量连接整个选区
+function handleSelectionConnectBlank({ side, screenX, screenY }) {
+  const types = [...new Set(selectedConnectableNodes().map((node) => node.type))]
+  if (!types.length) return
+  connectionMenu.value = {
+    screenX,
+    screenY,
+    flow: screenToFlowCoordinate({ x: screenX, y: screenY }),
+    side,
+    anchorToSource: false,
+    sourceNodeId: '',
+    sourceType: '',
+    selectionTypes: types,
+  }
 }
 
 function handleGroupSelected() {
@@ -1618,7 +1751,7 @@ async function requestDeleteSelection() {
     startingNodeIds.value.has(node.id) || ['running', 'waiting'].includes(node.data?.status),
   )
   const isSingleGroup = selected.length === 1 && selected[0]?.type === CANVAS_NODE_TYPES.GROUP
-  window.$dialog.warning({
+  window.$dialog.error({
     title: nodeIds.size > 1 ? `删除 ${nodeIds.size} 个节点` : '删除节点',
     content: hasActiveTask
       ? '任务可能继续计费且无法恢复。删除后也不会找回任务结果，是否继续？'
@@ -1627,6 +1760,8 @@ async function requestDeleteSelection() {
         : '删除后无法恢复，是否继续？',
     positiveText: '删除',
     negativeText: '取消',
+    positiveButtonProps: { type: 'error' },
+    negativeButtonProps: { quaternary: true },
     onPositiveClick: async () => {
       const currentProjectId = projectId.value
       const beforeGraph = toGraph()
@@ -1654,6 +1789,19 @@ function handleCanvasKeydown(event) {
   if (event.key === 'Escape') {
     clearSelection()
     connectionMenu.value = null
+    return
+  }
+
+  if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === 'z') {
+    event.preventDefault()
+    if (event.shiftKey) performRedo()
+    else performUndo()
+    return
+  }
+
+  if (event.ctrlKey && event.key.toLowerCase() === 'y') {
+    event.preventDefault()
+    performRedo()
     return
   }
 
@@ -1883,6 +2031,13 @@ async function handleAssetUpload(file) {
   background: color-mix(in srgb, var(--cf-brand) 6%, transparent);
 }
 
+// 多选后 Vue Flow 会在选区包围盒上盖一层 nodesselection-rect（pointer-events: all），
+// 把节点边缘的 + 连接桩全部挡住；改为穿透，选中态也能直接从任意节点拉线。
+// 拖动任意已选节点依然会整体移动选区，不受影响。
+:deep(.vue-flow__nodesselection-rect) {
+  pointer-events: none;
+}
+
 :deep(.vue-flow__connection-path) {
   stroke: var(--cf-brand);
   stroke-width: 2;
@@ -2018,9 +2173,8 @@ async function handleAssetUpload(file) {
 }
 
 // ── 新建画布弹窗（卡片式；n-modal 内容 teleport 到 body，需 :deep） ──
+// 宽度由 n-modal 的 style prop 控制（card 预设自带内联宽度，CSS 会被覆盖）
 :deep(.create-canvas-modal) {
-  width: 440px;
-  max-width: calc(100vw - 48px);
   border-radius: var(--cf-radius-lg);
   background: var(--cf-bg-elevated);
   border: 1px solid var(--cf-border);

@@ -14,7 +14,7 @@
             添加参考
             <input type="file" accept="image/*" :disabled="running" @change="handleFileChange" />
           </label>
-          <span class="dock-hint">Enter 生成 · @ 引用节点</span>
+          <span class="dock-hint">Enter 生成 · @ 引用已连接素材</span>
         </div>
       </div>
 
@@ -73,7 +73,7 @@
             <span v-if="item.snippet" class="mention-snippet">{{ item.snippet }}</span>
             <span class="mention-type">{{ mentionTypeLabel(item.type) }}</span>
           </button>
-          <div v-if="!mentionItems.length" class="mention-empty">没有可引用的节点</div>
+          <div v-if="!mentionItems.length" class="mention-empty">暂无已连接的图片/视频素材</div>
         </div>
         <textarea
           ref="promptInput"
@@ -224,7 +224,6 @@ const emit = defineEmits([
   'update-prompt',
   'update-form-data',
   'asset-upload',
-  'mention-node',
 ])
 
 const prompt = ref('')
@@ -304,7 +303,7 @@ const modelSelectPlaceholder = computed(() => (
 // 有结果时允许空输入直接「重新生成」(沿用节点已有提示词)
 const canSubmit = computed(() => (prompt.value.trim().length > 0 || hasResult.value) && !props.running)
 
-// ── @ 引用节点：输入 @ 弹出可选上游节点，选中后自动建立连线 ──
+// ── @ 引用节点：输入 @ 弹出已连接的媒体素材（图1/图2…），选中插入「图N」位置标记 ──
 const promptInput = ref(null)
 const mentionOpen = ref(false)
 const mentionIndex = ref(0)
@@ -370,22 +369,19 @@ function handlePromptInput(event) {
 function pickMention(item) {  if (!item) return
   const el = promptInput.value
   const caret = el?.selectionStart ?? prompt.value.length
-  // @ 引用替换为「图N」位置标记(即梦式):N 按媒体参考(图片/视频)计数,
-  // 与请求注入 images[] 的顺序一致,模型可理解"图1/图2"指代关系
-  const isMediaRef = item.type !== CANVAS_NODE_TYPES.TEXT
-  const mediaCount = (props.connectedInputs || []).filter((input) => input.type !== 'textNode').length
-  const token = isMediaRef ? `图${mediaCount + 1}` : ''
+  // @ 引用替换为「图N」位置标记(即梦式):N = 该素材在已连接媒体参考中的序号
+  // (与「参考内容」条上的 图1/图2… 一致),模型可理解"图1/图2"指代关系
+  const token = `图${item.mediaIndex || 1}`
   const before = prompt.value.slice(0, mentionStart.value)
   const after = prompt.value.slice(caret)
-  const cleaned = before + (token ? `${token} ` : '') + after
+  const cleaned = before + `${token} ` + after
   prompt.value = cleaned
   emit('update-prompt', cleaned)
   mentionOpen.value = false
-  emit('mention-node', item.id)
   nextTick(() => {
     if (!el) return
     el.focus()
-    const pos = before.length + (token ? token.length + 1 : 0)
+    const pos = before.length + token.length + 1
     el.setSelectionRange(pos, pos)
   })
 }

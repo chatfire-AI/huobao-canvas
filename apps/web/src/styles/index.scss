@@ -262,3 +262,12 @@ html body .n-drawer-body-content-wrapper {
   background: var(--cf-border-strong);
   border-radius: 3px;
 }
+
+// ── naive 确认弹窗质感：圆角 + 标题加粗 + 按钮尺寸统一 ──
+.n-dialog .n-dialog__title {
+  font-weight: 800;
+}
+
+.n-dialog .n-dialog__action .n-button {
+  min-width: 72px;
+}

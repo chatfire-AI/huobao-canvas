@@ -61,6 +61,15 @@
                 >
                   <svg-icon icon="tabler:pencil" />
                 </button>
+                <button
+                  type="button"
+                  class="project-action-btn is-danger"
+                  title="删除画布"
+                  :disabled="controlsLocked"
+                  @click="$emit('delete-project', item)"
+                >
+                  <svg-icon icon="tabler:trash" />
+                </button>
               </span>
             </div>
           </div>
@@ -89,6 +98,15 @@
     </div>
 
     <div class="toolbar-actions">
+      <button type="button" title="撤销（⌘/Ctrl+Z）" :disabled="!canUndo" @click="$emit('undo')">
+        <svg-icon icon="tabler:arrow-back-up" />
+        <span>撤销</span>
+      </button>
+      <button type="button" title="重做（⌘/Ctrl+Shift+Z）" :disabled="!canRedo" @click="$emit('redo')">
+        <svg-icon icon="tabler:arrow-forward-up" />
+        <span>重做</span>
+      </button>
+      <span class="toolbar-divider" aria-hidden="true"></span>
       <button type="button" title="自动布局" @click="$emit('auto-layout')">
         <svg-icon icon="tabler:hierarchy-2" />
         <span>自动布局</span>
@@ -166,6 +184,8 @@ const props = defineProps({
   storageError: { type: String, default: '' },
   controlsLocked: { type: Boolean, default: false },
   showApiKeyControl: { type: Boolean, default: true },
+  canUndo: { type: Boolean, default: false },
+  canRedo: { type: Boolean, default: false },
 })
 
 const emit = defineEmits([
@@ -177,6 +197,9 @@ const emit = defineEmits([
   'auto-layout',
   'fit-canvas',
   'rename-project',
+  'delete-project',
+  'undo',
+  'redo',
 ])
 
 const renamingId = ref('')
@@ -299,6 +322,13 @@ function formatProjectMeta(item) {
   flex-shrink: 0;
 }
 
+.toolbar-divider {
+  width: 1px;
+  height: 18px;
+  flex-shrink: 0;
+  background: var(--cf-border);
+}
+
 .brand-icon {
   width: 26px;
   height: 26px;
@@ -337,32 +367,31 @@ function formatProjectMeta(item) {
   }
 }
 
-// ── 图标按钮（主题切换等） ──
+// ── 图标按钮（主题切换等）：品牌橙图标 + 淡橙底，与「设置」同族常驻高亮 ──
 .tips-toggle {
   position: relative;
-  width: 30px;
-  height: 30px;
+  width: 34px;
+  height: 34px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
-  border: 1px solid var(--cf-border);
+  border: 1px solid var(--cf-brand-soft-strong);
   border-radius: 9px;
-  background: color-mix(in srgb, var(--cf-bg-elevated) 88%, transparent);
-  color: var(--cf-text-tertiary);
+  background: var(--cf-brand-soft);
+  color: var(--cf-brand);
   cursor: pointer;
   transition: color 0.13s ease, border-color 0.13s ease, background 0.13s ease;
 
-  svg { width: 15px; height: 15px; }
+  svg { width: 20px; height: 20px; }
 
   &:hover {
-    color: var(--cf-text-primary);
-    border-color: var(--cf-border-strong);
+    border-color: var(--cf-brand);
+    background: var(--cf-brand-soft-strong);
   }
   &.is-active {
-    color: var(--cf-brand);
-    border-color: color-mix(in srgb, var(--cf-brand) 45%, transparent);
-    background: var(--cf-brand-soft);
+    border-color: var(--cf-brand);
+    background: var(--cf-brand-soft-strong);
   }
 }
 
@@ -715,6 +744,11 @@ button {
   &:hover:not(:disabled) {
     background: var(--cf-bg-subtle);
     color: var(--cf-text-primary);
+  }
+
+  &.is-danger:hover:not(:disabled) {
+    background: var(--cf-error-soft);
+    color: var(--cf-error);
   }
 }
 

@@ -75,7 +75,7 @@ const pathD = computed(() => {
 
 <style>
 .glow-edge-base {
-  stroke: var(--cf-border-strong);
+  stroke: var(--cf-edge-stroke, var(--cf-border-strong));
   stroke-width: 1.4;
   stroke-linecap: round;
   vector-effect: non-scaling-stroke;
@@ -83,7 +83,7 @@ const pathD = computed(() => {
 }
 
 .vue-flow__edge:hover .glow-edge-base {
-  stroke: var(--cf-text-tertiary);
+  stroke: var(--cf-text-secondary);
 }
 
 .glow-edge-selected {

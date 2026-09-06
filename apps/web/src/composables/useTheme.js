@@ -38,9 +38,9 @@ export function useTheme() {
     return isDark.value
       ? {
           common: {
-            primaryColor: "#ffb076",
-            primaryColorHover: "#ffc194",
-            primaryColorPressed: "#f5934e",
+            primaryColor: "#f97316",
+            primaryColorHover: "#fb923c",
+            primaryColorPressed: "#ea580c",
             successColor: "#4ade80",
             warningColor: "#fbbf24",
             errorColor: "#f87171",
@@ -56,6 +56,11 @@ export function useTheme() {
             borderColor: "rgba(255, 255, 255, .08)",
             dividerColor: "rgba(255, 255, 255, .08)",
           },
+          Dialog: {
+            borderRadius: "16px",
+            titleFontSize: "16px",
+            titleFontWeight: "800",
+          },
           DataTable: dataTable,
         }
       : {
@@ -67,6 +72,11 @@ export function useTheme() {
             warningColor: "#d97706",
             errorColor: "#dc2626",
             infoColor: "#2563eb",
+          },
+          Dialog: {
+            borderRadius: "16px",
+            titleFontSize: "16px",
+            titleFontWeight: "800",
           },
           DataTable: dataTable,
         };
