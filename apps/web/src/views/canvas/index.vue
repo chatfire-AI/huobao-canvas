@@ -951,10 +951,10 @@ function commitCanvasConnection(connection) {
 
 watch(nodes, () => {
   scheduleGraphSave()
-}, { deep: true })
+})
 watch(edges, () => {
   scheduleGraphSave()
-}, { deep: true })
+})
 
 watch(() => selectedNode.value?.id, async (nodeId) => {
   // 节点已进入生成流程(如「重新生成」副本选中后立即开跑):跳过 schema 重载,
