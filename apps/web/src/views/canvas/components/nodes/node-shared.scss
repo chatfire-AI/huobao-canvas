@@ -45,6 +45,9 @@
   letter-spacing: -0.01em;
   text-overflow: ellipsis;
   white-space: nowrap;
+  // 双击重命名（NodeTitle）：禁止选中文字，提示可编辑
+  user-select: none;
+  cursor: default;
 }
 
 .node-outside-head .node-status-dot {

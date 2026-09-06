@@ -10,7 +10,21 @@ import { isConnectionAllowed } from '../utils/connectionRules.js'
 import { computeGroupBounds, computeLayeredLayout } from '../utils/graphLayout.js'
 import { sanitizeCanvasGraph } from '../utils/graphSerialization.js'
 
-const makeId = (prefix) => `${prefix}_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`
+// 节点身份一律 UUID：名称（data.title）允许用户自由修改/重复，身份与连线只靠 id
+// （randomUUID 仅在安全上下文可用，http 局域网访问时回退时间戳+随机串）
+const makeId = (prefix) => `${prefix}_${crypto.randomUUID?.() || `${Date.now()}_${Math.random().toString(36).slice(2)}`}`
+
+/**
+ * 系统生成名称唯一化：base 已被占用时取 `${base} 2`、`${base} 3`…（最小未占用序号）。
+ * 仅约束系统默认名/副本名；用户手动改名不做唯一校验（重复与否是用户自由，身份有 UUID）。
+ */
+const uniqueNodeTitle = (nodeList, base) => {
+  const taken = new Set(nodeList.map((node) => node.data?.title))
+  if (!taken.has(base)) return base
+  let index = 2
+  while (taken.has(`${base} ${index}`)) index += 1
+  return `${base} ${index}`
+}
 const RESULT_OWNERSHIP_KEYS = [
   'resultOwnerNodeId',
   'resultIndex',
@@ -174,6 +188,11 @@ export function useCanvasGraph() {
       x: 120 + nodes.value.length * 300,
       y: 120 + nodes.value.length * 40,
     }
+    const data = options.data ? clonePlain(options.data) : getNodeDefaults(nodeType)
+    // 系统默认名按当前画布唯一化（图片 / 图片 2 / 图片 3…）；显式传入的 title 不动
+    if (!options.data?.title) {
+      data.title = uniqueNodeTitle(nodes.value, data.title || getNodeDefaults(nodeType).title || '节点')
+    }
     const node = {
       id,
       type: nodeType,
@@ -181,7 +200,7 @@ export function useCanvasGraph() {
       ...(options.parentNode ? { parentNode: options.parentNode } : {}),
       ...(options.extent ? { extent: options.extent } : {}),
       ...(options.dimensions ? { dimensions: options.dimensions } : {}),
-      data: options.data ? clonePlain(options.data) : getNodeDefaults(nodeType),
+      data,
     }
     nodes.value = [...nodes.value, node]
     if (options.select !== false) {
@@ -666,7 +685,7 @@ export function useCanvasGraph() {
         data: {
           ...copiedData,
           status: copiedStatus,
-          title: `${node.data?.title || '节点'} 副本`,
+          title: uniqueNodeTitle(nodes.value, `${node.data?.title || '节点'} 副本`),
           payload: stripCanvasResultOwnership(copiedData.payload || {}, { clearTask: true }),
           updatedAt: Date.now(),
         },

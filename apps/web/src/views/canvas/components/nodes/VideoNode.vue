@@ -5,7 +5,7 @@
   >
     <div class="node-outside-head">
       <span class="node-type-icon"><svg-icon icon="tabler:video" /></span>
-      <span class="node-title">{{ data.title || '视频' }}</span>
+      <NodeTitle :id="id" :title="data.title || '视频'" />
       <span v-if="status !== 'idle'" class="node-status-dot" aria-hidden="true"></span>
     </div>
     <div class="node-card media-card is-video" :class="{ 'has-media': showMedia }">
@@ -37,6 +37,7 @@
 <script setup>
 import { computed, inject } from 'vue'
 import NodeHandlePlus from '../NodeHandlePlus.vue'
+import NodeTitle from './NodeTitle.vue'
 
 const props = defineProps({
   id: { type: String, required: true },

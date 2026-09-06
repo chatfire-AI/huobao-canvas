@@ -2,7 +2,7 @@
   <div class="canvas-group-node">
     <div class="group-title">
       <span><svg-icon icon="tabler:category" /></span>
-      <strong>{{ data.title || '分组' }}</strong>
+      <NodeTitle :id="id" :title="data.title || '分组'" />
     </div>
     <span class="group-layout">自由布局</span>
     <!-- 分组级连接桩：从组内所有节点批量连线 -->
@@ -23,8 +23,10 @@
 
 <script setup>
 import { Handle, Position } from '@vue-flow/core'
+import NodeTitle from './NodeTitle.vue'
 
 defineProps({
+  id: { type: String, required: true },
   data: { type: Object, required: true },
 })
 </script>
@@ -78,7 +80,8 @@ defineProps({
   color: var(--cf-brand);
 }
 
-.group-title strong {
+.group-title strong,
+.group-title .node-title {
   overflow: hidden;
   font-size: 11.5px;
   font-weight: 800;

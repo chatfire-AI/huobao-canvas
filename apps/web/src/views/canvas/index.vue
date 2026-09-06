@@ -518,6 +518,14 @@ provide('canvasPreview', ({ url, type }) => {
 provide('canvasUpdateNodePayload', (nodeId, patch) => {
   updateNodePayload(nodeId, patch, { userMutation: true })
 })
+// 节点重命名（NodeTitle 组件双击触发）；title 在 data 层不在 payload
+provide('canvasUpdateNodeTitle', (nodeId, title) => {
+  updateNodeData(nodeId, { title }, { userMutation: true })
+  nextTick(() => {
+    schedulePromptDockPositionUpdate()
+    scheduleGraphSave()
+  })
+})
 
 // 节点拖拽时连接的边显示渐变流光（参考 drama-studio GlowEdge）
 const pulsingEdgeIds = ref(new Set())
