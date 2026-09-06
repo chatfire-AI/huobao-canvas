@@ -9,13 +9,11 @@ const routes = [
     path: "/canvas",
     name: "Canvas",
     component: () => import("@/views/canvas/index.vue"),
-    meta: { title: "" },
   },
   {
     path: "/settings",
     name: "Settings",
     component: () => import("@/views/settings/index.vue"),
-    meta: { title: "设置" },
   },
 ]
 
@@ -25,9 +23,9 @@ const router = createRouter({
 })
 
 router.beforeEach((to, from, next) => {
-  document.title = to.meta?.title
-    ? `${to.meta.title} · 火宝画布`
-    : "火宝画布"
+  // 标签页标题恒定「火宝画布」——切页不改为「设置 · 火宝画布」这类形式，
+  // 避免浏览器标签截断后产品名不可见
+  document.title = "火宝画布"
   next()
 })
 
