@@ -32,9 +32,11 @@ pnpm-debug.log*
 # Storage runtime data
 apps/storage/data/
 
-# Desktop (Tauri)
-apps/desktop/src-tauri/target/
+# Desktop (Electron)
 apps/desktop/node_modules/
+apps/desktop/build/
+apps/desktop/resources/
+apps/desktop/release/
 
 # canvas server 本地数据（SQLite + 运行产物文件）
 apps/server/data/

@@ -19,11 +19,14 @@ src/
     settings.js  设置（Key 镜像）
     runs.js      运行队列 + 厂商连通测试
     files.js     结果文件静态访问
+    proxy.js     网关/厂商反代（Electron 内嵌模式承接渲染端同源转发；Web 部署由 nginx 先行截走）
+    static.js    前端静态托管（FRONTEND_DIST 存在时挂载，SPA fallback；Electron 内嵌模式用）
 ```
 
 > `engine.js` 直接 import `apps/web/src` 的纯函数模块（providers 配置、协议适配器、
 > inputTransform 模板引擎）——单一实现，前后端共用，不存在复制漂移。
-> 因此 Docker 构建上下文是**仓库根目录**，按相同相对路径 COPY web 侧闭包。
+> 因此 Docker 构建上下文是**仓库根目录**，按相同相对路径 COPY web 侧闭包；
+> Electron 桌面端则用 esbuild 把本服务打成单文件 bundle（apps/desktop/scripts/build-server.mjs）。
 
 ## 接口文档
 
@@ -33,7 +36,7 @@ src/
 
 | 方法 | 路径 | 说明 |
 |---|---|---|
-| GET | `/api/healthz` | 存活探测。前端据此决定走服务端还是回退浏览器本地（IndexedDB/BYOK） |
+| GET | `/api/healthz` | 存活探测。前端据此决定走服务端还是回退浏览器 BYOK 链路（回退时画布存储不可用） |
 
 ### 画布项目
 
@@ -97,6 +100,16 @@ src/
 |---|---|---|
 | GET | `/api/files/:name` | Veo 鉴权视频 / base64 结果落盘后的持久访问（7 天缓存头） |
 
+### 反代与静态托管（Electron 内嵌模式）
+
+非 `/api` 前缀，仅在请求到达本服务时生效（Web 部署由 nginx 先行截走，不会到达）：
+
+| 路径 | 说明 |
+|---|---|
+| `/v1/*`、`/v1beta/*`、`/sys/*`、`/qwen/*`、`/volcengine/*`、`/vidu/*`、`/minimax/*`、`/xai/*`、`/zhipu/*` | 透传到网关地址（settings `chatfire_canvas_gateway_base` > 内置公共网关）；调用方未带鉴权头时用服务端 Key 兜底注入 |
+| `/official/{providerId}/*` | 透传到厂商官方 baseUrl（含 settings baseUrl 覆盖）；同样支持服务端 Key 兜底 |
+| 其余 GET 路径 | `FRONTEND_DIST` 存在时托管前端静态产物，未命中回退 `index.html`（SPA） |
+
 ## 运行
 
 ```bash
@@ -108,7 +121,7 @@ pnpm dev              # --watch 热重启
 docker compose up -d
 ```
 
-环境变量：`PORT`（默认 16812）、`DATA_DIR`（默认 `./data`）。
+环境变量：`PORT`（默认 16812）、`DATA_DIR`（默认 `./data`）、`FRONTEND_DIST`（前端产物目录，Electron 注入；为空则不挂载 static 路由）。
 
 ## 行为约定
 

@@ -1,13 +1,22 @@
 {
-  "name": "chatfire-canvas-desktop",
-  "private": true,
+  "name": "huobao-canvas-desktop",
+  "productName": "HuobaoCanvas",
   "version": "2.0.0",
-  "type": "module",
+  "private": true,
+  "description": "火宝画布桌面版（Electron 壳 + 内嵌 canvas-server）",
+  "author": "Huobao",
+  "main": "dist/main.js",
   "scripts": {
-    "dev": "tauri dev",
-    "build": "tauri build"
+    "build:main": "node scripts/build-main.mjs",
+    "build:server": "node scripts/build-server.mjs",
+    "dev": "npm run build:main && electron .",
+    "dist": "pnpm --dir ../web build && npm run build:server && npm run build:main && node scripts/prepare-resources.mjs && electron-builder --mac",
+    "dist:win": "pnpm --dir ../web build && npm run build:server && npm run build:main && node scripts/prepare-resources.mjs && electron-builder --win",
+    "feed": "node scripts/make-update-feed.mjs"
   },
   "devDependencies": {
-    "@tauri-apps/cli": "^2"
+    "electron": "^37.10.3",
+    "electron-builder": "^26.15.3",
+    "esbuild": "^0.28.2"
   }
 }

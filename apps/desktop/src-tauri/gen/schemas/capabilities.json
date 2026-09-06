@@ -1,1 +1,0 @@
-{"default":{"identifier":"default","description":"主窗口权限：plugin-http 全域名直连（桌面端请求层）","local":true,"windows":["main"],"permissions":["core:default","http:default",{"identifier":"http:allow-fetch","allow":[{"url":"https://*"},{"url":"http://*"}]},"http:allow-fetch-send","http:allow-fetch-read-body","http:allow-fetch-cancel"]}}
