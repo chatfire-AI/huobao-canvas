@@ -92,7 +92,7 @@ function handleDownload(event) {
   gap: 3px;
   padding: 4px 5px;
   border: 1px solid var(--cf-border);
-  border-radius: 11px;
+  border-radius: 999px;
   background: color-mix(in srgb, var(--cf-bg-elevated) 95%, transparent);
   box-shadow: var(--cf-shadow-lg);
   transform: translateX(-50%);
@@ -106,9 +106,9 @@ a {
   align-items: center;
   gap: 6px;
   box-sizing: border-box;
-  padding: 0 9px;
+  padding: 0 11px;
   border: 0;
-  border-radius: 8px;
+  border-radius: 999px;
   background: transparent;
   color: var(--cf-text-secondary);
   font: inherit;

@@ -344,9 +344,9 @@ function formatProjectMeta(item) {
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  padding: 0 12px;
+  padding: 0 14px;
   border: 1px solid var(--cf-brand-soft-strong);
-  border-radius: 9px;
+  border-radius: 999px;
   background: var(--cf-brand-soft);
   color: var(--cf-brand);
   font-size: 12px;
@@ -370,7 +370,7 @@ function formatProjectMeta(item) {
   gap: 5px;
   padding: 0 10px;
   border: 1px solid var(--cf-border);
-  border-radius: 9px;
+  border-radius: 999px;
   background: color-mix(in srgb, var(--cf-bg-elevated) 88%, transparent);
   color: var(--cf-text-tertiary);
   font-size: 12px;
@@ -398,7 +398,7 @@ function formatProjectMeta(item) {
   justify-content: center;
   flex-shrink: 0;
   border: 1px solid var(--cf-brand-soft-strong);
-  border-radius: 9px;
+  border-radius: 999px;
   background: var(--cf-brand-soft);
   color: var(--cf-brand);
   cursor: pointer;
@@ -420,8 +420,8 @@ function formatProjectMeta(item) {
 .project-trigger {
   width: 238px;
   justify-content: space-between;
-  padding: 0 10px;
-  border-radius: 10px;
+  padding: 0 10px 0 12px;
+  border-radius: 999px;
   border-color: var(--cf-border);
   background: color-mix(in srgb, var(--cf-bg-elevated) 88%, transparent);
   transition: border-color 0.14s ease, box-shadow 0.14s ease;
@@ -461,7 +461,7 @@ function formatProjectMeta(item) {
 
 .project-create-button {
   flex-shrink: 0;
-  border-radius: 10px;
+  border-radius: 999px;
   border-color: var(--cf-brand-soft-strong);
   background: var(--cf-brand-soft);
   color: var(--cf-brand);
@@ -473,19 +473,24 @@ function formatProjectMeta(item) {
   }
 }
 
-// ── 通用按钮 ──
+// ── 通用按钮（胶囊形，对齐 drama/gateway 按钮语言；按下微缩回馈） ──
 button {
   min-height: 32px;
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  padding: 0 10px;
+  padding: 0 12px;
   border: 1px solid var(--cf-border);
-  border-radius: 9px;
+  border-radius: 999px;
   background: var(--cf-bg-elevated);
   color: var(--cf-text-secondary);
   font-size: 12px;
   font-weight: 850;
+  transition: transform 0.1s ease;
+
+  &:active:not(:disabled) {
+    transform: scale(0.97);
+  }
 
   &:disabled {
     cursor: not-allowed;
@@ -499,9 +504,9 @@ button {
   display: inline-flex;
   align-items: center;
   gap: 5px;
-  padding: 0 9px;
+  padding: 0 12px;
   border-color: transparent;
-  border-radius: 9px;
+  border-radius: 999px;
   background: transparent;
   color: var(--cf-text-tertiary);
   font-size: 12px;

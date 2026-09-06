@@ -52,7 +52,7 @@ const toggleLock = () => {
   gap: 2px;
   padding: 3px;
   border: 1px solid var(--cf-border);
-  border-radius: 10px;
+  border-radius: 999px;
   background: color-mix(in srgb, var(--cf-bg-elevated) 95%, transparent);
   box-shadow: var(--cf-shadow-lg, 0 8px 24px rgba(0, 0, 0, 0.28));
 }
@@ -64,7 +64,7 @@ const toggleLock = () => {
   align-items: center;
   justify-content: center;
   border: none;
-  border-radius: 7px;
+  border-radius: 999px;
   background: transparent;
   color: var(--cf-text-secondary);
   font: inherit;

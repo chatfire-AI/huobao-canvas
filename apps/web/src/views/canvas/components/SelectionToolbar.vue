@@ -71,7 +71,7 @@ const style = computed(() => {
   min-height: 38px;
   padding: 4px 5px 4px 12px;
   border: 1px solid var(--cf-border);
-  border-radius: 11px;
+  border-radius: 999px;
   background: color-mix(in srgb, var(--cf-bg-elevated) 95%, transparent);
   box-shadow: var(--cf-shadow-lg);
   color: var(--cf-text-primary);
@@ -90,9 +90,9 @@ button {
   display: inline-flex;
   align-items: center;
   gap: 5px;
-  padding: 0 9px;
+  padding: 0 11px;
   border: 0;
-  border-radius: 8px;
+  border-radius: 999px;
   background: transparent;
   color: var(--cf-text-secondary);
   font-size: 12px;
