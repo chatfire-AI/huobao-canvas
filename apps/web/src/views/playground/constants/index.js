@@ -2,6 +2,8 @@
  * Playground 常量配置
  */
 
+import { i18n } from '@/locales'
+
 // API 配置（单一来源见 apiBaseUrl.js）
 export { DEFAULT_API_BASE_URL } from './apiBaseUrl.js'
 
@@ -57,7 +59,7 @@ export const CODE_VIEWS = ['javascript', 'python', 'curl', 'java', 'go']
 
 // Workbench 类型标签
 const WORKBENCH_TYPE_TABS = [
-  { key: 'all', label: '全部', icon: 'tabler:apps' },
+  { key: 'all', label: i18n.global.t('common.all'), icon: 'tabler:apps' },
   { key: 'chat', label: 'Chat', icon: 'tabler:message-circle' },
   { key: 'image', label: 'Image', icon: 'tabler:photo' },
   { key: 'video', label: 'Video', icon: 'tabler:video' }
@@ -65,12 +67,12 @@ const WORKBENCH_TYPE_TABS = [
 
 // Workbench 参数分组
 const WORKBENCH_FIELD_GROUPS = [
-  { key: 'basic', label: '基础参数' },
-  { key: 'generation', label: '生成控制' },
-  { key: 'media', label: '媒体输入' },
-  { key: 'advanced', label: '高级参数' },
-  { key: 'callback', label: '回调设置' },
-  { key: 'debug', label: '调试参数' }
+  { key: 'basic', label: i18n.global.t('playground.groups.basic') },
+  { key: 'generation', label: i18n.global.t('playground.groups.generation') },
+  { key: 'media', label: i18n.global.t('playground.groups.media') },
+  { key: 'advanced', label: i18n.global.t('playground.groups.advanced') },
+  { key: 'callback', label: i18n.global.t('playground.groups.callback') },
+  { key: 'debug', label: i18n.global.t('playground.groups.debug') }
 ]
 
 // 结果视图标签
@@ -142,12 +144,12 @@ export function getEndpointDisplayType(path, capability = '') {
   return 'text'
 }
 
-// 图片模型默认参数
-export const DEFAULT_IMAGE_PARAMS = [
+// 图片模型默认参数（函数形式保证文案随语言切换更新）
+export const getDefaultImageParams = () => [
   {
     id: 1, key: 'prompt', label: 'Prompt', type: 'textarea', required: true,
     defaultValue: 'A cute cat sitting on a windowsill',
-    description: '图片描述文本'
+    description: i18n.global.t('playground.defaultParams.imagePromptDesc')
   },
   {
     id: 2, key: 'size', label: 'Size', type: 'select',
@@ -158,43 +160,43 @@ export const DEFAULT_IMAGE_PARAMS = [
       { label: '1792x1024', value: '1792x1024' },
       { label: '512x512', value: '512x512' }
     ],
-    description: '图片尺寸'
+    description: i18n.global.t('playground.defaultParams.imageSizeDesc')
   },
   {
     id: 3, key: 'n', label: 'N', type: 'number',
     min: 1, max: 4, defaultValue: 1,
-    description: '生成图片数量'
+    description: i18n.global.t('playground.defaultParams.imageCountDesc')
   }
 ]
 
 // 视频模型默认参数
-export const DEFAULT_VIDEO_PARAMS = [
+export const getDefaultVideoParams = () => [
   {
     id: 1, key: 'prompt', label: 'Prompt', type: 'textarea', required: true,
     defaultValue: 'A cat walking on the beach at sunset',
-    description: '视频描述文本'
+    description: i18n.global.t('playground.defaultParams.videoPromptDesc')
   }
 ]
 
 // 对话模型默认参数（当模型未配置 input schema 时使用）
-export const DEFAULT_CHAT_PARAMS = [
+export const getDefaultChatParams = () => [
   {
     id: 1, key: 'messages', label: 'Messages', type: 'textarea', required: true,
     defaultValue: JSON.stringify([{ role: 'user', content: 'Hello' }], null, 2),
-    description: '对话消息数组，格式: [{"role":"user","content":"..."}]'
+    description: i18n.global.t('playground.defaultParams.chatMessagesDesc', { format: '[{"role":"user","content":"..."}]' })
   },
   {
     id: 2, key: 'stream', label: 'Stream', type: 'switch', defaultValue: true,
-    description: '是否使用流式输出 (SSE)'
+    description: i18n.global.t('playground.defaultParams.streamDesc')
   },
   {
     id: 3, key: 'temperature', label: 'Temperature', type: 'slider',
     min: 0, max: 2, step: 0.1, defaultValue: 0.7,
-    description: '采样温度，值越高输出越随机'
+    description: i18n.global.t('playground.defaultParams.temperatureDesc')
   },
   {
     id: 4, key: 'max_tokens', label: 'Max Tokens', type: 'number',
     min: 1, max: 128000, defaultValue: 4096,
-    description: '最大输出 token 数'
+    description: i18n.global.t('playground.defaultParams.maxTokensDesc')
   }
 ]

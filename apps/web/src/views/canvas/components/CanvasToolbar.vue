@@ -20,7 +20,7 @@
 
         <div v-if="projectPanelVisible" class="project-panel">
           <div class="project-panel-head">
-            <strong>画布列表</strong>
+            <strong>{{ $t('canvas.toolbar.projectList') }}</strong>
             <span>{{ projectOptions.length }}/50</span>
           </div>
           <div class="project-list">
@@ -46,7 +46,7 @@
                 <template v-else>
                   <span class="project-name">
                     {{ item.label }}
-                    <span v-if="item.value === projectId" class="current-badge">当前</span>
+                    <span v-if="item.value === projectId" class="current-badge">{{ $t('canvas.toolbar.currentBadge') }}</span>
                   </span>
                   <span class="project-meta">{{ formatProjectMeta(item) }}</span>
                 </template>
@@ -55,7 +55,7 @@
                 <button
                   type="button"
                   class="project-action-btn"
-                  title="重命名"
+                  :title="$t('common.rename')"
                   :disabled="controlsLocked"
                   @click="startRename(item)"
                 >
@@ -64,7 +64,7 @@
                 <button
                   type="button"
                   class="project-action-btn is-danger"
-                  title="删除画布"
+                  :title="$t('canvas.toolbar.deleteCanvas')"
                   :disabled="controlsLocked"
                   @click="$emit('delete-project', item)"
                 >
@@ -80,7 +80,7 @@
             @click="handleCreateProject"
           >
             <svg-icon icon="tabler:plus" />
-            <span>新建画布</span>
+            <span>{{ $t('canvas.toolbar.newCanvas') }}</span>
           </button>
         </div>
       </div>
@@ -88,32 +88,32 @@
       <button
         type="button"
         class="project-create-button"
-        title="新建画布"
+        :title="$t('canvas.toolbar.newCanvas')"
         :disabled="controlsLocked"
         @click="$emit('create-project')"
       >
         <svg-icon icon="tabler:plus" />
-        新建
+        {{ $t('common.create') }}
       </button>
     </div>
 
     <div class="toolbar-actions">
-      <button type="button" title="撤销（⌘/Ctrl+Z）" :disabled="!canUndo" @click="$emit('undo')">
+      <button type="button" :title="$t('canvas.toolbar.undoTitle')" :disabled="!canUndo" @click="$emit('undo')">
         <svg-icon icon="tabler:arrow-back-up" />
-        <span>撤销</span>
+        <span>{{ $t('common.undo') }}</span>
       </button>
-      <button type="button" title="重做（⌘/Ctrl+Shift+Z）" :disabled="!canRedo" @click="$emit('redo')">
+      <button type="button" :title="$t('canvas.toolbar.redoTitle')" :disabled="!canRedo" @click="$emit('redo')">
         <svg-icon icon="tabler:arrow-forward-up" />
-        <span>重做</span>
+        <span>{{ $t('common.redo') }}</span>
       </button>
       <span class="toolbar-divider" aria-hidden="true"></span>
-      <button type="button" title="自动布局" @click="$emit('auto-layout')">
+      <button type="button" :title="$t('canvas.toolbar.autoLayout')" @click="$emit('auto-layout')">
         <svg-icon icon="tabler:hierarchy-2" />
-        <span>自动布局</span>
+        <span>{{ $t('canvas.toolbar.autoLayout') }}</span>
       </button>
-      <button type="button" title="适配画布" @click="$emit('fit-canvas')">
+      <button type="button" :title="$t('canvas.toolbar.fitCanvas')" @click="$emit('fit-canvas')">
         <svg-icon icon="tabler:focus-centered" />
-        <span>适配画布</span>
+        <span>{{ $t('canvas.toolbar.fitCanvas') }}</span>
       </button>
     </div>
 
@@ -127,7 +127,7 @@
           :loading="apiKeyLoading"
           :disabled="controlsLocked"
           size="small"
-          placeholder="选择 API Key"
+          :placeholder="$t('canvas.toolbar.selectApiKey')"
           filterable
           clearable
           @update:value="$emit('select-api-key', $event || '')"
@@ -135,7 +135,7 @@
         <button
           type="button"
           class="api-key-manage"
-          title="管理 API Key（新增 / 删除）"
+          :title="$t('canvas.toolbar.manageApiKey')"
           :disabled="controlsLocked"
           @click="$emit('manage-api-keys')"
         >
@@ -147,15 +147,16 @@
         href="https://github.com/chatfire-AI/huobao-canvas"
         target="_blank"
         rel="noopener"
-        title="开源地址：觉得好用就点个 Star ⭐"
+        :title="$t('canvas.toolbar.githubTitle')"
       >
         <svg-icon icon="tabler:brand-github" />
-        <span>Star</span>
+        <span>{{ $t('canvas.toolbar.star') }}</span>
       </a>
+      <LocaleSwitcher />
       <button
         type="button"
         class="tips-toggle"
-        :title="isDark ? '切换到浅色主题' : '切换到暗色主题'"
+        :title="isDark ? $t('canvas.toolbar.toLight') : $t('canvas.toolbar.toDark')"
         @click="toggleTheme"
       >
         <svg-icon :icon="isDark ? 'tabler:sun' : 'tabler:moon'" />
@@ -163,11 +164,11 @@
       <button
         type="button"
         class="settings-entry"
-        title="设置（厂商 / 模型 / 存储）"
+        :title="$t('canvas.toolbar.settingsTitle')"
         @click="$emit('open-settings')"
       >
         <svg-icon icon="tabler:settings" />
-        <span>设置</span>
+        <span>{{ $t('common.settings') }}</span>
       </button>
     </div>
   </div>
@@ -175,13 +176,16 @@
 
 <script setup>
 import { computed, nextTick, onBeforeUnmount, ref, watch } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { useTheme } from '@/composables/useTheme'
+import LocaleSwitcher from '@/components/common/LocaleSwitcher.vue'
 
 const { isDark, toggleTheme } = useTheme()
+const { t, locale } = useI18n()
 
 const props = defineProps({
   projectId: { type: String, default: '' },
-  projectName: { type: String, default: '默认画布' },
+  projectName: { type: String, default: '' },
   projectOptions: { type: Array, default: () => [] },
   apiKeyOptions: { type: Array, default: () => [] },
   selectedApiKey: { type: String, default: '' },
@@ -244,7 +248,7 @@ function handleCreateProject() {
 
 function startRename(item) {
   renamingId.value = item.value
-  renamingValue.value = item.label.replace(' · 未保存', '')
+  renamingValue.value = item.label.replace(t('canvas.project.unsavedSuffix'), '')
   nextTick(() => {
     const input = Array.isArray(renameInputRef.value) ? renameInputRef.value[0] : renameInputRef.value
     input?.focus()
@@ -264,19 +268,19 @@ function commitRename() {
 // 保存状态不在工具栏展示（自动保存静默进行，出错时由页面级 message 提示）
 const currentProject = computed(() => (
   props.projectOptions.find((item) => item.value === props.projectId) || {
-    label: props.projectName || '默认画布',
+    label: props.projectName || t('canvas.project.defaultName'),
     nodeCount: 0,
   }
 ))
 
-const currentProjectLabel = computed(() => currentProject.value.label || '默认画布')
-const currentProjectMeta = computed(() => `${currentProject.value.nodeCount || 0} 个节点`)
+const currentProjectLabel = computed(() => currentProject.value.label || t('canvas.project.defaultName'))
+const currentProjectMeta = computed(() => t('canvas.toolbar.nodeCount', { n: currentProject.value.nodeCount || 0 }))
 
 function formatDate(value) {
-  if (!value) return '未保存'
+  if (!value) return t('canvas.toolbar.unsaved')
   const date = new Date(value)
-  if (Number.isNaN(date.getTime())) return '未保存'
-  return date.toLocaleString('zh-CN', {
+  if (Number.isNaN(date.getTime())) return t('canvas.toolbar.unsaved')
+  return date.toLocaleString(locale.value, {
     month: '2-digit',
     day: '2-digit',
     hour: '2-digit',
@@ -285,7 +289,7 @@ function formatDate(value) {
 }
 
 function formatProjectMeta(item) {
-  return `${item.nodeCount || 0} 个节点 · ${formatDate(item.updatedAt)}`
+  return t('canvas.toolbar.projectMeta', { n: item.nodeCount || 0, date: formatDate(item.updatedAt) })
 }
 </script>
 

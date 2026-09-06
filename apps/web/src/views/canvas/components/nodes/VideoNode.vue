@@ -5,7 +5,7 @@
   >
     <div class="node-outside-head">
       <span class="node-type-icon"><svg-icon icon="tabler:video" /></span>
-      <NodeTitle :id="id" :title="data.title || '视频'" />
+      <NodeTitle :id="id" :title="data.title || $t('canvas.nodeTypes.video')" />
       <span v-if="status !== 'idle'" class="node-status-dot" aria-hidden="true"></span>
     </div>
     <div class="node-card media-card is-video" :class="{ 'has-media': showMedia }">
@@ -22,7 +22,7 @@
       />
       <div v-else class="node-media-empty">
         <span class="empty-icon"><svg-icon icon="tabler:video" /></span>
-        <p>{{ data.payload?.prompt || (data.payload?.taskId ? `任务 ${data.payload.taskId}` : '在节点下方输入视频提示') }}</p>
+        <p>{{ data.payload?.prompt || (data.payload?.taskId ? $t('canvas.videoNode.taskLabel', { id: data.payload.taskId }) : $t('canvas.videoNode.emptyHint')) }}</p>
       </div>
       <div v-if="modelName || statusText" class="node-overlay-bottom">
         <span v-if="modelName" class="node-model-pill">{{ modelName }}</span>
@@ -36,8 +36,11 @@
 
 <script setup>
 import { computed, inject } from 'vue'
+import { useI18n } from 'vue-i18n'
 import NodeHandlePlus from '../NodeHandlePlus.vue'
 import NodeTitle from './NodeTitle.vue'
+
+const { t } = useI18n()
 
 const props = defineProps({
   id: { type: String, required: true },
@@ -57,12 +60,12 @@ const showMedia = computed(() => Boolean(videoUrl.value) && !['unavailable', 'ex
 const modelName = computed(() => props.data.payload?.modelName || '')
 const statusText = computed(() => {
   const notice = props.data.payload?.notice
-  if (status.value === 'running') return '运行中'
-  if (status.value === 'waiting') return notice || '等待恢复'
-  if (status.value === 'success') return '已生成'
-  if (status.value === 'unavailable') return notice || '任务已完成，结果暂不可预览'
-  if (status.value === 'expired') return notice || '资源已失效'
-  if (status.value === 'error') return notice || props.data.payload?.error || '运行失败'
+  if (status.value === 'running') return t('canvas.nodeStatus.running')
+  if (status.value === 'waiting') return notice || t('canvas.nodeStatus.waiting')
+  if (status.value === 'success') return t('canvas.nodeStatus.success')
+  if (status.value === 'unavailable') return notice || t('canvas.nodeStatus.unavailable')
+  if (status.value === 'expired') return notice || t('canvas.nodeStatus.expired')
+  if (status.value === 'error') return notice || props.data.payload?.error || t('canvas.nodeStatus.error')
   return ''
 })
 

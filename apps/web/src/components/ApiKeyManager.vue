@@ -1,7 +1,10 @@
 <script setup>
 import { computed, ref, watch } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { validateApiKey } from '@/utils/apiKeySession'
 import { getGatewayBaseUrl } from '@/config'
+
+const { t } = useI18n()
 
 const props = defineProps({
   show: { type: Boolean, default: false },
@@ -34,7 +37,7 @@ const mask = (key) => {
 const handleSave = async () => {
   const key = newKey.value.trim()
   if (!key) {
-    window.$message?.warning('请填入 API Key')
+    window.$message?.warning(t('settings.apiKeys.enterKey'))
     return
   }
   validating.value = true
@@ -43,9 +46,9 @@ const handleSave = async () => {
     const base = getGatewayBaseUrl() || window.location.origin
     const ok = await validateApiKey(key, base)
     if (!ok) {
-      window.$message?.warning('Key 校验未通过（端点无响应或 Key 无效），已保存，请确认后使用')
+      window.$message?.warning(t('settings.apiKeys.validationFailed'))
     } else {
-      window.$message?.success('API Key 已验证并保存')
+      window.$message?.success(t('settings.apiKeys.saved'))
     }
     emit('save', { key, name: newName.value.trim() })
     newKey.value = ''
@@ -60,14 +63,14 @@ const handleSave = async () => {
   <n-modal
     v-model:show="visible"
     preset="card"
-    title="API Key 管理"
+    :title="$t('settings.apiKeys.title')"
     style="width: 520px"
     :bordered="false"
   >
     <div class="api-key-manager">
       <p class="hint">
-        Key 仅保存在当前浏览器 localStorage，不会上传到任何服务器。
-        默认端点为 Huobao 公共 API（可在部署配置中切换为任意 OpenAI 兼容端点）。
+        {{ $t('settings.providers.keyHint') }}
+        {{ $t('settings.apiKeys.hintEndpoint') }}
       </p>
       <div class="add-form">
         <n-input
@@ -77,15 +80,15 @@ const handleSave = async () => {
           show-password-on="click"
           @keyup.enter="handleSave"
         />
-        <n-input v-model:value="newName" placeholder="备注名（可选）" class="name-input" />
-        <n-button type="primary" :loading="validating" @click="handleSave">验证并保存</n-button>
+        <n-input v-model:value="newName" :placeholder="$t('settings.apiKeys.namePlaceholder')" class="name-input" />
+        <n-button type="primary" :loading="validating" @click="handleSave">{{ $t('settings.apiKeys.validateAndSave') }}</n-button>
       </div>
-      <n-empty v-if="!keys.length" description="还没有保存的 Key" style="margin: 24px 0" />
+      <n-empty v-if="!keys.length" :description="$t('settings.apiKeys.empty')" style="margin: 24px 0" />
       <div v-else class="key-list">
         <div v-for="item in keys" :key="item.key" class="key-item">
           <span class="key-name">{{ item.name || 'API Key' }}</span>
           <span class="key-value">{{ mask(item.key) }}</span>
-          <n-button text type="error" size="small" @click="emit('delete', item.key)">删除</n-button>
+          <n-button text type="error" size="small" @click="emit('delete', item.key)">{{ $t('common.delete') }}</n-button>
         </div>
       </div>
     </div>

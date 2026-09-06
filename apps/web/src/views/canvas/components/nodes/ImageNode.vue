@@ -5,7 +5,7 @@
   >
     <div class="node-outside-head">
       <span class="node-type-icon"><svg-icon icon="tabler:photo" /></span>
-      <NodeTitle :id="id" :title="data.title || '图片'" />
+      <NodeTitle :id="id" :title="data.title || $t('canvas.nodeTypes.image')" />
       <span v-if="displayStatus !== 'idle'" class="node-status-dot" aria-hidden="true"></span>
     </div>
     <div class="node-card media-card" :class="{ 'has-media': showMedia }">
@@ -13,13 +13,13 @@
         v-if="showMedia"
         class="node-media-fill"
         :src="imageUrl"
-        :alt="data.title || '图片结果'"
+        :alt="data.title || $t('canvas.imageNode.resultAlt')"
         draggable="false"
         @dblclick.stop="handlePreview"
       />
       <div v-else class="node-media-empty">
         <span class="empty-icon"><svg-icon icon="tabler:photo" /></span>
-        <p>{{ data.payload?.prompt || '在节点下方输入图片提示' }}</p>
+        <p>{{ data.payload?.prompt || $t('canvas.imageNode.emptyHint') }}</p>
       </div>
       <div v-if="modelName || statusText" class="node-overlay-bottom">
         <span v-if="modelName" class="node-model-pill">{{ modelName }}</span>
@@ -33,8 +33,11 @@
 
 <script setup>
 import { computed, inject } from 'vue'
+import { useI18n } from 'vue-i18n'
 import NodeHandlePlus from '../NodeHandlePlus.vue'
 import NodeTitle from './NodeTitle.vue'
+
+const { t } = useI18n()
 
 const props = defineProps({
   id: { type: String, required: true },
@@ -61,13 +64,13 @@ const showMedia = computed(() => Boolean(imageUrl.value) && !['unavailable', 'ex
 const modelName = computed(() => props.data.payload?.modelName || '')
 const statusText = computed(() => {
   const notice = props.data.payload?.notice
-  if (isLocalImageUnavailable.value) return '本地素材已失效'
-  if (displayStatus.value === 'running') return '运行中'
-  if (displayStatus.value === 'waiting') return notice || '等待恢复'
-  if (displayStatus.value === 'success') return '已生成'
-  if (displayStatus.value === 'unavailable') return notice || '任务已完成，结果暂不可预览'
-  if (displayStatus.value === 'expired') return notice || '资源已失效'
-  if (displayStatus.value === 'error') return notice || props.data.payload?.error || '运行失败'
+  if (isLocalImageUnavailable.value) return t('canvas.imageNode.localExpired')
+  if (displayStatus.value === 'running') return t('canvas.nodeStatus.running')
+  if (displayStatus.value === 'waiting') return notice || t('canvas.nodeStatus.waiting')
+  if (displayStatus.value === 'success') return t('canvas.nodeStatus.success')
+  if (displayStatus.value === 'unavailable') return notice || t('canvas.nodeStatus.unavailable')
+  if (displayStatus.value === 'expired') return notice || t('canvas.nodeStatus.expired')
+  if (displayStatus.value === 'error') return notice || props.data.payload?.error || t('canvas.nodeStatus.error')
   return ''
 })
 

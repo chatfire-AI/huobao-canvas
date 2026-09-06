@@ -8,6 +8,7 @@
  * 方法签名与 Dexie 存储适配器一一对应（useCanvasStorage.createDexieStore）。
  */
 import { appFetch } from '@/utils/desktopBridge.js'
+import { i18n } from '@/locales'
 
 const PING_TIMEOUT = 1500
 
@@ -33,7 +34,7 @@ const request = async (path, { method = 'GET', body } = {}) => {
   if (resp.status === 404) return null
   if (!resp.ok) {
     const data = await resp.json().catch(() => ({}))
-    throw new Error(data?.message || `画布服务请求失败(${resp.status})`)
+    throw new Error(data?.message || i18n.global.t('runtime.server.requestFailed', { status: resp.status }))
   }
   return resp.json()
 }

@@ -1,3 +1,4 @@
+import { i18n } from '@/locales'
 import { CANVAS_NODE_TYPES } from '../constants/nodeTypes.js'
 import { useModelRunner } from '../../../composables/useModelRunner.js'
 import { getProviderForModel } from '@/config/providers/index.js'
@@ -9,6 +10,8 @@ import {
   getVideoReferenceInfo,
   referenceImageLimitMessage,
 } from '@/utils/referenceImages.js'
+
+const t = (key, args) => i18n.global.t(key, args)
 
 const textFieldCandidates = ['prompt', 'input', 'text', 'query']
 
@@ -199,7 +202,7 @@ export function useCanvasModelNode({
       .map((field) => field.label || field.key)
 
     if (missing.length) {
-      throw new Error(`缺少必填参数：${missing.join('、')}`)
+      throw new Error(t('canvas.run.missingRequired', { fields: missing.join(t('canvas.run.fieldSep')) }))
     }
   }
 
@@ -221,17 +224,17 @@ export function useCanvasModelNode({
     signal,
     onTaskSubmitted,
   }) => {
-    if (!node) throw new Error('请选择节点')
+    if (!node) throw new Error(t('canvas.run.selectNode'))
     // 官方直连模式的模型按厂商取 Key（设置页配置）；网关模式用全局 Key。
     // 服务端执行模式下 Key 在服务端（settings 表），本地无 Key 不拦截
     const nodeProvider = getProviderForModel(modelData || {})
     const nodeProviderKey = nodeProvider ? getProviderApiKey(nodeProvider.id) : ''
     if (!apiKey && !nodeProviderKey && !(await isServerRunMode())) {
       throw new Error(nodeProvider
-        ? `请先在设置页配置 ${nodeProvider.label} 的 API Key`
-        : '请先创建或选择 API Key')
+        ? t('canvas.run.configureProviderKey', { provider: nodeProvider.label })
+        : t('canvas.run.createOrSelectKey'))
     }
-    if (!modelData?.name) throw new Error('请先选择模型')
+    if (!modelData?.name) throw new Error(t('canvas.run.selectModel'))
 
     // 参考图上限:图片节点 image=1 / images=max;视频节点按参考模式
     // (文生=0 / 首帧=1 / 首尾帧=2 / 全能参考=max),显式 inputBindings 优先,探测失败回退通用推断

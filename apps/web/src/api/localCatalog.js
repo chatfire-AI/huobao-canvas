@@ -9,10 +9,15 @@
  */
 import { providerPresets, collectModels } from '@/config/providers'
 import { mirrorSettingsToServer } from '@/utils/apiKeySession.js'
+import { i18n } from '@/locales'
 
 const CATALOG_STORAGE = 'chatfire_canvas_catalog'
 
+// 类型码 → 中文规范值：数据契约（settings 页直接消费、typeName 逻辑匹配依赖中文值），不翻译
 export const MODEL_TYPE_MAP = { '1': '对话', '2': '图片', '3': '视频' }
+
+// 类型码 → 展示标签：调用点按当前语言取值
+const modelTypeLabel = (type) => i18n.global.t(`runtime.catalog.typeLabels.${type}`)
 
 export const readCatalogOverrides = () => {
   try {
@@ -27,8 +32,9 @@ export const writeCatalogOverrides = (overrides) => {
   mirrorSettingsToServer()
 }
 
-/** 等价于 getModelTypes()：{ "1": "对话", ... } */
-export const getLocalModelTypes = () => ({ ...MODEL_TYPE_MAP })
+/** 等价于 getModelTypes()：{ "1": "对话", ... }（展示标签按当前语言） */
+export const getLocalModelTypes = () =>
+  Object.fromEntries(Object.keys(MODEL_TYPE_MAP).map((type) => [type, modelTypeLabel(type)]))
 
 /**
  * 合成 allCategory：[{ name, type, factories: [{ name, models }] }]
@@ -38,13 +44,14 @@ export const getLocalCategoryData = () => {
   const overrides = readCatalogOverrides()
   const models = collectModels(overrides)
   const categories = []
-  for (const [type, label] of Object.entries(MODEL_TYPE_MAP)) {
+  for (const type of Object.keys(MODEL_TYPE_MAP)) {
+    const label = modelTypeLabel(type)
     const typeModels = models.filter((m) =>
       String(m.type || '').split(',').map((t) => t.trim()).includes(type))
     if (!typeModels.length) continue
     const factoryMap = {}
     for (const m of typeModels) {
-      const factory = m.factory || '其他'
+      const factory = m.factory || i18n.global.t('runtime.catalog.otherFactory')
       ;(factoryMap[factory] = factoryMap[factory] || []).push(m)
     }
     categories.push({

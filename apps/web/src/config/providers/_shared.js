@@ -6,6 +6,12 @@
  * protocolKey 显式声明（对应 protocols/registry.js 的适配器键），路径推断仅作兜底。
  */
 
+// 相对路径导入：本目录会被 Node 校验脚本/server 直接 import（无 vite alias，不能用 '@/locales'）
+import { i18n } from '../../locales/index.js'
+
+/** providers 命名空间取文案（key 不带 providers. 前缀），读取时求值以跟随语言切换 */
+export const t = (key, params) => i18n.global.t(`providers.${key}`, params)
+
 /** 端点记录：path 自动拼 proxyPrefix */
 export const ep = (proxyPrefix, path, opts = {}) => ({
   path: `${proxyPrefix}${path}`,
@@ -31,28 +37,29 @@ export const model = (provider, m) => ({
 export const messagesField = {
   key: 'messages', label: 'Messages', type: 'textarea', required: true,
   defaultValue: JSON.stringify([{ role: 'user', content: 'Hello' }], null, 2),
-  description: '对话消息数组：[{"role":"user","content":"..."}]',
+  // getter：读取/JSON.stringify 时求值，语言切换后即为新语言
+  get description() { return t('fields.messagesDesc') },
 }
 
 export const temperatureField = (max = 2) => ({
   key: 'temperature', label: 'Temperature', type: 'slider',
   min: 0, max, step: 0.1, defaultValue: 0.7,
-  description: '采样温度，值越高输出越随机',
+  description: t('fields.temperatureDesc'),
 })
 
 export const maxTokensField = (key = 'max_tokens', def = 4096, max = 128000) => ({
   key, label: 'Max Tokens', type: 'number', min: 1, max, defaultValue: def,
-  description: '最大输出 token 数',
+  description: t('fields.maxTokensDesc'),
 })
 
 export const promptField = (def = '') => ({
   key: 'prompt', label: 'Prompt', type: 'textarea', required: true,
-  defaultValue: def, description: '提示词',
+  defaultValue: def, description: t('fields.promptDesc'),
 })
 
 /** 参考图字段（画布上游图片注入入口，配合 inputBindings.sourceImage） */
-export const sourceImageField = (label = '参考图') => ({
-  key: 'image', label, type: 'image', description: '可上传或由上游节点传入',
+export const sourceImageField = (label = t('fields.sourceImage')) => ({
+  key: 'image', label, type: 'image', description: t('fields.sourceImageDesc'),
 })
 
 /** OpenAI 兼容 chat 模型的标准 schema（temperature 可选） */

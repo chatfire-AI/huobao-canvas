@@ -1,6 +1,20 @@
 // 协议适配器基础设施：task 工具 + 媒体结果提取
 // 纯函数模块——可被 verify 脚本直接 import，禁止引入 DOM 依赖。
 
+// 用户可见文案走 i18n，但本模块同时被 Node 服务端（apps/server）直接 import，
+// 不能顶层引入 @/locales（detectLocale 依赖 localStorage/navigator）。
+// 浏览器端异步注入翻译函数；Node 端或注入完成前回退 zh-CN 原文。
+const ADAPTER_TEXT_FALLBACKS = {
+  'playground.adapter.protectedResult': '任务已完成，但结果需要供应商鉴权，当前无法直接预览',
+}
+let translateAdapterText = null
+if (typeof window !== 'undefined') {
+  import('@/locales')
+    .then(({ i18n }) => { translateAdapterText = (key) => i18n.global.t(key) })
+    .catch(() => {})
+}
+const adapterText = (key) => translateAdapterText?.(key) || ADAPTER_TEXT_FALLBACKS[key] || key
+
 export const MEDIA_RESULT_TYPES = new Set(['image', 'video', 'audio'])
 
 export const RESULT_URL_KEYS = new Set([
@@ -115,7 +129,7 @@ export const extractMediaResult = (result, resultType, outputSchema, getNestedVa
     parsedResults,
     protectedUris,
     unavailableReason: parsedResults.length === 0 && protectedResult
-      ? '任务已完成，但结果需要供应商鉴权，当前无法直接预览'
+      ? adapterText('playground.adapter.protectedResult')
       : '',
   }
 }

@@ -7,6 +7,7 @@ import {
   setCurrentApiKey,
 } from '@/utils/apiKeySession'
 import { getGatewayBaseUrl } from '@/config'
+import { i18n } from '@/locales'
 
 /**
  * BYOK 模式 API Key 管理：
@@ -27,7 +28,7 @@ export function usePlaygroundApiKey(route, router) {
   }
 
   const createOption = (apiKey, item = {}, source = 'stored') => ({
-    label: source === 'url' ? `URL 密钥 · ${maskApiKey(apiKey)}` : (item.name || maskApiKey(apiKey)),
+    label: source === 'url' ? i18n.global.t('playground.apiKey.urlLabel', { key: maskApiKey(apiKey) }) : (item.name || maskApiKey(apiKey)),
     value: apiKey,
     source,
     raw: item,
@@ -95,7 +96,7 @@ export function usePlaygroundApiKey(route, router) {
     const apiKey = await getFirstApiKey()
     if (apiKey) return apiKey
 
-    window.$message?.warning('请先填入 API Key')
+    window.$message?.warning(i18n.global.t('playground.apiKey.required'))
     return null
   }
 

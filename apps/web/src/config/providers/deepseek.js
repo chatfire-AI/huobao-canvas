@@ -1,4 +1,4 @@
-import { ep, model, messagesField, temperatureField, maxTokensField, schema } from './_shared.js'
+import { ep, model, messagesField, temperatureField, maxTokensField, schema, t } from './_shared.js'
 
 const provider = {
   id: 'deepseek',
@@ -17,15 +17,15 @@ const provider = {
 // 思考模式请求体为 thinking:{type:'enabled'|'disabled'}：模板语言无布尔→字符串转换，
 // thinking 用 select 直存 enabled/disabled，由 inputTransform 包成官方对象；
 // 两端点共用此 schema，thinking 对象在 claude 协议层被忽略（官方默认即开启）
-const chatSchema = schema({
+const chatSchema = () => schema({
   protocolKey: 'openai-chat',
   input: [
     messagesField,
-    { ...temperatureField(), description: '采样温度，值越高输出越随机；思考模式（默认开启）下不生效' },
+    { ...temperatureField(), description: t('deepseek.temperatureDesc') },
     maxTokensField(),
-    { key: 'thinking', label: '深度思考', type: 'select', defaultValue: 'enabled', options: ['enabled', 'disabled'],
-      description: '官方默认开启思考模式' },
-    { key: 'reasoning_effort', label: '推理力度', type: 'select', defaultValue: 'high', options: ['low', 'high', 'max'] },
+    { key: 'thinking', label: t('fields.thinking'), type: 'select', defaultValue: 'enabled', options: ['enabled', 'disabled'],
+      description: t('deepseek.thinkingDesc') },
+    { key: 'reasoning_effort', label: t('fields.reasoningEffort'), type: 'select', defaultValue: 'high', options: ['low', 'high', 'max'] },
   ],
   inputTransform: {
     messages: '$${messages}',
@@ -36,16 +36,19 @@ const chatSchema = schema({
   },
 })
 
-provider.models = [
+// models 用 getter 定义：每次读取重建，schema 内文案（t()）跟随语言切换
+Object.defineProperty(provider, 'models', {
+  enumerable: true,
+  get: () => [
   model(provider, {
     name: 'deepseek-v4-pro',
     fullName: 'DeepSeek V4 Pro',
     type: '1', typeName: '对话', icon: provider.icon, launchTime: '2026-01-01',
     endpoints: [
       ep(provider.proxyPrefix, '/v1/chat/completions', { capability: 'CHAT', protocolKey: 'openai-chat' }),
-      ep(provider.proxyPrefix, '/anthropic/v1/messages', { capability: 'CHAT', protocolKey: 'claude', canvasModeLabel: 'Claude 协议' }),
+      ep(provider.proxyPrefix, '/anthropic/v1/messages', { capability: 'CHAT', protocolKey: 'claude', canvasModeLabel: t('canvasMode.claudeProtocol') }),
     ],
-    modelSchema: chatSchema,
+    modelSchema: chatSchema(),
   }),
   model(provider, {
     name: 'deepseek-v4-flash',
@@ -53,10 +56,11 @@ provider.models = [
     type: '1', typeName: '对话', icon: provider.icon, launchTime: '2026-01-01',
     endpoints: [
       ep(provider.proxyPrefix, '/v1/chat/completions', { capability: 'CHAT', protocolKey: 'openai-chat' }),
-      ep(provider.proxyPrefix, '/anthropic/v1/messages', { capability: 'CHAT', protocolKey: 'claude', canvasModeLabel: 'Claude 协议' }),
+      ep(provider.proxyPrefix, '/anthropic/v1/messages', { capability: 'CHAT', protocolKey: 'claude', canvasModeLabel: t('canvasMode.claudeProtocol') }),
     ],
-    modelSchema: chatSchema,
+    modelSchema: chatSchema(),
   }),
-]
+  ],
+})
 
 export default provider

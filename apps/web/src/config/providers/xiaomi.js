@@ -1,8 +1,8 @@
-import { ep, model, messagesField, temperatureField, maxTokensField, schema } from './_shared.js'
+import { ep, model, messagesField, temperatureField, maxTokensField, schema, t } from './_shared.js'
 
 const provider = {
   id: 'xiaomi',
-  label: '小米 MiMo',
+  get label() { return t('xiaomi.label') },
   icon: 'xiaomi-color.png',
   docsUrl: 'https://mimo.mi.com',
   baseUrl: 'https://api.xiaomimimo.com',
@@ -15,9 +15,12 @@ const provider = {
 const chatEp = ep(provider.proxyPrefix, '/v1/chat/completions', { capability: 'CHAT', protocolKey: 'openai-chat' })
 
 // 思考模式下 temperature 强制 1.0（官方文档），仅关闭思考时可调
-const mimoTemperatureField = { ...temperatureField(1.5), description: '采样温度，值越高输出越随机；思考模式下强制 1.0' }
+const mimoTemperatureField = () => ({ ...temperatureField(1.5), description: t('xiaomi.temperatureDesc') })
 
-provider.models = [
+// models 用 getter 定义：每次读取重建，schema 内文案（t()）跟随语言切换
+Object.defineProperty(provider, 'models', {
+  enumerable: true,
+  get: () => [
   // 全模态理解：图片/音频/视频输入、深度思考、1M 上下文 / 128K 输出
   model(provider, {
     name: 'mimo-v2.5',
@@ -26,7 +29,7 @@ provider.models = [
     endpoints: [chatEp],
     modelSchema: schema({
       protocolKey: 'openai-chat',
-      input: [messagesField, mimoTemperatureField, maxTokensField('max_completion_tokens', 32768, 131072)],
+      input: [messagesField, mimoTemperatureField(), maxTokensField('max_completion_tokens', 32768, 131072)],
       chatConfig: { supportImage: true },
     }),
   }),
@@ -38,9 +41,10 @@ provider.models = [
     endpoints: [chatEp],
     modelSchema: schema({
       protocolKey: 'openai-chat',
-      input: [messagesField, mimoTemperatureField, maxTokensField('max_completion_tokens', 32768, 131072)],
+      input: [messagesField, mimoTemperatureField(), maxTokensField('max_completion_tokens', 32768, 131072)],
     }),
   }),
-]
+  ],
+})
 
 export default provider

@@ -2,7 +2,7 @@
   <div class="field-control" :class="{ compact }">
     <label v-if="showLabel" class="field-label">
       <span>{{ field.label || field.key }}</span>
-      <span v-if="field.required" class="required-mark">是</span>
+      <span v-if="field.required" class="required-mark">{{ t('playground.field.required') }}</span>
       <span v-if="field.key" class="field-key">{{ field.key }}</span>
     </label>
 
@@ -11,7 +11,7 @@
       :value="value"
       type="textarea"
       :rows="compact ? 3 : 5"
-      :placeholder="field.placeholder || field.description || `请输入${field.label || field.key}`"
+      :placeholder="field.placeholder || field.description || t('playground.field.inputPlaceholder', { label: field.label || field.key })"
       :disabled="disabled"
       @update:value="updateValue"
     />
@@ -51,7 +51,7 @@
       v-else-if="controlType === 'select'"
       :value="value"
       :options="normalizedOptions"
-      :placeholder="field.placeholder || `请选择${field.label || field.key}`"
+      :placeholder="field.placeholder || t('playground.field.selectPlaceholder', { label: field.label || field.key })"
       :disabled="disabled"
       clearable
       @update:value="updateValue"
@@ -60,7 +60,7 @@
     <div v-else-if="controlType === 'image'" class="image-control">
       <n-input
         :value="imageTextValue"
-        :placeholder="field.placeholder || '图片 URL 或上传后的地址'"
+        :placeholder="field.placeholder || t('playground.field.imageUrlPlaceholder')"
         :disabled="disabled"
         @update:value="updateValue"
       />
@@ -104,7 +104,7 @@
         <n-upload-dragger>
           <div class="file-drop">
             <svg-icon icon="tabler:cloud-upload" />
-            <span>{{ field.placeholder || '选择文件' }}</span>
+            <span>{{ field.placeholder || t('playground.field.chooseFile') }}</span>
           </div>
         </n-upload-dragger>
       </n-upload>
@@ -113,7 +113,7 @@
     <n-input
       v-else
       :value="value"
-      :placeholder="field.placeholder || field.description || `请输入${field.label || field.key}`"
+      :placeholder="field.placeholder || field.description || t('playground.field.inputPlaceholder', { label: field.label || field.key })"
       :disabled="disabled"
       @update:value="updateValue"
     />
@@ -124,6 +124,9 @@
 
 <script setup>
 import { computed } from 'vue'
+import { useI18n } from 'vue-i18n'
+
+const { t } = useI18n()
 
 const props = defineProps({
   field: { type: Object, required: true },

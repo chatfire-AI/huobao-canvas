@@ -1,4 +1,4 @@
-import { ep, model, messagesField, temperatureField, maxTokensField, schema } from './_shared.js'
+import { ep, model, messagesField, temperatureField, maxTokensField, schema, t } from './_shared.js'
 
 const provider = {
   id: 'anthropic',
@@ -23,8 +23,8 @@ const claudeThinkingSchema = (maxTokens = 128000) => schema({
   protocolKey: 'claude',
   input: [
     ...baseInput(maxTokens),
-    { key: 'thinking', label: '深度思考', type: 'switch', defaultValue: false, description: '开启扩展思考（thinking.enabled）' },
-    { key: 'thinking_budget', label: '思考预算', type: 'number', min: 1024, defaultValue: 4096, description: 'thinking.budget_tokens，须 ≥1024 且小于 max_tokens' },
+    { key: 'thinking', label: t('fields.thinking'), type: 'switch', defaultValue: false, description: t('anthropic.thinkingDesc') },
+    { key: 'thinking_budget', label: t('fields.thinkingBudget'), type: 'number', min: 1024, defaultValue: 4096, description: t('anthropic.thinkingBudgetDesc') },
   ],
 })
 
@@ -37,12 +37,15 @@ const claudeAdaptiveSchema = () => schema({
   ],
 })
 
-provider.models = [
+// models 用 getter 定义：每次读取重建，schema 内文案（t()）跟随语言切换
+Object.defineProperty(provider, 'models', {
+  enumerable: true,
+  get: () => [
   model(provider, {
     name: 'claude-fable-5',
     fullName: 'Claude Fable 5',
     type: '1', typeName: '对话', icon: provider.icon, launchTime: '2026-06-09',
-    description: '旗舰模型，1M 上下文 / 128k 输出；自适应思考恒开启，不支持采样参数；$10/$50 每百万 token',
+    description: t('anthropic.models.fable5'),
     endpoints: [ep(provider.proxyPrefix, '/v1/messages', { capability: 'CHAT', protocolKey: 'claude' })],
     modelSchema: claudeAdaptiveSchema(),
   }),
@@ -50,7 +53,7 @@ provider.models = [
     name: 'claude-opus-5',
     fullName: 'Claude Opus 5',
     type: '1', typeName: '对话', icon: provider.icon, launchTime: '2026-07-23',
-    description: '接近 Fable 5 的智能，价格减半；思考仅 adaptive，不支持采样参数；$5/$25 每百万 token',
+    description: t('anthropic.models.opus5'),
     endpoints: [ep(provider.proxyPrefix, '/v1/messages', { capability: 'CHAT', protocolKey: 'claude' })],
     modelSchema: claudeAdaptiveSchema(),
   }),
@@ -58,7 +61,7 @@ provider.models = [
     name: 'claude-opus-4-8',
     fullName: 'Claude Opus 4.8',
     type: '1', typeName: '对话', icon: provider.icon, launchTime: '2026-06-01',
-    description: '1M 上下文 / 128k 输出；思考仅 adaptive（省略=不思考），不支持采样参数；$5/$25 每百万 token',
+    description: t('anthropic.models.opus48'),
     endpoints: [ep(provider.proxyPrefix, '/v1/messages', { capability: 'CHAT', protocolKey: 'claude' })],
     modelSchema: claudeAdaptiveSchema(),
   }),
@@ -66,7 +69,7 @@ provider.models = [
     name: 'claude-opus-4-7',
     fullName: 'Claude Opus 4.7',
     type: '1', typeName: '对话', icon: provider.icon, launchTime: '2026-04-01',
-    description: '1M 上下文 / 128k 输出；思考仅 adaptive，新增 xhigh effort，不支持采样参数；$5/$25 每百万 token',
+    description: t('anthropic.models.opus47'),
     endpoints: [ep(provider.proxyPrefix, '/v1/messages', { capability: 'CHAT', protocolKey: 'claude' })],
     modelSchema: claudeAdaptiveSchema(),
   }),
@@ -74,7 +77,7 @@ provider.models = [
     name: 'claude-opus-4-6',
     fullName: 'Claude Opus 4.6',
     type: '1', typeName: '对话', icon: provider.icon, launchTime: '2026-02-07',
-    description: '1M 上下文 / 128k 输出；支持采样参数与扩展/自适应思考；$5/$25 每百万 token',
+    description: t('anthropic.models.opus46'),
     endpoints: [ep(provider.proxyPrefix, '/v1/messages', { capability: 'CHAT', protocolKey: 'claude' })],
     modelSchema: claudeThinkingSchema(),
   }),
@@ -82,7 +85,7 @@ provider.models = [
     name: 'claude-opus-4-5',
     fullName: 'Claude Opus 4.5',
     type: '1', typeName: '对话', icon: provider.icon, launchTime: '2025-11-24',
-    description: '200k 上下文 / 64k 输出；支持扩展思考，首发 effort 参数（beta）；$5/$25 每百万 token',
+    description: t('anthropic.models.opus45'),
     endpoints: [ep(provider.proxyPrefix, '/v1/messages', { capability: 'CHAT', protocolKey: 'claude' })],
     modelSchema: claudeThinkingSchema(64000),
   }),
@@ -90,7 +93,7 @@ provider.models = [
     name: 'claude-sonnet-5',
     fullName: 'Claude Sonnet 5',
     type: '1', typeName: '对话', icon: provider.icon, launchTime: '2025-11-01',
-    description: '1M 上下文 / 128k 输出；自适应思考默认开启，不支持采样参数；标准价 $2/$10 每百万 token',
+    description: t('anthropic.models.sonnet5'),
     endpoints: [ep(provider.proxyPrefix, '/v1/messages', { capability: 'CHAT', protocolKey: 'claude' })],
     modelSchema: claudeAdaptiveSchema(),
   }),
@@ -98,7 +101,7 @@ provider.models = [
     name: 'claude-sonnet-4-6',
     fullName: 'Claude Sonnet 4.6',
     type: '1', typeName: '对话', icon: provider.icon, launchTime: '2026-03-01',
-    description: '1M 上下文 / 128k 输出；支持采样参数与扩展/自适应思考；$3/$15 每百万 token',
+    description: t('anthropic.models.sonnet46'),
     endpoints: [ep(provider.proxyPrefix, '/v1/messages', { capability: 'CHAT', protocolKey: 'claude' })],
     modelSchema: claudeThinkingSchema(),
   }),
@@ -106,7 +109,7 @@ provider.models = [
     name: 'claude-sonnet-4-5',
     fullName: 'Claude Sonnet 4.5',
     type: '1', typeName: '对话', icon: provider.icon, launchTime: '2025-09-29',
-    description: '200k 上下文（1M 为 beta）/ 64k 输出；支持扩展思考；$3/$15 每百万 token',
+    description: t('anthropic.models.sonnet45'),
     endpoints: [ep(provider.proxyPrefix, '/v1/messages', { capability: 'CHAT', protocolKey: 'claude' })],
     modelSchema: claudeThinkingSchema(64000),
   }),
@@ -114,10 +117,11 @@ provider.models = [
     name: 'claude-haiku-4-5',
     fullName: 'Claude Haiku 4.5',
     type: '1', typeName: '对话', icon: provider.icon, launchTime: '2025-10-15',
-    description: '200k 上下文 / 64k 输出；支持扩展思考；高性价比 $1/$5 每百万 token',
+    description: t('anthropic.models.haiku45'),
     endpoints: [ep(provider.proxyPrefix, '/v1/messages', { capability: 'CHAT', protocolKey: 'claude' })],
     modelSchema: claudeThinkingSchema(64000),
   }),
-]
+  ],
+})
 
 export default provider

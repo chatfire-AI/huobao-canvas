@@ -1,4 +1,8 @@
 import { useRequestPipeline } from './useRequestPipeline.js'
+import { i18n } from '@/locales'
+
+// 调用点求值：切语言后新抛出的错误/提示跟随当前语言
+const t = (key, params) => i18n.global.t(key, params)
 
 const SAFE_AUTHORIZATION_HEADER = 'Bearer <API_KEY>'
 const SENSITIVE_HEADER_KEYS = ['authorization', 'proxy-authorization', 'x-api-key', 'api-key', 'cookie', 'set-cookie']
@@ -26,7 +30,7 @@ const MAX_RESULT_NODES = 1000
  * （开源版无平台登录体系，主仓的 key-id:/JWT 双模式已移除）
  */
 export const buildModelRunnerAuthHeaders = (credential) => {
-  if (!credential) throw new Error('请先填入 API Key')
+  if (!credential) throw new Error(t('runtime.auth.apiKeyMissing'))
   return { Authorization: `Bearer ${credential}` }
 }
 
@@ -152,7 +156,7 @@ export const extractModelRunnerResults = (result, resultType, outputSchema, getN
   return {
     parsedResults,
     unavailableReason: parsedResults.length === 0 && protectedResult
-      ? '任务已完成，但结果需要供应商鉴权，当前无法直接预览'
+      ? t('runtime.runner.protectedResult')
       : '',
   }
 }
@@ -186,7 +190,7 @@ export function useModelRunner({ getNestedValue, wait }) {
       outputSchema,
     } = params
 
-    if (!apiKey) throw new Error('请先创建或选择 API Key')
+    if (!apiKey) throw new Error(t('runtime.auth.apiKeyRequired'))
 
     // 兼容旧行为：消息体字符串在交给适配器前先解析，保证聊天厂商请求体能被正确构建
     let prepped = formData

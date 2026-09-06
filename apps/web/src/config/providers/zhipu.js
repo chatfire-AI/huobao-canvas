@@ -1,8 +1,8 @@
-import { ep, model, schema, messagesField, temperatureField, maxTokensField } from './_shared.js'
+import { ep, model, schema, messagesField, temperatureField, maxTokensField, t } from './_shared.js'
 
 const provider = {
   id: 'zhipu',
-  label: '智谱 GLM',
+  get label() { return t('zhipu.label') },
   icon: 'zhipu-color.png',
   docsUrl: 'https://docs.bigmodel.cn/cn/api',
   baseUrl: 'https://open.bigmodel.cn',
@@ -11,7 +11,10 @@ const provider = {
   testPath: '/api/paas/v4/models',
 }
 
-provider.models = [
+// models 用 getter 定义：每次读取重建，schema 内文案（t()）跟随语言切换
+Object.defineProperty(provider, 'models', {
+  enumerable: true,
+  get: () => [
   model(provider, {
     name: 'glm-5.3',
     fullName: 'GLM 5.3',
@@ -85,6 +88,7 @@ provider.models = [
       input: [messagesField, temperatureField(1), maxTokensField('max_tokens', 65536, 131072)],
     }),
   }),
-]
+  ],
+})
 
 export default provider

@@ -1,31 +1,31 @@
 <template>
   <div v-if="visible" class="selection-toolbar" :style="style">
-    <span>{{ count }} 个节点</span>
+    <span>{{ $t('canvas.toolbar.nodeCount', { n: count }) }}</span>
     <button type="button" @click="$emit('duplicate')">
       <svg-icon icon="tabler:copy" />
-      复制
+      {{ $t('common.copy') }}
     </button>
     <button v-if="canGroup" type="button" @click="$emit('group')">
       <svg-icon icon="tabler:category" />
-      分组
+      {{ $t('canvas.selection.group') }}
     </button>
     <template v-if="isSingleGroup">
       <button type="button" @click="$emit('ungroup')">
         <svg-icon icon="tabler:category-minus" />
-        解组
+        {{ $t('canvas.selection.ungroup') }}
       </button>
       <button type="button" @click="$emit('layout-horizontal')">
         <svg-icon icon="tabler:layout-columns" />
-        横向布局
+        {{ $t('canvas.selection.layoutHorizontal') }}
       </button>
       <button type="button" @click="$emit('layout-vertical')">
         <svg-icon icon="tabler:layout-rows" />
-        纵向布局
+        {{ $t('canvas.selection.layoutVertical') }}
       </button>
     </template>
     <button type="button" @click="$emit('delete')">
       <svg-icon icon="tabler:trash" />
-      删除
+      {{ $t('common.delete') }}
     </button>
   </div>
 </template>

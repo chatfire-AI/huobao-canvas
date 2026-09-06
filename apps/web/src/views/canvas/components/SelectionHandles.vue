@@ -7,7 +7,7 @@
       class="selection-handle"
       :class="[`is-${side}`, { 'is-active': dragState?.side === side }]"
       :style="handleStyles[side]"
-      :title="side === 'right' ? '从选区拉线：所有兼容的选中节点一起连出' : '拉线进选区：源节点连到所有兼容的选中节点'"
+      :title="side === 'right' ? $t('canvas.selection.connectOut') : $t('canvas.selection.connectIn')"
       @pointerdown="startDrag(side, $event)"
     >
       <svg-icon icon="tabler:plus" />

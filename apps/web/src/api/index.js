@@ -12,6 +12,7 @@
 import { API_BASE_URL } from '@/config'
 import { getCurrentApiKey } from '@/utils/apiKeySession'
 import { appFetch } from '@/utils/desktopBridge'
+import { i18n } from '@/locales'
 
 const request = async (path, params = {}) => {
   const url = new URL(`${API_BASE_URL}${path}`, window.location.origin)
@@ -27,7 +28,7 @@ const request = async (path, params = {}) => {
   const resp = await appFetch(url, { headers })
   const body = await resp.json().catch(() => null)
   if (!resp.ok || (body && body.code !== undefined && body.code !== 200)) {
-    throw new Error(body?.message || `目录请求失败(${resp.status})`)
+    throw new Error(body?.message || i18n.global.t('runtime.catalog.requestFailed', { status: resp.status }))
   }
   return body?.data !== undefined ? body.data : body
 }
@@ -58,12 +59,12 @@ export const getOpenAIModels = async () => {
   const apiKey = getCurrentApiKey()
   if (apiKey) headers.Authorization = `Bearer ${apiKey}`
   const resp = await appFetch(`${API_BASE_URL}/v1/models`, { headers })
-  if (!resp.ok) throw new Error(`/v1/models 请求失败(${resp.status})`)
+  if (!resp.ok) throw new Error(i18n.global.t('runtime.catalog.modelsRequestFailed', { status: resp.status }))
   const body = await resp.json()
   return (body?.data || []).map((item) => ({
     name: item.id,
     fullName: item.id,
-    factory: String(item.id || '').split('/')[0] || '其他',
+    factory: String(item.id || '').split('/')[0] || i18n.global.t('runtime.catalog.otherFactory'),
     enable: true,
   }))
 }

@@ -23,6 +23,7 @@
     "unplugin-auto-import": "^20.2.0",
     "unplugin-vue-components": "^29.1.0",
     "vue": "^3.5.21",
+    "vue-i18n": "^11.4.10",
     "vue-router": "4"
   },
   "devDependencies": {

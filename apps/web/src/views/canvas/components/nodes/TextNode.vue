@@ -5,7 +5,7 @@
   >
     <div class="node-outside-head">
       <span class="node-type-icon"><svg-icon icon="tabler:text-caption" /></span>
-      <NodeTitle :id="id" :title="data.title || '文本'" />
+      <NodeTitle :id="id" :title="data.title || $t('canvas.nodeTypes.text')" />
       <span v-if="status !== 'idle'" class="node-status-dot" aria-hidden="true"></span>
     </div>
     <div class="node-card text-card" :class="{ 'has-status': Boolean(statusText) }">
@@ -15,7 +15,7 @@
           v-model="draft"
           class="text-editor nodrag nowheel"
           rows="5"
-          aria-label="编辑文本节点"
+          :aria-label="$t('canvas.textNode.editAria')"
           autofocus
           @mousedown.stop
           @blur="saveEdit"
@@ -31,8 +31,11 @@
 
 <script setup>
 import { computed, inject, ref } from 'vue'
+import { useI18n } from 'vue-i18n'
 import NodeHandlePlus from '../NodeHandlePlus.vue'
 import NodeTitle from './NodeTitle.vue'
+
+const { t } = useI18n()
 
 const props = defineProps({
   id: { type: String, required: true },
@@ -47,15 +50,15 @@ const text = computed(() => {
   const value = payload.parsedResults?.[0] ?? payload.result ?? payload.prompt
   return typeof value === 'string' ? value : ''
 })
-const preview = computed(() => text.value || '在节点下方输入文本提示')
+const preview = computed(() => text.value || t('canvas.textNode.emptyHint'))
 const statusText = computed(() => {
   const notice = props.data.payload?.notice
-  if (status.value === 'running') return '运行中'
-  if (status.value === 'waiting') return notice || '等待恢复'
-  if (status.value === 'success') return '已生成'
-  if (status.value === 'unavailable') return notice || '任务已完成，结果暂不可预览'
-  if (status.value === 'expired') return notice || '资源已失效'
-  if (status.value === 'error') return notice || props.data.payload?.error || '运行失败'
+  if (status.value === 'running') return t('canvas.nodeStatus.running')
+  if (status.value === 'waiting') return notice || t('canvas.nodeStatus.waiting')
+  if (status.value === 'success') return t('canvas.nodeStatus.success')
+  if (status.value === 'unavailable') return notice || t('canvas.nodeStatus.unavailable')
+  if (status.value === 'expired') return notice || t('canvas.nodeStatus.expired')
+  if (status.value === 'error') return notice || props.data.payload?.error || t('canvas.nodeStatus.error')
   return ''
 })
 

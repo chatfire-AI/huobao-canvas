@@ -1,4 +1,4 @@
-import { ep, model, messagesField, temperatureField, promptField, schema } from './_shared.js'
+import { ep, model, messagesField, temperatureField, promptField, schema, t } from './_shared.js'
 
 const provider = {
   id: 'gemini',
@@ -20,7 +20,7 @@ const chatSchema = () => schema({
     messagesField,
     temperatureField(),
     { key: 'maxOutputTokens', label: 'Max Output Tokens', type: 'number',
-      min: 1, max: 65536, defaultValue: 8192, description: '最大输出 token 数' },
+      min: 1, max: 65536, defaultValue: 8192, description: t('fields.maxTokensDesc') },
   ],
 })
 
@@ -31,12 +31,12 @@ const imageSchema = ({ prompt, aspectRatios, imageSizes = [], maxImages = 3 }) =
   protocolKey: 'gemini',
   input: [
     promptField(prompt),
-    { key: 'images', label: '参考图', type: 'images', max: maxImages, description: '图生图/参考生成（可上传或由上游节点传入）' },
-    { key: 'aspectRatio', label: '宽高比', type: 'select', defaultValue: '1:1',
+    { key: 'images', label: t('fields.sourceImage'), type: 'images', max: maxImages, description: t('gemini.imagesDesc') },
+    { key: 'aspectRatio', label: t('fields.aspectRatio'), type: 'select', defaultValue: '1:1',
       options: aspectRatios },
     ...(imageSizes.length
-      ? [{ key: 'imageSize', label: '分辨率', type: 'select', defaultValue: '1K',
-          options: imageSizes, description: '输出分辨率，必须大写 K' }]
+      ? [{ key: 'imageSize', label: t('fields.resolution'), type: 'select', defaultValue: '1K',
+          options: imageSizes, description: t('gemini.imageSizeDesc') }]
       : []),
   ],
   inputBindings: { sourceImages: 'images' },
@@ -63,7 +63,10 @@ const ASPECTS_10 = ['1:1', '2:3', '3:2', '3:4', '4:3', '4:5', '5:4', '9:16', '16
 // 3.1 系新增极宽/极高规格（共 14 种）
 const ASPECTS_14 = [...ASPECTS_10, '1:4', '4:1', '1:8', '8:1']
 
-provider.models = [
+// models 用 getter 定义：每次读取重建，schema 内文案（t()）跟随语言切换
+Object.defineProperty(provider, 'models', {
+  enumerable: true,
+  get: () => [
   model(provider, {
     name: 'gemini-3.7-flash',
     fullName: 'Gemini 3.7 Flash',
@@ -181,13 +184,13 @@ provider.models = [
       protocolKey: 'gemini',
       input: [
         promptField('A cat walking on the beach at sunset'),
-        { key: 'aspectRatio', label: '宽高比', type: 'select', defaultValue: '16:9',
+        { key: 'aspectRatio', label: t('fields.aspectRatio'), type: 'select', defaultValue: '16:9',
           options: ['16:9', '9:16'] },
         // 数字枚举：parameters.durationSeconds 官方为 integer，select 存数字避免字符串化下发
-        { key: 'durationSeconds', label: '时长(秒)', type: 'select', defaultValue: 8,
+        { key: 'durationSeconds', label: t('fields.durationSec'), type: 'select', defaultValue: 8,
           options: [4, 6, 8] },
-        { key: 'resolution', label: '分辨率', type: 'select', defaultValue: '720p',
-          options: ['720p', '1080p', '4k'], description: '1080p/4k 需配 8 秒时长' },
+        { key: 'resolution', label: t('fields.resolution'), type: 'select', defaultValue: '720p',
+          options: ['720p', '1080p', '4k'], description: t('gemini.resolutionDesc') },
       ],
       inputTransform: {
         instances: [{ prompt: '$${prompt}' }],
@@ -200,6 +203,7 @@ provider.models = [
       output: { displayType: 'video' },
     }),
   }),
-]
+  ],
+})
 
 export default provider

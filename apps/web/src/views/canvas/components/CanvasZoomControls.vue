@@ -1,23 +1,23 @@
 <template>
   <div class="zoom-controls">
-    <button type="button" class="zoom-btn" title="缩小" @click="zoomOut()">
+    <button type="button" class="zoom-btn" :title="$t('canvas.zoom.zoomOut')" @click="zoomOut()">
       <svg-icon icon="tabler:minus" />
     </button>
-    <button type="button" class="zoom-value" title="重置为 100%" @click="zoomTo(1)">
+    <button type="button" class="zoom-value" :title="$t('canvas.zoom.reset')" @click="zoomTo(1)">
       {{ zoomPercent }}%
     </button>
-    <button type="button" class="zoom-btn" title="放大" @click="zoomIn()">
+    <button type="button" class="zoom-btn" :title="$t('canvas.zoom.zoomIn')" @click="zoomIn()">
       <svg-icon icon="tabler:plus" />
     </button>
     <span class="zoom-divider" aria-hidden="true"></span>
-    <button type="button" class="zoom-btn" title="适配画布" @click="fitView({ padding: 0.2, duration: 300 })">
+    <button type="button" class="zoom-btn" :title="$t('canvas.toolbar.fitCanvas')" @click="fitView({ padding: 0.2, duration: 300 })">
       <svg-icon icon="tabler:focus-centered" />
     </button>
     <button
       type="button"
       class="zoom-btn"
       :class="{ 'is-locked': locked }"
-      :title="locked ? '解锁画布（恢复拖动/缩放）' : '锁定画布（禁止拖动/缩放）'"
+      :title="locked ? $t('canvas.zoom.unlock') : $t('canvas.zoom.lock')"
       @click="toggleLock"
     >
       <svg-icon :icon="locked ? 'tabler:lock' : 'tabler:lock-open'" />

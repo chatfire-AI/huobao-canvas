@@ -1,8 +1,8 @@
-import { ep, model, messagesField, temperatureField, maxTokensField, promptField, schema } from './_shared.js'
+import { ep, model, messagesField, temperatureField, maxTokensField, promptField, schema, t } from './_shared.js'
 
 const provider = {
   id: 'qwen',
-  label: '阿里百炼 Qwen',
+  get label() { return t('qwen.label') },
   icon: 'qwen-color.png',
   docsUrl: 'https://help.aliyun.com/zh/model-studio/developer-reference',
   baseUrl: 'https://dashscope.aliyuncs.com',
@@ -51,8 +51,8 @@ const chatSchema = ({ thinking = false, thinkingDefault = true } = {}) => schema
     temperatureField(),
     maxTokensField(),
     ...(thinking
-      ? [{ key: 'enable_thinking', label: '深度思考', type: 'switch', defaultValue: thinkingDefault,
-           description: '混合思考开关，官方默认开启；关闭可省成本' }]
+      ? [{ key: 'enable_thinking', label: t('fields.thinking'), type: 'switch', defaultValue: thinkingDefault,
+           description: t('qwen.thinkingDesc') }]
       : []),
   ],
 })
@@ -73,21 +73,24 @@ const imageContentItems = (field, max) =>
   }))
 
 const resolutionField = (options = ['720P', '1080P'], def = '1080P') => ({
-  key: 'resolution', label: '分辨率', type: 'select', defaultValue: def, options,
+  key: 'resolution', label: t('fields.resolution'), type: 'select', defaultValue: def, options,
 })
 
 const ratioField = (options = ['16:9', '9:16', '1:1', '4:3', '3:4'], def = '16:9') => ({
-  key: 'ratio', label: '宽高比', type: 'select', defaultValue: def, options,
+  key: 'ratio', label: t('fields.aspectRatio'), type: 'select', defaultValue: def, options,
 })
 
-const durationField = (min, max, def = 5, description = '按秒计费') => ({
-  key: 'duration', label: '时长(秒)', type: 'number', min, max, defaultValue: def, description,
+const durationField = (min, max, def = 5, description = t('qwen.durationBilling')) => ({
+  key: 'duration', label: t('fields.durationSec'), type: 'number', min, max, defaultValue: def, description,
 })
 
-const promptExtendField = { key: 'prompt_extend', label: '智能改写', type: 'switch', defaultValue: true,
-  description: '官方默认开启，自动优化提示词（增加耗时）' }
+const promptExtendField = () => ({ key: 'prompt_extend', label: t('fields.promptExtend'), type: 'switch', defaultValue: true,
+  description: t('qwen.promptExtendDesc') })
 
-provider.models = [
+// models 用 getter 定义：每次读取重建，schema 内文案（t()）跟随语言切换
+Object.defineProperty(provider, 'models', {
+  enumerable: true,
+  get: () => [
   // ── 对话 ──
   model(provider, {
     name: 'qwen3.8-max',
@@ -165,13 +168,13 @@ provider.models = [
     modelSchema: schema({
       protocolKey: 'dashscope',
       input: [
-        promptField('一只坐在窗台上的可爱猫咪'),
-        { key: 'images', label: '参考图(0~3张)', type: 'images', max: 3,
-          description: '图生图/图像编辑/多图参考，官方 I2I 最多 3 张' },
-        { key: 'size', label: '尺寸', type: 'select', defaultValue: '2048*2048',
+        promptField(t('prompts.catWindowsill')),
+        { key: 'images', label: t('qwen.images03'), type: 'images', max: 3,
+          description: t('qwen.images03Desc') },
+        { key: 'size', label: t('fields.size'), type: 'select', defaultValue: '2048*2048',
           options: ['2048*2048', '2688*1536', '1536*2688', '2368*1728', '1728*2368'] },
-        { key: 'n', label: '数量', type: 'number', min: 1, max: 6, defaultValue: 1 },
-        { key: 'negative_prompt', label: '负向提示词', type: 'textarea', defaultValue: '' },
+        { key: 'n', label: t('fields.count'), type: 'number', min: 1, max: 6, defaultValue: 1 },
+        { key: 'negative_prompt', label: t('fields.negativePrompt'), type: 'textarea', defaultValue: '' },
       ],
       inputBindings: { sourceImages: 'images' },
       inputTransform: {
@@ -199,13 +202,13 @@ provider.models = [
     modelSchema: schema({
       protocolKey: 'dashscope',
       input: [
-        promptField('一只坐在窗台上的可爱猫咪'),
-        { key: 'images', label: '参考图(0~3张)', type: 'images', max: 3,
-          description: '图生图/图像编辑/多图参考，官方 I2I 最多 3 张' },
-        { key: 'size', label: '尺寸', type: 'select', defaultValue: '2048*2048',
+        promptField(t('prompts.catWindowsill')),
+        { key: 'images', label: t('qwen.images03'), type: 'images', max: 3,
+          description: t('qwen.images03Desc') },
+        { key: 'size', label: t('fields.size'), type: 'select', defaultValue: '2048*2048',
           options: ['2048*2048', '2688*1536', '1536*2688', '2368*1728', '1728*2368'] },
-        { key: 'n', label: '数量', type: 'number', min: 1, max: 6, defaultValue: 1 },
-        { key: 'negative_prompt', label: '负向提示词', type: 'textarea', defaultValue: '' },
+        { key: 'n', label: t('fields.count'), type: 'number', min: 1, max: 6, defaultValue: 1 },
+        { key: 'negative_prompt', label: t('fields.negativePrompt'), type: 'textarea', defaultValue: '' },
       ],
       inputBindings: { sourceImages: 'images' },
       inputTransform: {
@@ -233,12 +236,12 @@ provider.models = [
     modelSchema: schema({
       protocolKey: 'dashscope',
       input: [
-        promptField('一只坐在窗台上的可爱猫咪'),
-        { key: 'image', label: '参考图/编辑图', type: 'image', description: '可上传或由上游节点传入' },
-        { key: 'size', label: '尺寸', type: 'select', defaultValue: '2048*2048',
+        promptField(t('prompts.catWindowsill')),
+        { key: 'image', label: t('qwen.imageEdit'), type: 'image', description: t('fields.sourceImageDesc') },
+        { key: 'size', label: t('fields.size'), type: 'select', defaultValue: '2048*2048',
           options: ['2048*2048', '2688*1536', '1536*2688', '2368*1728', '1728*2368'] },
-        { key: 'n', label: '数量', type: 'number', min: 1, max: 6, defaultValue: 1 },
-        { key: 'negative_prompt', label: '负向提示词', type: 'textarea', defaultValue: '' },
+        { key: 'n', label: t('fields.count'), type: 'number', min: 1, max: 6, defaultValue: 1 },
+        { key: 'negative_prompt', label: t('fields.negativePrompt'), type: 'textarea', defaultValue: '' },
       ],
       inputBindings: { sourceImage: 'image' },
       inputTransform: {
@@ -266,16 +269,16 @@ provider.models = [
     modelSchema: schema({
       protocolKey: 'dashscope',
       input: [
-        promptField('一只坐在窗台上的可爱猫咪'),
-        { key: 'images', label: '参考图(0~9张)', type: 'images', max: 9,
-          description: '图生图/图像编辑/多图参考' },
-        { key: 'size', label: '尺寸', type: 'select', defaultValue: '2K',
-          options: ['2K', '1K'], description: '也支持 宽*高（如 1488*704）' },
-        { key: 'n', label: '数量', type: 'number', min: 1, max: 4, defaultValue: 1,
-          description: '1~4 张，直接决定费用' },
-        { key: 'enable_sequential', label: '组图模式', type: 'switch', defaultValue: false },
-        { key: 'thinking_mode', label: '思考模式', type: 'switch', defaultValue: true,
-          description: '仅文生图且非组图时生效' },
+        promptField(t('prompts.catWindowsill')),
+        { key: 'images', label: t('qwen.images09'), type: 'images', max: 9,
+          description: t('qwen.images09Desc') },
+        { key: 'size', label: t('fields.size'), type: 'select', defaultValue: '2K',
+          options: ['2K', '1K'], description: t('qwen.sizeCustomDesc') },
+        { key: 'n', label: t('fields.count'), type: 'number', min: 1, max: 4, defaultValue: 1,
+          description: t('qwen.countBillingDesc') },
+        { key: 'enable_sequential', label: t('fields.sequentialMode'), type: 'switch', defaultValue: false },
+        { key: 'thinking_mode', label: t('fields.thinkingMode'), type: 'switch', defaultValue: true,
+          description: t('qwen.thinkingModeDesc') },
       ],
       inputBindings: { sourceImages: 'images' },
       inputTransform: {
@@ -304,16 +307,16 @@ provider.models = [
     modelSchema: schema({
       protocolKey: 'dashscope',
       input: [
-        promptField('一只坐在窗台上的可爱猫咪'),
-        { key: 'images', label: '参考图(0~9张)', type: 'images', max: 9,
-          description: '图生图/图像编辑/多图参考' },
-        { key: 'size', label: '尺寸', type: 'select', defaultValue: '2K',
-          options: ['4K', '2K', '1K'], description: '4K 仅文生图非组图可用' },
-        { key: 'n', label: '数量', type: 'number', min: 1, max: 4, defaultValue: 1,
-          description: '1~4 张，直接决定费用' },
-        { key: 'enable_sequential', label: '组图模式', type: 'switch', defaultValue: false },
-        { key: 'thinking_mode', label: '思考模式', type: 'switch', defaultValue: true,
-          description: '仅文生图且非组图时生效' },
+        promptField(t('prompts.catWindowsill')),
+        { key: 'images', label: t('qwen.images09'), type: 'images', max: 9,
+          description: t('qwen.images09Desc') },
+        { key: 'size', label: t('fields.size'), type: 'select', defaultValue: '2K',
+          options: ['4K', '2K', '1K'], description: t('qwen.size4kDesc') },
+        { key: 'n', label: t('fields.count'), type: 'number', min: 1, max: 4, defaultValue: 1,
+          description: t('qwen.countBillingDesc') },
+        { key: 'enable_sequential', label: t('fields.sequentialMode'), type: 'switch', defaultValue: false },
+        { key: 'thinking_mode', label: t('fields.thinkingMode'), type: 'switch', defaultValue: true,
+          description: t('qwen.thinkingModeDesc') },
       ],
       inputBindings: { sourceImages: 'images' },
       inputTransform: {
@@ -342,11 +345,11 @@ provider.models = [
     modelSchema: schema({
       protocolKey: 'dashscope',
       input: [
-        promptField('一只坐在窗台上的可爱猫咪'),
-        { key: 'size', label: '尺寸', type: 'select', defaultValue: '1024*1536',
+        promptField(t('prompts.catWindowsill')),
+        { key: 'size', label: t('fields.size'), type: 'select', defaultValue: '1024*1536',
           options: ['1024*1536', '832*1248', '1280*720', '1248*1872', '1024*1024'] },
-        { key: 'prompt_extend', label: '智能改写', type: 'switch', defaultValue: false,
-          description: '开启后 LLM 改写提示词并返回推理过程，增加费用' },
+        { key: 'prompt_extend', label: t('fields.promptExtend'), type: 'switch', defaultValue: false,
+          description: t('qwen.promptExtendLlmDesc') },
       ],
       inputTransform: {
         input: { messages: [{ role: 'user', content: [{ text: '$${prompt}' }] }] },
@@ -368,11 +371,11 @@ provider.models = [
     modelSchema: schema({
       protocolKey: 'dashscope',
       input: [
-        promptField('一只猫在夕阳下的沙滩上行走'),
-        { key: 'image', label: '首帧图', type: 'image',
-          description: '传入后按图生视频；与参考图互斥，二者只能填其一' },
-        { key: 'images', label: '参考图(0~10张)', type: 'images', max: 10,
-          description: '参考生视频素材，prompt 中以「图1/图2」按顺序引用；与首帧图互斥' },
+        promptField(t('prompts.catBeach')),
+        { key: 'image', label: t('fields.firstFrame'), type: 'image',
+          description: t('qwen.firstFrameMutexDesc') },
+        { key: 'images', label: t('qwen.images010'), type: 'images', max: 10,
+          description: t('qwen.images010Desc') },
         resolutionField(['1080P', '720P', '480P']),
         // 官方默认 adaptive（画幅跟随素材/提示词）
         ratioField(['adaptive', '16:9', '9:16', '1:1', '4:3', '3:4'], 'adaptive'),
@@ -400,22 +403,22 @@ provider.models = [
   }),
   model(provider, {
     name: 'wan2.6-t2v',
-    fullName: 'Wan 2.6 文生视频',
+    fullName: t('qwen.names.wan26t2v'),
     type: '3', typeName: '视频', icon: provider.icon, launchTime: '2025-12-01',
     endpoints: [videoEp()],
     // 万相 2.6 旧版协议：parameters.size + shot_type（2.7 已弃用）
     modelSchema: schema({
       protocolKey: 'dashscope',
       input: [
-        promptField('一只猫在夕阳下的沙滩上行走'),
-        { key: 'negative_prompt', label: '负向提示词', type: 'textarea', defaultValue: '' },
-        { key: 'size', label: '分辨率', type: 'select', defaultValue: '1920*1080',
+        promptField(t('prompts.catBeach')),
+        { key: 'negative_prompt', label: t('fields.negativePrompt'), type: 'textarea', defaultValue: '' },
+        { key: 'size', label: t('fields.resolution'), type: 'select', defaultValue: '1920*1080',
           options: ['1920*1080', '1080*1920', '1440*1440', '1632*1248', '1248*1632',
             '1280*720', '720*1280', '960*960', '1088*832', '832*1088'] },
         durationField(2, 15),
-        { key: 'shot_type', label: '镜头类型', type: 'select', defaultValue: 'single',
-          options: ['single', 'multi'], description: 'multi 多镜头需开启智能改写' },
-        promptExtendField,
+        { key: 'shot_type', label: t('fields.shotType'), type: 'select', defaultValue: 'single',
+          options: ['single', 'multi'], description: t('qwen.shotTypeDesc') },
+        promptExtendField(),
       ],
       inputTransform: {
         input: { prompt: '$${prompt}', negative_prompt: '$${negative_prompt}' },
@@ -431,19 +434,19 @@ provider.models = [
   }),
   model(provider, {
     name: 'wan2.7-t2v',
-    fullName: 'Wan 2.7 文生视频',
+    fullName: t('qwen.names.wan27t2v'),
     type: '3', typeName: '视频', icon: provider.icon, launchTime: '2026-04-25',
     endpoints: [videoEp()],
     // 万相 2.7 新版协议：resolution + ratio 取代 size，shot_type 已弃用
     modelSchema: schema({
       protocolKey: 'dashscope',
       input: [
-        promptField('一只猫在夕阳下的沙滩上行走'),
-        { key: 'negative_prompt', label: '负向提示词', type: 'textarea', defaultValue: '' },
+        promptField(t('prompts.catBeach')),
+        { key: 'negative_prompt', label: t('fields.negativePrompt'), type: 'textarea', defaultValue: '' },
         resolutionField(),
         ratioField(),
         durationField(2, 15),
-        promptExtendField,
+        promptExtendField(),
       ],
       inputTransform: {
         input: { prompt: '$${prompt}', negative_prompt: '$${negative_prompt}' },
@@ -459,19 +462,19 @@ provider.models = [
   }),
   model(provider, {
     name: 'wan2.7-i2v',
-    fullName: 'Wan 2.7 图生视频',
+    fullName: t('qwen.names.wan27i2v'),
     type: '3', typeName: '视频', icon: provider.icon, launchTime: '2026-04-25',
     endpoints: [videoEp()],
     // input.media[] 素材组合区分任务类型：首帧 / 首帧+尾帧（官方无 ratio，画幅跟随素材）
     modelSchema: schema({
       protocolKey: 'dashscope',
       input: [
-        { ...promptField('一只猫在草地上奔跑'), required: false },
-        { key: 'image', label: '首帧图', type: 'image', required: true },
-        { key: 'last_frame', label: '尾帧图', type: 'image', description: '传入后按首尾帧生视频' },
+        { ...promptField(t('prompts.catGrass')), required: false },
+        { key: 'image', label: t('fields.firstFrame'), type: 'image', required: true },
+        { key: 'last_frame', label: t('fields.lastFrame'), type: 'image', description: t('qwen.lastFrameDesc') },
         resolutionField(),
         durationField(2, 15),
-        promptExtendField,
+        promptExtendField(),
       ],
       inputBindings: { sourceImage: 'image', lastFrameImage: 'last_frame' },
       videoModes: ['first', 'firstlast'],
@@ -494,20 +497,20 @@ provider.models = [
   }),
   model(provider, {
     name: 'wan2.7-r2v',
-    fullName: 'Wan 2.7 参考生视频',
+    fullName: t('qwen.names.wan27r2v'),
     type: '3', typeName: '视频', icon: provider.icon, launchTime: '2026-06-12',
     endpoints: [videoEp()],
     // input.media[]：1~5 个 reference_image（画布侧仅注入图像参考）
     modelSchema: schema({
       protocolKey: 'dashscope',
       input: [
-        promptField('图1中的角色在海边奔跑，镜头缓慢推近'),
-        { key: 'images', label: '参考图(1~5张)', type: 'images', max: 5, required: true,
-          description: 'prompt 中以「图1/图2」按顺序引用，仅含单一角色' },
+        promptField(t('prompts.characterSeaside')),
+        { key: 'images', label: t('qwen.images15'), type: 'images', max: 5, required: true,
+          description: t('qwen.images15Desc') },
         resolutionField(),
         ratioField(),
-        durationField(2, 15, 5, '含参考视频时 2~10 秒，按秒计费'),
-        promptExtendField,
+        durationField(2, 15, 5, t('qwen.durationRefDesc')),
+        promptExtendField(),
       ],
       inputBindings: { sourceImages: 'images' },
       videoModes: ['reference'],
@@ -528,14 +531,14 @@ provider.models = [
   }),
   model(provider, {
     name: 'happyhorse-1.1-t2v',
-    fullName: 'HappyHorse 1.1 文生视频',
+    fullName: t('qwen.names.hh11t2v'),
     type: '3', typeName: '视频', icon: provider.icon, launchTime: '2026-06-22',
     endpoints: [videoEp()],
     // 官方未定义 negative_prompt / prompt_extend，勿传
     modelSchema: schema({
       protocolKey: 'dashscope',
       input: [
-        promptField('一座由硬纸板和瓶盖搭建的微型城市，在夜晚焕发生机'),
+        promptField(t('prompts.cardboardCity')),
         resolutionField(['480P', '720P', '1080P']),
         ratioField(['16:9', '9:16', '1:1', '4:3', '3:4', '4:5', '5:4', '9:21', '21:9']),
         durationField(3, 15),
@@ -553,15 +556,15 @@ provider.models = [
   }),
   model(provider, {
     name: 'happyhorse-1.1-i2v',
-    fullName: 'HappyHorse 1.1 图生视频',
+    fullName: t('qwen.names.hh11i2v'),
     type: '3', typeName: '视频', icon: provider.icon, launchTime: '2026-06-22',
     endpoints: [videoEp()],
     // input.media 恰好 1 个 first_frame；不支持 ratio（画幅跟随首帧）
     modelSchema: schema({
       protocolKey: 'dashscope',
       input: [
-        { ...promptField('一只猫在草地上奔跑'), required: false },
-        { key: 'image', label: '首帧图', type: 'image', required: true },
+        { ...promptField(t('prompts.catGrass')), required: false },
+        { key: 'image', label: t('fields.firstFrame'), type: 'image', required: true },
         resolutionField(['480P', '720P', '1080P']),
         durationField(3, 15),
       ],
@@ -582,16 +585,16 @@ provider.models = [
   }),
   model(provider, {
     name: 'happyhorse-1.1-r2v',
-    fullName: 'HappyHorse 1.1 参考生视频',
+    fullName: t('qwen.names.hh11r2v'),
     type: '3', typeName: '视频', icon: provider.icon, launchTime: '2026-06-22',
     endpoints: [videoEp()],
     // input.media 1~9 个 reference_image，prompt 以 [Image N] 按顺序引用
     modelSchema: schema({
       protocolKey: 'dashscope',
       input: [
-        promptField('[Image 1]中身着红色旗袍的女性拿起[Image 2]中的折扇'),
-        { key: 'images', label: '参考图(1~9张)', type: 'images', max: 9, required: true,
-          description: 'prompt 中以 [Image 1]/[Image 2] 按 media 顺序引用；短边 ≥400px' },
+        promptField(t('prompts.fanLady')),
+        { key: 'images', label: t('qwen.images19'), type: 'images', max: 9, required: true,
+          description: t('qwen.images19Desc') },
         resolutionField(['480P', '720P', '1080P']),
         ratioField(['16:9', '9:16', '3:4', '4:3', '4:5', '5:4', '1:1', '9:21', '21:9']),
         durationField(3, 15),
@@ -612,6 +615,7 @@ provider.models = [
       output: { displayType: 'video' },
     }),
   }),
-]
+  ],
+})
 
 export default provider

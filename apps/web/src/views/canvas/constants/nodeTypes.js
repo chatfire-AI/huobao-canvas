@@ -1,3 +1,7 @@
+import { i18n } from '@/locales'
+
+const t = (key, args) => i18n.global.t(key, args)
+
 export const CANVAS_NODE_TYPES = {
   TEXT: 'textNode',
   IMAGE: 'imageNode',
@@ -35,119 +39,137 @@ export const NODE_STATUS = {
   ERROR: 'error',
 }
 
+const NODE_TYPE_LABEL_KEYS = {
+  [CANVAS_NODE_TYPES.TEXT]: 'canvas.nodeTypes.text',
+  [CANVAS_NODE_TYPES.IMAGE]: 'canvas.nodeTypes.image',
+  [CANVAS_NODE_TYPES.VIDEO]: 'canvas.nodeTypes.video',
+  [CANVAS_NODE_TYPES.GROUP]: 'canvas.nodeTypes.group',
+}
+
+export const getCanvasNodeTypeLabel = (type) => t(NODE_TYPE_LABEL_KEYS[type] || 'canvas.nodeTypes.node')
+
+// 节点库条目：label/description 走 i18n（见 connectionRules.getCanvasNodeMeta），
+// 此处只保留类型与图标等静态元数据
 export const NODE_LIBRARY = [
   {
     type: CANVAS_NODE_TYPES.TEXT,
-    label: '文本',
     icon: 'tabler:text-caption',
-    description: '对应模型库文本/对话分类',
   },
   {
     type: CANVAS_NODE_TYPES.IMAGE,
-    label: '图片',
     icon: 'tabler:photo',
-    description: '对应模型库图片分类',
   },
   {
     type: CANVAS_NODE_TYPES.VIDEO,
-    label: '视频',
     icon: 'tabler:video',
-    description: '对应模型库视频分类',
   },
   {
     type: CANVAS_NODE_TYPES.GROUP,
-    label: '分组',
     icon: 'tabler:category',
-    description: '用于整理画布节点',
   },
 ]
 
-export const CANVAS_PROMPT_DOCK_META = {
+// 提示词码头元数据：图标/结构静态保留，文案在 getCanvasPromptDockMeta 内按当前语言取
+const CANVAS_PROMPT_DOCK_STATIC_META = {
   [CANVAS_NODE_TYPES.TEXT]: {
-    label: '文本',
     icon: 'tabler:text-caption',
-    placeholder: '输入文本提示词，Enter 生成，Shift + Enter 换行',
-    modelPlaceholder: '选择文本模型',
-    helper: '输入会写入文本节点，并使用文本/对话分类下的模型',
     modes: [
-      { label: '上下文', icon: 'tabler:messages' },
-      { label: '语气', icon: 'tabler:mood-smile' },
-      { label: '格式', icon: 'tabler:layout-list' },
+      { labelKey: 'modeContext', icon: 'tabler:messages' },
+      { labelKey: 'modeTone', icon: 'tabler:mood-smile' },
+      { labelKey: 'modeFormat', icon: 'tabler:layout-list' },
     ],
     tools: [
-      { label: '文本生成', icon: 'tabler:writing' },
-      { label: '结构化', icon: 'tabler:list-details' },
-      { label: '长文', icon: 'tabler:article' },
-      { label: 'Markdown', icon: 'tabler:markdown' },
-      { label: '1段', suffixIcon: 'tabler:chevron-down', compact: true },
+      { labelKey: 'toolTextGen', icon: 'tabler:writing' },
+      { labelKey: 'toolStructured', icon: 'tabler:list-details' },
+      { labelKey: 'toolLongForm', icon: 'tabler:article' },
+      { labelKey: 'toolMarkdown', icon: 'tabler:markdown' },
+      { labelKey: 'toolOneParagraph', suffixIcon: 'tabler:chevron-down', compact: true },
     ],
-    estimate: '轻量',
+    estimateKey: 'estimateLight',
   },
   [CANVAS_NODE_TYPES.IMAGE]: {
-    label: '图片',
     icon: 'tabler:photo',
-    placeholder: '输入图片提示词，Enter 生成，Shift + Enter 换行',
-    modelPlaceholder: '选择图片模型',
-    helper: '输入会写入图片节点，并使用图片分类下的模型',
     modes: [
-      { label: '风格', icon: 'tabler:cube' },
-      { label: '标记', icon: 'tabler:sparkles' },
-      { label: '参考', icon: 'tabler:plus' },
+      { labelKey: 'modeStyle', icon: 'tabler:cube' },
+      { labelKey: 'modeMark', icon: 'tabler:sparkles' },
+      { labelKey: 'modeReference', icon: 'tabler:plus' },
     ],
     tools: [
-      { label: '自适应', icon: 'tabler:checkbox' },
-      { label: '标准画质', icon: 'tabler:photo-cog' },
+      { labelKey: 'toolAdaptive', icon: 'tabler:checkbox' },
+      { labelKey: 'toolStandardQuality', icon: 'tabler:photo-cog' },
       { label: '2K', suffixIcon: 'tabler:chevron-down' },
-      { label: '预设', icon: 'tabler:layout-grid' },
-      { label: '1张', suffixIcon: 'tabler:chevron-down', compact: true },
+      { labelKey: 'toolPreset', icon: 'tabler:layout-grid' },
+      { labelKey: 'toolOneImage', suffixIcon: 'tabler:chevron-down', compact: true },
     ],
     estimate: '18',
   },
   [CANVAS_NODE_TYPES.VIDEO]: {
-    label: '视频',
     icon: 'tabler:video',
-    placeholder: '输入视频提示词，Enter 生成，Shift + Enter 换行',
-    modelPlaceholder: '选择视频模型',
-    helper: '输入会写入视频节点，并使用视频分类下的模型',
     modes: [
-      { label: '镜头', icon: 'tabler:camera' },
-      { label: '动作', icon: 'tabler:route' },
-      { label: '参考', icon: 'tabler:plus' },
+      { labelKey: 'modeShot', icon: 'tabler:camera' },
+      { labelKey: 'modeMotion', icon: 'tabler:route' },
+      { labelKey: 'modeReference', icon: 'tabler:plus' },
     ],
     tools: [
       { label: '16:9', icon: 'tabler:aspect-ratio' },
-      { label: '标准画质', icon: 'tabler:video-plus' },
+      { labelKey: 'toolStandardQuality', icon: 'tabler:video-plus' },
       { label: '5s', suffixIcon: 'tabler:chevron-down' },
-      { label: '镜头运动', icon: 'tabler:arrows-shuffle' },
-      { label: '1条', suffixIcon: 'tabler:chevron-down', compact: true },
+      { labelKey: 'toolCameraMotion', icon: 'tabler:arrows-shuffle' },
+      { labelKey: 'toolOneVideo', suffixIcon: 'tabler:chevron-down', compact: true },
     ],
-    estimate: '高',
+    estimateKey: 'estimateHigh',
   },
 }
 
+const PROMPT_DOCK_TEXT_KEYS = {
+  [CANVAS_NODE_TYPES.TEXT]: { placeholder: 'textPlaceholder', modelPlaceholder: 'textModelPlaceholder', helper: 'textHelper' },
+  [CANVAS_NODE_TYPES.IMAGE]: { placeholder: 'imagePlaceholder', modelPlaceholder: 'imageModelPlaceholder', helper: 'imageHelper' },
+  [CANVAS_NODE_TYPES.VIDEO]: { placeholder: 'videoPlaceholder', modelPlaceholder: 'videoModelPlaceholder', helper: 'videoHelper' },
+}
+
+const DEFAULT_PROMPT_DOCK_STATIC_META = {
+  icon: 'tabler:square',
+  modes: [
+    { labelKey: 'modeInput', icon: 'tabler:prompt' },
+    { labelKey: 'modeParams', icon: 'tabler:adjustments' },
+    { labelKey: 'modeReference', icon: 'tabler:plus' },
+  ],
+  tools: [
+    { labelKey: 'toolDefault', icon: 'tabler:settings' },
+  ],
+  estimate: '',
+}
+
+const metaT = (key) => t(`canvas.promptDockMeta.${key}`)
+
+const translateDockItems = (items = []) => items.map((item) => ({
+  ...item,
+  label: item.labelKey ? metaT(item.labelKey) : item.label,
+}))
+
 export function getCanvasPromptDockMeta(type) {
-  return CANVAS_PROMPT_DOCK_META[type] || {
-    label: '节点',
-    icon: 'tabler:square',
-    placeholder: '输入提示词，Enter 生成，Shift + Enter 换行',
-    modelPlaceholder: '选择模型',
-    helper: '输入会写入当前节点，并使用该分类下的模型',
-    modes: [
-      { label: '输入', icon: 'tabler:prompt' },
-      { label: '参数', icon: 'tabler:adjustments' },
-      { label: '参考', icon: 'tabler:plus' },
-    ],
-    tools: [
-      { label: '默认', icon: 'tabler:settings' },
-    ],
-    estimate: '',
+  const staticMeta = CANVAS_PROMPT_DOCK_STATIC_META[type] || DEFAULT_PROMPT_DOCK_STATIC_META
+  const textKeys = PROMPT_DOCK_TEXT_KEYS[type] || {
+    placeholder: 'defaultPlaceholder',
+    modelPlaceholder: 'defaultModelPlaceholder',
+    helper: 'defaultHelper',
+  }
+  return {
+    label: getCanvasNodeTypeLabel(type),
+    icon: staticMeta.icon,
+    placeholder: metaT(textKeys.placeholder),
+    modelPlaceholder: metaT(textKeys.modelPlaceholder),
+    helper: metaT(textKeys.helper),
+    modes: translateDockItems(staticMeta.modes),
+    tools: translateDockItems(staticMeta.tools),
+    estimate: staticMeta.estimateKey ? metaT(staticMeta.estimateKey) : (staticMeta.estimate || ''),
   }
 }
 
 export const getNodeDefaults = (type) => {
   const now = Date.now()
   const base = {
-    title: NODE_LIBRARY.find((item) => item.type === type)?.label || '节点',
+    title: getCanvasNodeTypeLabel(type),
     status: NODE_STATUS.IDLE,
     createdAt: now,
     updatedAt: now,
@@ -158,7 +180,6 @@ export const getNodeDefaults = (type) => {
     case CANVAS_NODE_TYPES.TEXT:
       return {
         ...base,
-        title: '文本',
         payload: {
           prompt: '',
           modelName: '',
@@ -173,7 +194,6 @@ export const getNodeDefaults = (type) => {
     case CANVAS_NODE_TYPES.IMAGE:
       return {
         ...base,
-        title: '图片',
         payload: {
           prompt: '',
           modelName: '',
@@ -191,7 +211,6 @@ export const getNodeDefaults = (type) => {
     case CANVAS_NODE_TYPES.VIDEO:
       return {
         ...base,
-        title: '视频',
         payload: {
           prompt: '',
           modelName: '',
@@ -208,7 +227,7 @@ export const getNodeDefaults = (type) => {
       }
     case CANVAS_NODE_TYPES.GROUP:
       return {
-        title: '分组',
+        title: getCanvasNodeTypeLabel(type),
         layout: {
           width: 400,
           height: 300,

@@ -1,4 +1,4 @@
-import { ep, model, messagesField, maxTokensField, promptField, schema } from './_shared.js'
+import { ep, model, messagesField, maxTokensField, promptField, schema, t } from './_shared.js'
 
 const provider = {
   id: 'openai',
@@ -26,7 +26,7 @@ const EFFORTS_WITH_NONE = ['none', 'low', 'medium', 'high', 'xhigh']
 const EFFORTS_5_6 = ['none', 'low', 'medium', 'high', 'xhigh', 'max']
 
 const reasoningEffortField = (options, defaultValue) => ({
-  key: 'reasoning_effort', label: '推理力度', type: 'select', defaultValue, options,
+  key: 'reasoning_effort', label: t('fields.reasoningEffort'), type: 'select', defaultValue, options,
 })
 
 const chatSchema = (efforts, defaultValue) => schema({
@@ -50,7 +50,10 @@ const responsesSchema = (efforts, defaultValue) => schema({
 const IMAGE_SIZES = ['1024x1024', '1536x1024', '1024x1536', '2048x2048', '2048x1152', '1152x2048', '3840x2160', '2160x3840', 'auto']
 const IMAGE_QUALITIES = ['low', 'medium', 'high', 'auto']
 
-provider.models = [
+// models 用 getter 定义：每次读取重建，schema 内文案（t()）跟随语言切换
+Object.defineProperty(provider, 'models', {
+  enumerable: true,
+  get: () => [
   // ── GPT-5 首代（chat/completions + responses 双端点，走 chat/completions） ──
   model(provider, {
     name: 'gpt-5',
@@ -154,28 +157,28 @@ provider.models = [
     fullName: 'GPT Image 1.5',
     type: '2', typeName: '图片', icon: provider.icon, launchTime: '2025-04-23',
     endpoints: [
-      ep(P, '/v1/images/generations', { capability: 'IMAGE', protocolKey: 'openai-image', canvasModeLabel: '文生图' }),
-      ep(P, '/v1/images/edits', { capability: 'IMAGE', protocolKey: 'openai-image', contentType: 'formdata', canvasModeLabel: '图像编辑' }),
+      ep(P, '/v1/images/generations', { capability: 'IMAGE', protocolKey: 'openai-image', canvasModeLabel: t('canvasMode.t2i') }),
+      ep(P, '/v1/images/edits', { capability: 'IMAGE', protocolKey: 'openai-image', contentType: 'formdata', canvasModeLabel: t('canvasMode.imageEdit') }),
     ],
     modelSchema: schema({
       protocolKey: 'openai-image',
       input: [
         promptField('A cute cat sitting on a windowsill'),
-        { key: 'size', label: '尺寸', type: 'select', defaultValue: '1024x1024', options: ['1024x1024', '1536x1024', '1024x1536', 'auto'] },
-        { key: 'quality', label: '质量', type: 'select', defaultValue: 'auto', options: IMAGE_QUALITIES },
-        { key: 'output_format', label: '输出格式', type: 'select', defaultValue: 'png', options: ['png', 'jpeg', 'webp'] },
-        { key: 'n', label: '数量', type: 'number', min: 1, max: 10, defaultValue: 1 },
+        { key: 'size', label: t('fields.size'), type: 'select', defaultValue: '1024x1024', options: ['1024x1024', '1536x1024', '1024x1536', 'auto'] },
+        { key: 'quality', label: t('fields.quality'), type: 'select', defaultValue: 'auto', options: IMAGE_QUALITIES },
+        { key: 'output_format', label: t('fields.outputFormat'), type: 'select', defaultValue: 'png', options: ['png', 'jpeg', 'webp'] },
+        { key: 'n', label: t('fields.count'), type: 'number', min: 1, max: 10, defaultValue: 1 },
       ],
       endpointSchemas: {
         [`${P}/v1/images/edits`]: schema({
           input: [
             promptField(),
-            { key: 'image', label: '源图像', type: 'image', required: true },
-            { key: 'size', label: '尺寸', type: 'select', defaultValue: '1024x1024', options: ['1024x1024', '1536x1024', '1024x1536', 'auto'] },
-            { key: 'quality', label: '质量', type: 'select', defaultValue: 'auto', options: IMAGE_QUALITIES },
-            { key: 'output_format', label: '输出格式', type: 'select', defaultValue: 'png', options: ['png', 'jpeg', 'webp'] },
-            { key: 'input_fidelity', label: '输入保真度', type: 'select', defaultValue: 'high', options: ['high', 'low'] },
-            { key: 'n', label: '数量', type: 'number', min: 1, max: 10, defaultValue: 1 },
+            { key: 'image', label: t('fields.srcImage'), type: 'image', required: true },
+            { key: 'size', label: t('fields.size'), type: 'select', defaultValue: '1024x1024', options: ['1024x1024', '1536x1024', '1024x1536', 'auto'] },
+            { key: 'quality', label: t('fields.quality'), type: 'select', defaultValue: 'auto', options: IMAGE_QUALITIES },
+            { key: 'output_format', label: t('fields.outputFormat'), type: 'select', defaultValue: 'png', options: ['png', 'jpeg', 'webp'] },
+            { key: 'input_fidelity', label: t('fields.inputFidelity'), type: 'select', defaultValue: 'high', options: ['high', 'low'] },
+            { key: 'n', label: t('fields.count'), type: 'number', min: 1, max: 10, defaultValue: 1 },
           ],
           inputBindings: { sourceImage: 'image' },
         }),
@@ -187,34 +190,35 @@ provider.models = [
     fullName: 'GPT Image 2',
     type: '2', typeName: '图片', icon: provider.icon, launchTime: '2026-04-21',
     endpoints: [
-      ep(P, '/v1/images/generations', { capability: 'IMAGE', protocolKey: 'openai-image', canvasModeLabel: '文生图' }),
-      ep(P, '/v1/images/edits', { capability: 'IMAGE', protocolKey: 'openai-image', contentType: 'formdata', canvasModeLabel: '图像编辑' }),
+      ep(P, '/v1/images/generations', { capability: 'IMAGE', protocolKey: 'openai-image', canvasModeLabel: t('canvasMode.t2i') }),
+      ep(P, '/v1/images/edits', { capability: 'IMAGE', protocolKey: 'openai-image', contentType: 'formdata', canvasModeLabel: t('canvasMode.imageEdit') }),
     ],
     modelSchema: schema({
       protocolKey: 'openai-image',
       input: [
         promptField('A cute cat sitting on a windowsill'),
-        { key: 'size', label: '尺寸', type: 'select', defaultValue: '1024x1024', options: IMAGE_SIZES },
-        { key: 'quality', label: '质量', type: 'select', defaultValue: 'auto', options: IMAGE_QUALITIES },
-        { key: 'output_format', label: '输出格式', type: 'select', defaultValue: 'png', options: ['png', 'jpeg', 'webp'] },
-        { key: 'n', label: '数量', type: 'number', min: 1, max: 10, defaultValue: 1 },
+        { key: 'size', label: t('fields.size'), type: 'select', defaultValue: '1024x1024', options: IMAGE_SIZES },
+        { key: 'quality', label: t('fields.quality'), type: 'select', defaultValue: 'auto', options: IMAGE_QUALITIES },
+        { key: 'output_format', label: t('fields.outputFormat'), type: 'select', defaultValue: 'png', options: ['png', 'jpeg', 'webp'] },
+        { key: 'n', label: t('fields.count'), type: 'number', min: 1, max: 10, defaultValue: 1 },
       ],
       endpointSchemas: {
         [`${P}/v1/images/edits`]: schema({
           input: [
             promptField(),
-            { key: 'image', label: '源图像', type: 'image', required: true },
-            { key: 'size', label: '尺寸', type: 'select', defaultValue: '1024x1024', options: IMAGE_SIZES },
-            { key: 'quality', label: '质量', type: 'select', defaultValue: 'auto', options: IMAGE_QUALITIES },
-            { key: 'output_format', label: '输出格式', type: 'select', defaultValue: 'png', options: ['png', 'jpeg', 'webp'] },
-            { key: 'input_fidelity', label: '输入保真度', type: 'select', defaultValue: 'high', options: ['high', 'low'] },
-            { key: 'n', label: '数量', type: 'number', min: 1, max: 10, defaultValue: 1 },
+            { key: 'image', label: t('fields.srcImage'), type: 'image', required: true },
+            { key: 'size', label: t('fields.size'), type: 'select', defaultValue: '1024x1024', options: IMAGE_SIZES },
+            { key: 'quality', label: t('fields.quality'), type: 'select', defaultValue: 'auto', options: IMAGE_QUALITIES },
+            { key: 'output_format', label: t('fields.outputFormat'), type: 'select', defaultValue: 'png', options: ['png', 'jpeg', 'webp'] },
+            { key: 'input_fidelity', label: t('fields.inputFidelity'), type: 'select', defaultValue: 'high', options: ['high', 'low'] },
+            { key: 'n', label: t('fields.count'), type: 'number', min: 1, max: 10, defaultValue: 1 },
           ],
           inputBindings: { sourceImage: 'image' },
         }),
       },
     }),
   }),
-]
+  ],
+})
 
 export default provider

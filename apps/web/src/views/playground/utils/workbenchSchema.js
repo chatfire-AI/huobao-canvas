@@ -1,11 +1,15 @@
+import { i18n } from '@/locales'
+
 const FIELD_GROUP_ORDER = [
-  { key: 'basic', label: '基础参数' },
-  { key: 'generation', label: '生成控制' },
-  { key: 'media', label: '媒体输入' },
-  { key: 'advanced', label: '高级参数' },
-  { key: 'callback', label: '回调设置' },
-  { key: 'debug', label: '调试参数' }
+  { key: 'basic' },
+  { key: 'generation' },
+  { key: 'media' },
+  { key: 'advanced' },
+  { key: 'callback' },
+  { key: 'debug' }
 ]
+
+const fieldGroupLabel = (key) => i18n.global.t(`playground.groups.${key}`)
 
 const FIELD_GROUP_KEYS = new Set(FIELD_GROUP_ORDER.map(group => group.key))
 
@@ -164,7 +168,7 @@ export function groupSchemaFields(fields, resultType) {
     group.key,
     {
       key: group.key,
-      label: group.label,
+      label: fieldGroupLabel(group.key),
       fields: [],
       requiredCount: 0,
       totalCount: 0

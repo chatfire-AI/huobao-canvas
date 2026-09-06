@@ -1,8 +1,8 @@
-import { ep, model, messagesField, temperatureField, maxTokensField, promptField, schema } from './_shared.js'
+import { ep, model, messagesField, temperatureField, maxTokensField, promptField, schema, t } from './_shared.js'
 
 const provider = {
   id: 'volcengine',
-  label: '火山引擎 豆包',
+  get label() { return t('volcengine.label') },
   icon: 'doubao-color.png',
   docsUrl: 'https://www.volcengine.com/docs/82379',
   baseUrl: 'https://ark.cn-beijing.volces.com',
@@ -26,14 +26,14 @@ const chatModel = ({ name, fullName, launchTime }) => model(provider, {
 
 // ── Seedream 图像（OpenAI 兼容 /images/generations）──
 // extra 用于追加版本特有字段（output_format / aspect_ratio 等）
-const seedreamSchema = ({ sizes, defaultSize, imageMax = 14, imageDesc = '图生图/多图融合', extra = [] }) => schema({
+const seedreamSchema = ({ sizes, defaultSize, imageMax = 14, imageDesc = t('volcengine.imageFusionDesc'), extra = [] }) => schema({
   protocolKey: 'openai-image',
   input: [
-    promptField('一只坐在窗台上的可爱猫咪'),
-    { key: 'size', label: '尺寸', type: 'select', defaultValue: defaultSize, options: sizes },
-    { key: 'image', label: '参考图', type: 'images', max: imageMax, description: imageDesc },
+    promptField(t('prompts.catWindowsill')),
+    { key: 'size', label: t('fields.size'), type: 'select', defaultValue: defaultSize, options: sizes },
+    { key: 'image', label: t('fields.sourceImage'), type: 'images', max: imageMax, description: imageDesc },
     ...extra,
-    { key: 'response_format', label: '返回格式', type: 'select', defaultValue: 'url',
+    { key: 'response_format', label: t('fields.returnFormat'), type: 'select', defaultValue: 'url',
       options: ['url', 'b64_json'] },
   ],
   inputBindings: { sourceImages: 'image' },
@@ -71,16 +71,16 @@ const seedanceSchema = ({ durationMin, durationMax, resolutions, defaultResoluti
   ratios = SEEDANCE_RATIOS, defaultRatio = 'adaptive', withAudio = false, withLastFrame = true, withFirstFrame = true }) => schema({
   protocolKey: 'ark',
   input: [
-    promptField('一只猫在夕阳下的沙滩上行走'),
+    promptField(t('prompts.catBeach')),
     ...(withFirstFrame
-      ? [{ key: 'image', label: '首帧参考图', type: 'image' }]
+      ? [{ key: 'image', label: t('fields.firstFrameRef'), type: 'image' }]
       : []),
     ...(withLastFrame && withFirstFrame
-      ? [{ key: 'last_image', label: '尾帧参考图', type: 'image' }]
+      ? [{ key: 'last_image', label: t('fields.lastFrameRef'), type: 'image' }]
       : []),
-    { key: 'duration', label: '时长(秒)', type: 'number', min: durationMin, max: durationMax, defaultValue: 5 },
-    { key: 'resolution', label: '分辨率', type: 'select', defaultValue: defaultResolution, options: resolutions },
-    { key: 'ratio', label: '宽高比', type: 'select', defaultValue: defaultRatio, options: ratios },
+    { key: 'duration', label: t('fields.durationSec'), type: 'number', min: durationMin, max: durationMax, defaultValue: 5 },
+    { key: 'resolution', label: t('fields.resolution'), type: 'select', defaultValue: defaultResolution, options: resolutions },
+    { key: 'ratio', label: t('fields.aspectRatio'), type: 'select', defaultValue: defaultRatio, options: ratios },
   ],
   inputBindings: !withFirstFrame
     ? null
@@ -114,7 +114,10 @@ const seedanceModel = ({ name, fullName, launchTime, schemaOpts }) => model(prov
   modelSchema: seedanceSchema(schemaOpts),
 })
 
-provider.models = [
+// models 用 getter 定义：每次读取重建，schema 内文案（t()）跟随语言切换
+Object.defineProperty(provider, 'models', {
+  enumerable: true,
+  get: () => [
   // ── 对话 ──
   chatModel({
     name: 'doubao-seed-2-1-pro-260628', fullName: 'Doubao Seed 2.1 Pro', launchTime: '2026-06-23',
@@ -155,7 +158,7 @@ provider.models = [
     schemaOpts: {
       sizes: ['2K', '3K', '4K'],
       defaultSize: '2K',
-      extra: [{ key: 'output_format', label: '输出格式', type: 'select', defaultValue: 'jpeg',
+      extra: [{ key: 'output_format', label: t('fields.outputFormat'), type: 'select', defaultValue: 'jpeg',
         options: ['jpeg', 'png'] }],
     },
   }),
@@ -165,11 +168,11 @@ provider.models = [
       // Pro 仅 1K/1.5K/2K 档位（最高 2K），支持像素级编辑，参考图+生成图 ≤ 15 张
       sizes: ['1K', '1.5K', '2K'],
       defaultSize: '2K',
-      imageDesc: '图生图/多参考图融合（参考图+生成图 ≤ 15 张）',
+      imageDesc: t('volcengine.seedream5ProImageDesc'),
       extra: [
-        { key: 'aspect_ratio', label: '宽高比', type: 'select', defaultValue: 'auto',
+        { key: 'aspect_ratio', label: t('fields.aspectRatio'), type: 'select', defaultValue: 'auto',
           options: ['auto', '1:1', '16:9', '9:16', '4:3', '3:4', '3:2', '2:3', '21:9'] },
-        { key: 'output_format', label: '输出格式', type: 'select', defaultValue: 'jpeg',
+        { key: 'output_format', label: t('fields.outputFormat'), type: 'select', defaultValue: 'jpeg',
           options: ['jpeg', 'png'] },
       ],
     },
@@ -249,6 +252,7 @@ provider.models = [
       withAudio: true,
     },
   }),
-]
+  ],
+})
 
 export default provider

@@ -3,7 +3,7 @@
     <section class="canvas-workspace" @pointerdown.capture="handleSelectionAreaPointerDown" @click.capture="handleWorkspaceClickCapture">
       <CanvasToolbar
         :project-id="projectId"
-        :project-name="project?.name || '默认画布'"
+        :project-name="project?.name || $t('canvas.project.defaultName')"
         :project-options="projectOptions"
         :api-key-options="apiKeyOptions"
         :selected-api-key="selectedApiKeyValue"
@@ -36,12 +36,12 @@
 
       <div v-if="!nodes.length" class="empty-canvas-hint">
         <span class="empty-hint-icon"><SvgIcon icon="tabler:layout-dashboard" width="22" height="22" /></span>
-        <strong>双击添加节点</strong>
-        <span>在画布空白处双击，选择文本、图片、视频或分组节点。</span>
+        <strong>{{ $t('canvas.emptyHint.title') }}</strong>
+        <span>{{ $t('canvas.emptyHint.desc') }}</span>
         <span class="empty-hint-keys">
-          <span class="hint-key"><kbd>滚轮</kbd>平移</span>
-          <span class="hint-key"><kbd>Ctrl/⌘</kbd>+<kbd>滚轮</kbd>缩放</span>
-          <span class="hint-key"><kbd>空格</kbd>+<kbd>拖拽</kbd>平移</span>
+          <span class="hint-key"><kbd>{{ $t('canvas.emptyHint.keyWheel') }}</kbd>{{ $t('canvas.emptyHint.actionPan') }}</span>
+          <span class="hint-key"><kbd>Ctrl/⌘</kbd>+<kbd>{{ $t('canvas.emptyHint.keyWheel') }}</kbd>{{ $t('canvas.emptyHint.actionZoom') }}</span>
+          <span class="hint-key"><kbd>{{ $t('canvas.emptyHint.keySpace') }}</kbd>+<kbd>{{ $t('canvas.emptyHint.keyDrag') }}</kbd>{{ $t('canvas.emptyHint.actionPan') }}</span>
         </span>
       </div>
 
@@ -156,17 +156,17 @@
     <n-modal
       v-model:show="createDialogVisible"
       preset="card"
-      title="新建画布"
+      :title="$t('canvas.dialogs.createTitle')"
       class="create-canvas-modal"
       style="width: 440px; max-width: calc(100vw - 48px)"
       :z-index="3100"
     >
       <div class="create-canvas-body">
-        <label class="create-canvas-label" for="create-canvas-name">画布名称</label>
+        <label class="create-canvas-label" for="create-canvas-name">{{ $t('canvas.dialogs.nameLabel') }}</label>
         <n-input
           id="create-canvas-name"
           v-model:value="createName"
-          placeholder="输入画布名称"
+          :placeholder="$t('canvas.dialogs.namePlaceholder')"
           maxlength="50"
           show-count
           autofocus
@@ -175,8 +175,8 @@
       </div>
       <template #footer>
         <div class="create-canvas-footer">
-          <n-button quaternary @click="createDialogVisible = false">取消</n-button>
-          <n-button type="primary" @click="confirmCreateProject">创建</n-button>
+          <n-button quaternary @click="createDialogVisible = false">{{ $t('common.cancel') }}</n-button>
+          <n-button type="primary" @click="confirmCreateProject">{{ $t('common.create') }}</n-button>
         </div>
       </template>
     </n-modal>
@@ -186,6 +186,7 @@
 <script setup>
 import { computed, markRaw, nextTick, onBeforeUnmount, onMounted, provide, reactive, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
+import { useI18n } from 'vue-i18n'
 import { VueFlow, useVueFlow } from '@vue-flow/core'
 import { Background } from '@vue-flow/background'
 import CanvasZoomControls from './components/CanvasZoomControls.vue'
@@ -234,6 +235,7 @@ import { useTheme } from '@/composables/useTheme'
 
 const route = useRoute()
 const router = useRouter()
+const { t } = useI18n()
 const nodeComponents = {
   [CANVAS_NODE_TYPES.TEXT]: markRaw(TextNode),
   [CANVAS_NODE_TYPES.IMAGE]: markRaw(ImageNode),
@@ -276,7 +278,7 @@ const projects = ref([])
 const isSwitchingProject = ref(false)
 const projectId = computed(() => project.value?.id || '')
 const projectOptions = computed(() => projects.value.map((item) => ({
-  label: `${item.name || '未命名画布'}${unsavedProjectIds.value.has(item.id) ? ' · 未保存' : ''}`,
+  label: `${item.name || t('canvas.project.untitled')}${unsavedProjectIds.value.has(item.id) ? t('canvas.project.unsavedSuffix') : ''}`,
   value: item.id,
   updatedAt: item.updatedAt,
   isActive: item.id === projectId.value,
@@ -416,7 +418,7 @@ const connectedInputs = computed(() => {
     return {
       id: node.id,
       type: node.type,
-      label: node.data?.title || '上游节点',
+      label: node.data?.title || t('canvas.node.upstream'),
       url,
       text,
     }
@@ -582,11 +584,11 @@ const modelOptions = computed(() => {
     .map((model) => {
     const unavailable = areCanvasModelEndpointsUnavailable(model)
     return {
-      label: `${model.fullName || model.name} · ${model.factory || group.factory || group.name || '模型'}${unavailable ? ' · 提交入口未开放' : ''}`,
+      label: `${model.fullName || model.name} · ${model.factory || group.factory || group.name || t('canvas.model.factoryFallback')}${unavailable ? t('canvas.model.submitUnavailableSuffix') : ''}`,
       value: model.name,
       disabled: unavailable,
       modelName: model.fullName || model.name,
-      factory: model.factory || group.factory || group.name || '模型',
+      factory: model.factory || group.factory || group.name || t('canvas.model.factoryFallback'),
       icon: model.icon || '',
     }
   }))
@@ -600,7 +602,7 @@ const endpointOptions = computed(() => parsedEndpoints.value.map((endpoint, inde
   )
   const streaming = isStreamEndpoint(endpoint)
   const disabled = streaming || !isCanvasSubmitEndpointMounted(resolvedPath)
-  const suffix = streaming ? ' · 流式端点暂不支持' : (disabled ? ' · 提交入口未开放' : '')
+  const suffix = streaming ? t('canvas.model.streamUnsupportedSuffix') : (disabled ? t('canvas.model.submitUnavailableSuffix') : '')
   return {
     label: `${endpoint.canvasModeLabel || endpoint.canvasMode || `POST ${endpoint.path}`}${suffix}`,
     value: index,
@@ -730,7 +732,7 @@ async function persistSubmittedTask(work, taskLink) {
   updateNodeStatus(work.nodeId, NODE_STATUS.WAITING, {
     task: taskLink,
     error: '',
-    notice: '任务已提交，等待结果',
+    notice: t('canvas.run.taskSubmitted'),
   })
   await persistTaskGraph(work, isCurrentTaskWork)
 }
@@ -762,7 +764,7 @@ async function resumeNodeTask(nodeId, existingWork = null) {
       if (!isCurrentTaskWork(work)) return
       if (runResult.status === 'cancelled') return
       if (runResult.status === 'failed') {
-        throw Object.assign(new Error(runResult.error || '服务端运行失败'), { kind: 'terminal' })
+        throw Object.assign(new Error(runResult.error || t('canvas.run.serverRunFailed')), { kind: 'terminal' })
       }
       materializeCanvasResults(nodeId, {
         result: runResult.result,
@@ -770,7 +772,7 @@ async function resumeNodeTask(nodeId, existingWork = null) {
         unavailableReason: runResult.unavailableReason || '',
       })
       await persistCompletedTask(work)
-      if (isCurrentTaskController(work)) window.$message?.success('模型运行完成')
+      if (isCurrentTaskController(work)) window.$message?.success(t('canvas.run.completed'))
     } catch (error) {
       if (error?.name === 'AbortError' || !isCurrentTaskWork(work)) return
       const currentNode = getNodeById(nodeId)
@@ -779,8 +781,8 @@ async function resumeNodeTask(nodeId, existingWork = null) {
       )
       updateNodeStatus(nodeId, NODE_STATUS.ERROR, {
         task: undefined,
-        error: error?.message || '任务处理失败',
-        notice: hasPreviousResult ? '本次失败，当前显示上次成功结果' : '',
+        error: error?.message || t('canvas.run.taskFailed'),
+        notice: hasPreviousResult ? t('canvas.run.failedShowingLast') : '',
       })
       await saveGraph(work.projectId, toGraph()).catch(() => {})
     } finally {
@@ -792,7 +794,7 @@ async function resumeNodeTask(nodeId, existingWork = null) {
   if (!getApiKey()) {
     updateNodeStatus(nodeId, NODE_STATUS.WAITING, {
       task: taskLink,
-      notice: '选择有效 API Key 后继续查询',
+      notice: t('canvas.run.selectKeyToContinue'),
     })
     finishTaskWork(work)
     return
@@ -808,7 +810,7 @@ async function resumeNodeTask(nodeId, existingWork = null) {
     if (!isCurrentTaskWork(work)) return
     materializeCanvasResults(nodeId, result)
     await persistCompletedTask(work)
-    if (isCurrentTaskController(work)) window.$message?.success('模型运行完成')
+    if (isCurrentTaskController(work)) window.$message?.success(t('canvas.run.completed'))
   } catch (error) {
     if (error?.name === 'AbortError' || !isCurrentTaskWork(work)) return
     const currentNode = getNodeById(nodeId)
@@ -818,14 +820,14 @@ async function resumeNodeTask(nodeId, existingWork = null) {
     if (error?.kind === 'auth-waiting' || error?.kind === 'retryable-waiting') {
       updateNodeStatus(nodeId, NODE_STATUS.WAITING, {
         task: taskLink,
-        error: error?.message || '任务查询暂时失败',
-        notice: hasPreviousResult ? '等待继续，当前显示上次成功结果' : '任务等待继续',
+        error: error?.message || t('canvas.run.queryFailed'),
+        notice: hasPreviousResult ? t('canvas.run.waitingShowingLast') : t('canvas.run.taskWaiting'),
       })
     } else {
       updateNodeStatus(nodeId, NODE_STATUS.ERROR, {
         task: undefined,
-        error: error?.message || '任务处理失败',
-        notice: hasPreviousResult ? '本次失败，当前显示上次成功结果' : '',
+        error: error?.message || t('canvas.run.taskFailed'),
+        notice: hasPreviousResult ? t('canvas.run.failedShowingLast') : '',
       })
     }
     await saveGraph(work.projectId, toGraph()).catch(() => {})
@@ -869,12 +871,12 @@ onMounted(async () => {
     // 官方直连模式提示去设置页配置厂商 Key
     if (!selectedApiKeyValue.value) {
       if (isGatewayMode) showApiKeyManager.value = true
-      else window.$message?.info('请先前往右上角「设置」配置厂商 API Key')
+      else window.$message?.info(t('canvas.run.configureKeyHint'))
     }
     recoverWaitingTasks()
   } catch (error) {
     if (isCurrentPageEpoch(epoch)) {
-      window.$message?.error(error?.message || '画布加载失败')
+      window.$message?.error(error?.message || t('canvas.project.loadFailed'))
     }
   }
 })
@@ -1056,7 +1058,7 @@ async function applyLoadedProject(loaded, { request = null, epoch = pageEpoch } 
 async function handleProjectSelect(nextProjectId) {
   if (!nextProjectId || nextProjectId === projectId.value) return
   if (taskPersistenceLocked.value) {
-    window.$message?.warning('任务信息正在保存，暂时不能切换画布')
+    window.$message?.warning(t('canvas.project.switchLocked'))
     return
   }
   const request = beginProjectRequest()
@@ -1069,7 +1071,7 @@ async function handleProjectSelect(nextProjectId) {
     recoverWaitingTasks()
   } catch (error) {
     if (isCurrentProjectRequest(request)) {
-      window.$message?.error(error?.message || '画布切换失败')
+      window.$message?.error(error?.message || t('canvas.project.switchFailed'))
     }
   }
 }
@@ -1080,17 +1082,17 @@ const createName = ref('')
 
 function handleCreateProject() {
   if (taskPersistenceLocked.value) {
-    window.$message?.warning('任务信息正在保存，暂时不能新建画布')
+    window.$message?.warning(t('canvas.project.createLocked'))
     return
   }
-  createName.value = `画布 ${projects.value.length + 1}`
+  createName.value = t('canvas.project.defaultNewName', { n: projects.value.length + 1 })
   createDialogVisible.value = true
 }
 
 async function confirmCreateProject() {
   const name = String(createName.value || '').trim()
   if (!name) {
-    window.$message?.warning('请输入画布名称')
+    window.$message?.warning(t('canvas.project.nameRequired'))
     return
   }
   const request = beginProjectRequest()
@@ -1103,7 +1105,7 @@ async function confirmCreateProject() {
     createDialogVisible.value = false
   } catch (error) {
     if (isCurrentProjectRequest(request)) {
-      window.$message?.warning(error?.message || '新建画布失败')
+      window.$message?.warning(error?.message || t('canvas.project.createFailed'))
     }
   }
 }
@@ -1113,9 +1115,9 @@ async function handleRenameProject({ id, name }) {
   try {
     await renameProject(id, name)
     await refreshProjects()
-    window.$message?.success('已重命名')
+    window.$message?.success(t('canvas.project.renamed'))
   } catch (error) {
-    window.$message?.warning(error?.message || '重命名失败')
+    window.$message?.warning(error?.message || t('canvas.project.renameFailed'))
   }
 }
 
@@ -1123,18 +1125,18 @@ async function handleRenameProject({ id, name }) {
 function requestDeleteProject(item) {
   if (!item?.value) return
   if (taskPersistenceLocked.value) {
-    window.$message?.warning('任务信息正在保存，暂时不能删除画布')
+    window.$message?.warning(t('canvas.project.deleteLocked'))
     return
   }
-  const name = String(item.label || '').replace(' · 未保存', '')
+  const name = String(item.label || '').replace(t('canvas.project.unsavedSuffix'), '')
   const nodeCount = item.nodeCount || 0
   window.$dialog.error({
-    title: `删除画布「${name}」`,
+    title: t('canvas.dialogs.deleteProjectTitle', { name }),
     content: nodeCount > 0
-      ? `包含 ${nodeCount} 个节点，删除后无法恢复，是否继续？`
-      : '删除后无法恢复，是否继续？',
-    positiveText: '删除',
-    negativeText: '取消',
+      ? t('canvas.dialogs.deleteProjectWithNodes', { n: nodeCount })
+      : t('canvas.dialogs.deleteIrreversible'),
+    positiveText: t('common.delete'),
+    negativeText: t('common.cancel'),
     positiveButtonProps: { type: 'error' },
     negativeButtonProps: { quaternary: true },
     onPositiveClick: async () => {
@@ -1149,10 +1151,10 @@ function requestDeleteProject(item) {
           if (!await applyLoadedProject(loaded, { request })) return
         }
         await refreshProjects(request)
-        window.$message?.success('画布已删除')
+        window.$message?.success(t('canvas.project.deleted'))
       } catch (error) {
         if (isCurrentProjectRequest(request)) {
-          window.$message?.error(error?.message || '删除画布失败')
+          window.$message?.error(error?.message || t('canvas.project.deleteFailed'))
         }
       }
     },
@@ -1161,7 +1163,7 @@ function requestDeleteProject(item) {
 
 async function handleApiKeySelect(value) {
   if (taskPersistenceLocked.value) {
-    window.$message?.warning('任务信息正在保存，暂时不能切换 API Key')
+    window.$message?.warning(t('canvas.project.apiKeySwitchLocked'))
     return
   }
   const waitingNodeIds = nodes.value
@@ -1228,7 +1230,7 @@ async function handlePromptDockSubmit(payload) {
   if (hasResult) {
     const canRunVariant = payload.shouldRun && modelName && getApiKey()
     if (!canRunVariant) {
-      window.$message?.info(modelName ? '选择 API Key 后可运行。' : '请先选择模型。')
+      window.$message?.info(modelName ? t('canvas.run.selectKeyToRun') : t('canvas.run.selectModelFirst'))
       return
     }
     const copy = spawnRegenerationCopy(node)
@@ -1265,7 +1267,7 @@ async function handlePromptDockSubmit(payload) {
 
   const canRun = payload.shouldRun && modelName && getApiKey()
   if (!canRun) {
-    window.$message?.info(modelName ? '已写入当前节点，选择 API Key 后可运行。' : '已写入当前节点，选择模型后可运行。')
+    window.$message?.info(modelName ? t('canvas.run.savedSelectKey') : t('canvas.run.savedSelectModel'))
     return
   }
 
@@ -1339,7 +1341,7 @@ async function runNodeFromDock(node) {
   try {
     const model = await loadSingleModel(node.data.payload.modelName)
     if (!isCurrentSchemaRequest(schemaRequest)) return
-    if (!model) throw new Error('未找到模型配置')
+    if (!model) throw new Error(t('canvas.run.modelConfigMissing'))
     setupModel(model)
     selectedEndpointIndex.value = Number(node.data.payload?.endpointIndex || 0)
     await nextTick()
@@ -1379,17 +1381,17 @@ async function runNodeFromDock(node) {
       if (isCurrentTaskWork(work)) await resumeNodeTask(node.id, work)
     } else if (isCurrentTaskWork(work)) {
       await persistCompletedTask(work)
-      if (isCurrentTaskController(work)) window.$message?.success('模型运行完成')
+      if (isCurrentTaskController(work)) window.$message?.success(t('canvas.run.completed'))
     }
   } catch (error) {
     if (error?.name !== 'AbortError' && isCurrentTaskWork(work)) {
       updateNodeStatus(node.id, NODE_STATUS.ERROR, {
         task: undefined,
-        error: error?.message || '模型运行失败',
-        notice: node.data?.payload?.parsedResults?.length ? '本次失败，当前显示上次成功结果' : '',
+        error: error?.message || t('canvas.run.failed'),
+        notice: node.data?.payload?.parsedResults?.length ? t('canvas.run.failedShowingLast') : '',
       })
       await saveGraph(work.projectId, toGraph()).catch(() => {})
-      window.$message?.error(error?.message || '模型运行失败')
+      window.$message?.error(error?.message || t('canvas.run.failed'))
     }
   } finally {
     // 中止/中断且未进入其他状态时，复位 running 视觉
@@ -1839,8 +1841,8 @@ async function requestDeleteSelection() {
     const deletionIntentSaved = await recordPendingGraphDeletion(currentProjectId, beforeGraph, afterGraph)
     void saveGraph(currentProjectId, afterGraph).catch((error) => {
       window.$message?.error(deletionIntentSaved
-        ? '删除结果暂未写入主存储，刷新后仍会保持删除'
-        : (error?.message || '删除保存失败，请暂勿刷新并重试'))
+        ? t('canvas.dialogs.deletePendingSave')
+        : (error?.message || t('canvas.dialogs.deleteSaveFailed')))
     })
     return
   }
@@ -1852,14 +1854,14 @@ async function requestDeleteSelection() {
   )
   const isSingleGroup = selected.length === 1 && selected[0]?.type === CANVAS_NODE_TYPES.GROUP
   window.$dialog.error({
-    title: nodeIds.size > 1 ? `删除 ${nodeIds.size} 个节点` : '删除节点',
+    title: nodeIds.size > 1 ? t('canvas.dialogs.deleteNodesTitle', { n: nodeIds.size }) : t('canvas.dialogs.deleteNodeTitle'),
     content: hasActiveTask
-      ? '任务可能继续计费且无法恢复。删除后也不会找回任务结果，是否继续？'
+      ? t('canvas.dialogs.deleteActiveTaskContent')
       : isSingleGroup
-        ? '仅删除分组容器，组内节点会保留。是否继续？'
-        : '删除后无法恢复，是否继续？',
-    positiveText: '删除',
-    negativeText: '取消',
+        ? t('canvas.dialogs.deleteGroupContent')
+        : t('canvas.dialogs.deleteIrreversible'),
+    positiveText: t('common.delete'),
+    negativeText: t('common.cancel'),
     positiveButtonProps: { type: 'error' },
     negativeButtonProps: { quaternary: true },
     onPositiveClick: async () => {
@@ -1873,8 +1875,8 @@ async function requestDeleteSelection() {
         await saveGraph(currentProjectId, afterGraph)
       } catch (error) {
         window.$message?.error(deletionIntentSaved
-          ? '删除结果暂未写入主存储，刷新后仍会保持删除'
-          : (error?.message || '删除保存失败，请暂勿刷新并重试'))
+          ? t('canvas.dialogs.deletePendingSave')
+          : (error?.message || t('canvas.dialogs.deleteSaveFailed')))
       }
     },
   })
@@ -1973,7 +1975,7 @@ async function handleModelNameUpdate(modelName) {
   if (!nodeId) return
   const option = modelOptions.value.find((item) => item.value === modelName)
   if (option?.disabled) {
-    window.$message?.warning('该模型的提交入口未开放')
+    window.$message?.warning(t('canvas.model.submitUnavailable'))
     return
   }
   const schemaRequest = beginSchemaRequest(nodeId)
@@ -1995,7 +1997,7 @@ async function handleEndpointIndexUpdate(index) {
   if (!nodeId || formDataOwnerNodeId.value !== nodeId) return
   const option = endpointOptions.value.find((item) => item.value === index)
   if (option?.disabled) {
-    window.$message?.warning('该 Endpoint 的提交入口未开放')
+    window.$message?.warning(t('canvas.model.endpointUnavailable'))
     return
   }
   const schemaRequest = beginSchemaRequest(nodeId)

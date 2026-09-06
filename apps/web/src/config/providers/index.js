@@ -21,6 +21,7 @@ import vidu from './vidu.js'
 import xiaomi from './xiaomi.js'
 // 相对路径导入：本文件会被 Node 校验脚本直接 import（无 vite alias）
 import { getProviderConfig } from '../../utils/apiKeySession.js'
+import { t } from './_shared.js'
 
 export const providerPresets = [
   openai, anthropic, gemini, qwen, volcengine, deepseek,
@@ -45,7 +46,7 @@ export const getProviderForModel = (m = {}) =>
  * token: Authorization: Token <key>（Vidu）
  */
 export const buildProviderAuthHeaders = (provider, key) => {
-  if (!key) throw new Error(`请先在设置页配置 ${provider?.label || '该厂商'} 的 API Key`)
+  if (!key) throw new Error(t('errors.apiKeyRequired', { name: provider?.label || t('errors.thatProvider') }))
   const auth = provider?.auth || { type: 'bearer' }
   const extra = auth.extraHeaders || {}
   switch (auth.type) {

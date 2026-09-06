@@ -12,15 +12,22 @@
  * - reference 全能参考:多张 → images/reference_* 字段(上限取字段 max)
  * 模型在 schema.videoModes 显式声明时以声明为准,否则按字段 key 探测。
  */
+import { i18n } from '@/locales'
+
+// 调用点求值：切语言后新生成的文案跟随当前语言
+const t = (key, params) => i18n.global.t(key, params)
+
 const IMAGE_FIELD_TYPES = new Set(['image', 'images'])
 
 export const DEFAULT_REFERENCE_IMAGE_LIMIT = 9
 
-export const VIDEO_REFERENCE_MODES = [
-  { key: 'text', label: '文生视频' },
-  { key: 'first', label: '首帧' },
-  { key: 'firstlast', label: '首尾帧' },
-  { key: 'reference', label: '全能参考' },
+// 参考模式标签为用户可见文案，改为函数在调用点取当前语言
+// （原 VIDEO_REFERENCE_MODES 常量无消费方，已移除；key 保持不变）
+export const getVideoReferenceModes = () => [
+  { key: 'text', label: t('runtime.reference.modeText') },
+  { key: 'first', label: t('runtime.reference.modeFirst') },
+  { key: 'firstlast', label: t('runtime.reference.modeFirstLast') },
+  { key: 'reference', label: t('runtime.reference.modeReference') },
 ]
 const FIRST_FRAME_KEYS = ['first_frame', 'image', 'image_url']
 // 尾帧键：last_frame（qwen）/ lastFrame（驼峰）/ last_image（volcengine seedance、vidu）
@@ -75,6 +82,6 @@ export const getVideoReferenceInfo = (fields, declaredModes) => {
 
 /** 参考图超限提示文案 */
 export const referenceImageLimitMessage = (limit, dropped) => {
-  if (limit <= 0) return '当前模型不支持参考图，已忽略'
-  return `当前模型最多支持 ${limit} 张参考图，已忽略超出的 ${dropped} 张`
+  if (limit <= 0) return t('runtime.reference.limitUnsupported')
+  return t('runtime.reference.limitExceeded', { limit, dropped })
 }

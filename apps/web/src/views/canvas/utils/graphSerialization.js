@@ -1,4 +1,7 @@
+import { i18n } from '@/locales'
 import { CANVAS_NODE_TYPES, NODE_STATUS } from '../constants/nodeTypes.js'
+
+const t = (key) => i18n.global.t(key)
 
 const SENSITIVE_KEYS = new Set([
   'apikey', 'xapikey', 'authorization', 'proxyauthorization',
@@ -29,9 +32,10 @@ const RESULT_URL_KEYS = new Set([
   'url', 'image_url', 'imageUrl', 'video_url', 'videoUrl',
   'audio_url', 'audioUrl', 'output_url', 'outputUrl',
 ])
-const TEMPORARY_RESULT_NOTICE = '临时结果未保存，刷新后请重新生成'
-const UNRECOVERABLE_TASK_ERROR = '任务无法恢复，请重新生成'
-const UNAVAILABLE_RESULT_NOTICE = '任务已完成，但结果不可预览，请重新生成'
+// 以下通知/错误文案写入节点 payload 持久化，按写入时的当前语言取词
+const temporaryResultNotice = () => t('canvas.serialization.temporaryResult')
+const unrecoverableTaskError = () => t('canvas.serialization.unrecoverableTask')
+const unavailableResultNotice = () => t('canvas.serialization.unavailableResult')
 
 const normalizeKey = (key) => String(key).toLowerCase().replace(/[-_]/g, '')
 const SAFE_TOKEN_PARAMETER_KEYS = new Set([
@@ -134,7 +138,7 @@ const expireTransientMediaResult = (node) => {
     url: '',
     result: null,
     parsedResults: [],
-    notice: TEMPORARY_RESULT_NOTICE,
+    notice: temporaryResultNotice(),
   }
   delete nextPayload.requestMeta
   return {
@@ -190,7 +194,7 @@ export function repairCanvasGraphForLoad(graph = {}) {
           url: '',
           result: null,
           parsedResults: [],
-          notice: UNAVAILABLE_RESULT_NOTICE,
+          notice: unavailableResultNotice(),
         }
         delete payload.requestMeta
         delete payload.task
@@ -214,7 +218,7 @@ export function repairCanvasGraphForLoad(graph = {}) {
           status: NODE_STATUS.ERROR,
           payload: {
             ...(node.data?.payload || {}),
-            error: UNRECOVERABLE_TASK_ERROR,
+            error: unrecoverableTaskError(),
           },
         },
       }

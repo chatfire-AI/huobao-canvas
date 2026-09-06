@@ -14,19 +14,20 @@
   <span
     v-else
     class="node-title"
-    :title="`${title}（双击重命名）`"
+    :title="$t('canvas.nodeTitle.renameHint', { title })"
     @dblclick.stop="startEdit"
   >{{ title }}</span>
 </template>
 
 <script setup>
 import { inject, nextTick, ref } from 'vue'
+import { i18n } from '@/locales'
 
 // 节点名称：双击重命名（Enter/失焦提交，Esc 取消）；
 // 身份靠节点 UUID，名称只是展示标签，允许自由修改、不做唯一校验
 const props = defineProps({
   id: { type: String, required: true },
-  title: { type: String, default: '节点' },
+  title: { type: String, default: () => i18n.global.t('canvas.nodeTypes.node') },
 })
 
 const updateNodeTitle = inject('canvasUpdateNodeTitle', null)

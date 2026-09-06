@@ -17,6 +17,7 @@ import {
 } from '../constants/index'
 import { getEndpointBehavior } from '../constants/index'
 import { resolveEndpointPath } from '../utils/endpointPath'
+import { i18n } from '@/locales'
 
 const CODE_EXAMPLE_API_KEY = '<API_KEY>'
 
@@ -159,10 +160,10 @@ export function useCodeGeneration({ modelData, formData, selectedEndpoint, input
   const copyCode = async (code) => {
     try {
       await navigator.clipboard.writeText(code)
-      window.$message?.success('已复制到剪贴板')
+      window.$message?.success(i18n.global.t('common.copySuccess'))
     } catch (e) {
       console.error('Copy failed:', e)
-      window.$message?.error('复制失败')
+      window.$message?.error(i18n.global.t('common.copyFailed'))
     }
   }
 

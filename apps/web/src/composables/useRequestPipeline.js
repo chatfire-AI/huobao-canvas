@@ -13,6 +13,10 @@ import { getProviderForModel, getProvider, buildProviderAuthHeaders, applyProvid
 import { isServerRunMode, submitRunToServer, pollServerRun, cancelServerRun } from '../api/canvasServer.js'
 import { getProviderApiKey } from '../utils/apiKeySession.js'
 import { appFetch } from '../utils/desktopBridge.js'
+import { i18n } from '@/locales'
+
+// 调用点求值：切语言后新抛出的错误/提示跟随当前语言
+const t = (key, params) => i18n.global.t(key, params)
 
 // 请求 URL 拼接：绝对路径（厂商 baseUrl 覆盖为 http 地址时）直连，否则走 apiBaseUrl 前缀
 const joinUrl = (apiBaseUrl, path) =>
@@ -65,7 +69,13 @@ export function useRequestPipeline({ getNestedValue, wait = defaultWait }) {
         : '')
       : ''
     if (endpointType && endpointType !== 'text') return endpointType
+    // 优先按类型码（数据契约 '1'对话/'2'图片/'3'视频）判定；typeName 已本地化，不能再匹配
+    const typeCodes = String(model.type || '').split(',').map((s) => s.trim())
+    if (typeCodes.includes('3')) return 'video'
+    if (typeCodes.includes('2')) return 'image'
+    if (typeCodes.includes('1')) return 'chat'
     const typeName = model.typeName || ''
+    // 历史快照兜底：旧持久化数据的 typeName 为中文规范值；音频无类型码，仅走这里
     if (typeName.includes('视频')) return 'video'
     if (typeName.includes('图片')) return 'image'
     if (typeName.includes('音频')) return 'audio'
@@ -140,7 +150,7 @@ export function useRequestPipeline({ getNestedValue, wait = defaultWait }) {
           return { blob, name: `upload.${ext}` }
         } catch (error) {
           if (error?.name === 'AbortError') throw error
-          throw taskError(`参考图 URL 无法转为文件上传（跨域或已过期）：${value.slice(0, 80)}…请改用本地上传`, 'terminal', error)
+          throw taskError(t('runtime.pipeline.referenceUrlToFileFailed', { url: value.slice(0, 80) }), 'terminal', error)
         }
       }
       // 与旧 runModel 一致：multipart 请求显式携带 model 字段
@@ -208,7 +218,7 @@ export function useRequestPipeline({ getNestedValue, wait = defaultWait }) {
       }
     } catch (error) {
       if (error?.name === 'AbortError') throw error
-      throw taskError('响应格式异常', 'terminal', error)
+      throw taskError(t('runtime.pipeline.invalidResponseFormat'), 'terminal', error)
     }
     return data
   }
@@ -258,7 +268,7 @@ export function useRequestPipeline({ getNestedValue, wait = defaultWait }) {
 
   const resumeTask = async ({ taskLink, apiKey, apiBaseUrl, signal, maxAttempts = DEFAULT_POLL_MAX_ATTEMPTS, pollInterval = DEFAULT_POLL_INTERVAL }) => {
     const taskId = normalizeTaskId(taskLink?.taskId)
-    if (!taskId) throw taskError('任务标识无效', 'terminal')
+    if (!taskId) throw taskError(t('runtime.pipeline.invalidTaskId'), 'terminal')
 
     // 厂商官方直连的异步任务：按端点 query 配置轮询（官方任务查询端点 + 厂商状态映射）；
     // 无 query 配置保持 Huobao 网关的归一化任务查询。
@@ -266,7 +276,7 @@ export function useRequestPipeline({ getNestedValue, wait = defaultWait }) {
     const authHeaders = taskLink?.providerId
       ? buildProviderAuthHeaders(getProvider(taskLink.providerId), getProviderApiKey(taskLink.providerId) || apiKey)
       : buildModelRunnerAuthHeaders(apiKey)
-    if (!taskLink?.providerId && !apiKey) throw taskError('请先创建或选择 API Key', 'auth-waiting')
+    if (!taskLink?.providerId && !apiKey) throw taskError(t('runtime.auth.apiKeyRequired'), 'auth-waiting')
 
     const MAX_ATTEMPTS = maxAttempts
     const POLL_INTERVAL = pollInterval
@@ -274,7 +284,7 @@ export function useRequestPipeline({ getNestedValue, wait = defaultWait }) {
     const pollUrl = vendorQuery
       ? joinUrl(apiBaseUrl, applyProviderBaseUrl(taskProvider, String(vendorQuery.path).replace('{taskId}', taskId)))
       : `${apiBaseUrl}/v1/tasks/${encodeURIComponent(taskId)}?view=normalized`
-    let lastRetryableMessage = '任务仍在处理中，请稍后重试'
+    let lastRetryableMessage = t('runtime.pipeline.taskStillProcessing')
 
     for (let attempt = 0; attempt < MAX_ATTEMPTS; attempt += 1) {
       let response
@@ -283,8 +293,8 @@ export function useRequestPipeline({ getNestedValue, wait = defaultWait }) {
         response = await appFetch(pollUrl, { method: vendorQuery?.method || 'GET', headers: authHeaders, signal })
       } catch (error) {
         if (error?.name === 'AbortError') throw error
-        if (signal?.aborted) throw taskError('已取消', 'terminal')
-        lastRetryableMessage = error?.message || '任务查询暂时失败'
+        if (signal?.aborted) throw taskError(t('runtime.pipeline.cancelled'), 'terminal')
+        lastRetryableMessage = error?.message || t('runtime.pipeline.taskQueryFailed')
         if (attempt === MAX_ATTEMPTS - 1) throw taskError(lastRetryableMessage, 'retryable-waiting', error)
         await wait(POLL_INTERVAL, signal)
         continue
@@ -293,10 +303,10 @@ export function useRequestPipeline({ getNestedValue, wait = defaultWait }) {
         data = await response.json()
       } catch (error) {
         if (error?.name === 'AbortError') throw error
-        if (signal?.aborted) throw taskError('已取消', 'terminal')
+        if (signal?.aborted) throw taskError(t('runtime.pipeline.cancelled'), 'terminal')
         if (!response.ok) data = {}
         else {
-          lastRetryableMessage = error?.message || '任务响应格式暂时异常'
+          lastRetryableMessage = error?.message || t('runtime.pipeline.taskResponseFormatError')
           if (attempt === MAX_ATTEMPTS - 1) throw taskError(lastRetryableMessage, 'retryable-waiting', error)
           await wait(POLL_INTERVAL, signal)
           continue
@@ -337,14 +347,14 @@ export function useRequestPipeline({ getNestedValue, wait = defaultWait }) {
             if (blobs.length) extraction = { ...extraction, parsedResults: blobs, unavailableReason: '' }
           }
           if (MEDIA_RESULT_TYPES.has(taskLink?.resultType) && extraction.parsedResults.length === 0 && !extraction.unavailableReason) {
-            throw taskError('任务已完成，但未返回可用媒体结果', 'terminal')
+            throw taskError(t('runtime.pipeline.taskNoMediaResult'), 'terminal')
           }
           return {
             result: data, resultType: taskLink?.resultType || 'text',
             parsedResults: extraction.parsedResults, unavailableReason: extraction.unavailableReason,
           }
         }
-        if (isFailed) throw taskError(errorMessage(data, '任务处理失败'), 'terminal')
+        if (isFailed) throw taskError(errorMessage(data, t('runtime.pipeline.taskFailed')), 'terminal')
         // 厂商任务：未识别的状态一律视为处理中继续轮询
         if (attempt === MAX_ATTEMPTS - 1) throw taskError(lastRetryableMessage, 'retryable-waiting')
         await wait(POLL_INTERVAL, signal)
@@ -356,15 +366,15 @@ export function useRequestPipeline({ getNestedValue, wait = defaultWait }) {
       if (status === 'COMPLETED' || status === 'SUCCEEDED') {
         const extraction = extractMediaResult(data?.result, taskLink?.resultType || 'text', null, getNestedValue)
         if (MEDIA_RESULT_TYPES.has(taskLink?.resultType) && extraction.parsedResults.length === 0 && !extraction.unavailableReason) {
-          throw taskError('任务已完成，但未返回可用媒体结果', 'terminal')
+          throw taskError(t('runtime.pipeline.taskNoMediaResult'), 'terminal')
         }
         return {
           result: data?.result, resultType: taskLink?.resultType || 'text',
           parsedResults: extraction.parsedResults, unavailableReason: extraction.unavailableReason,
         }
       }
-      if (status === 'FAILED' || status === 'ERROR') throw taskError(errorMessage(data, '任务处理失败'), 'terminal')
-      if (!NONTERMINAL_TASK_STATUSES.has(status)) throw taskError('任务查询协议异常', 'terminal')
+      if (status === 'FAILED' || status === 'ERROR') throw taskError(errorMessage(data, t('runtime.pipeline.taskFailed')), 'terminal')
+      if (!NONTERMINAL_TASK_STATUSES.has(status)) throw taskError(t('runtime.pipeline.taskProtocolError'), 'terminal')
       if (attempt === MAX_ATTEMPTS - 1) throw taskError(lastRetryableMessage, 'retryable-waiting')
       await wait(POLL_INTERVAL, signal)
     }
@@ -393,7 +403,7 @@ export function useRequestPipeline({ getNestedValue, wait = defaultWait }) {
       signal?.addEventListener('abort', onAbort, { once: true })
       try {
         const runResult = await pollServerRun(runId, { signal })
-        if (runResult.status === 'failed') throw taskError(runResult.error || '服务端运行失败', 'terminal')
+        if (runResult.status === 'failed') throw taskError(runResult.error || t('runtime.pipeline.serverRunFailed'), 'terminal')
         if (runResult.status === 'cancelled') throw new DOMException('Aborted', 'AbortError')
         const resultType = resolveResultType({ model, selectedEndpoint: endpoint, outputSchema })
         return {
@@ -420,7 +430,7 @@ export function useRequestPipeline({ getNestedValue, wait = defaultWait }) {
     const authHeaders = resolveAuthHeaders({ model, apiKey })
     const providerCode = model?.providerCode || model?.factory || ''
     let endpointPath = resolveEndpointPath(endpoint?.path || '/v1/chat/completions', modelName, providerCode)
-    if (!isCanvasSubmitEndpointMounted(endpointPath)) throw new Error(`当前未开放该提交入口：${endpointPath}`)
+    if (!isCanvasSubmitEndpointMounted(endpointPath)) throw new Error(t('runtime.pipeline.endpointNotMounted', { path: endpointPath }))
     // 厂商 baseUrl 覆盖（设置页可配）：默认 /official/{id} 反代，覆盖后直连自定义地址
     endpointPath = applyProviderBaseUrl(provider, endpointPath)
 
@@ -494,12 +504,12 @@ export function useRequestPipeline({ getNestedValue, wait = defaultWait }) {
         providerId: provider?.id || '',
         resultType, modelName, endpointPath,
       }
-      if (typeof onTaskSubmitted !== 'function') throw taskError('异步任务缺少持久化回调', 'terminal')
+      if (typeof onTaskSubmitted !== 'function') throw taskError(t('runtime.pipeline.asyncMissingCallback'), 'terminal')
       await onTaskSubmitted(taskLink)
       return { pending: true, taskLink }
     }
     if (isAsync && extraction.parsedResults.length === 0) {
-      throw taskError('异步任务响应缺少任务标识或可用结果', 'terminal')
+      throw taskError(t('runtime.pipeline.asyncMissingTaskId'), 'terminal')
     }
 
     const requestMeta = buildRequestMeta({ startTime, authHeaders, responseHeaders, contentType, tokenUsage: data?.usage || null })

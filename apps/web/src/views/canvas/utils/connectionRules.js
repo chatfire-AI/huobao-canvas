@@ -1,4 +1,12 @@
-import { CANVAS_NODE_TYPES, NODE_LIBRARY } from '../constants/nodeTypes.js'
+import { i18n } from '@/locales'
+import { CANVAS_NODE_TYPES, NODE_LIBRARY, getCanvasNodeTypeLabel } from '../constants/nodeTypes.js'
+
+const NODE_TYPE_DESC_KEYS = {
+  [CANVAS_NODE_TYPES.TEXT]: 'canvas.nodeTypes.textDesc',
+  [CANVAS_NODE_TYPES.IMAGE]: 'canvas.nodeTypes.imageDesc',
+  [CANVAS_NODE_TYPES.VIDEO]: 'canvas.nodeTypes.videoDesc',
+  [CANVAS_NODE_TYPES.GROUP]: 'canvas.nodeTypes.groupDesc',
+}
 
 export const CONNECTION_RULES = {
   [CANVAS_NODE_TYPES.TEXT]: [
@@ -33,10 +41,18 @@ export const getConnectableNodeTypes = (sourceType, side = 'right') => {
 }
 
 export const getCanvasNodeMeta = (type) => {
-  return NODE_LIBRARY.find((item) => item.type === type) || {
-    type,
-    label: '节点',
-    icon: 'tabler:circle',
-    description: '',
+  const item = NODE_LIBRARY.find((entry) => entry.type === type)
+  if (!item) {
+    return {
+      type,
+      label: getCanvasNodeTypeLabel(type),
+      icon: 'tabler:circle',
+      description: '',
+    }
+  }
+  return {
+    ...item,
+    label: getCanvasNodeTypeLabel(type),
+    description: NODE_TYPE_DESC_KEYS[type] ? i18n.global.t(NODE_TYPE_DESC_KEYS[type]) : '',
   }
 }

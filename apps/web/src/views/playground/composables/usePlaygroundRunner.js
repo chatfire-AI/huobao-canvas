@@ -1,6 +1,7 @@
 import { computed, onScopeDispose, ref } from 'vue'
 import { useRequestPipeline } from '../../../composables/useRequestPipeline'
 import { STATUS_TEXT_MAP, STATUS_TYPE_MAP, getEndpointDisplayType } from '../constants/index'
+import { i18n } from '@/locales'
 
 export function usePlaygroundRunner({
   modelData,
@@ -59,7 +60,7 @@ export function usePlaygroundRunner({
 
   const statusType = computed(() => STATUS_TYPE_MAP[status.value] || 'default')
   const statusText = computed(() => pollingTaskId.value
-    ? `任务处理中: ${pollingTaskId.value}`
+    ? i18n.global.t('playground.runner.taskProcessing', { taskId: pollingTaskId.value })
     : STATUS_TEXT_MAP[status.value] || 'Idle')
   const resultType = computed(() => {
     if (outputSchema.value?.displayType && outputSchema.value.displayType !== 'auto') {

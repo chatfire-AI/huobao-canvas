@@ -1,12 +1,13 @@
 <script setup>
 import { onMounted } from "vue"
 import { NConfigProvider } from "naive-ui"
-import { zhCN, dateZhCN } from "naive-ui"
 import NaiveProvider from "@/components/common/NaiveProvider/index.vue"
 import { useTheme } from "@/composables/useTheme"
+import { useLocale } from "@/composables/useLocale"
 import { syncSettingsMirror } from "@/api/canvasServer.js"
 
 const { theme, themeOverrides, isDark } = useTheme()
+const { naiveLocale, naiveDateLocale } = useLocale()
 
 // 服务端设置对账（Key/baseUrl 镜像）：服务端非空则覆盖本地（换浏览器拿到全部 Key），
 // 服务端空且本地有数据则上传。探测失败静默——本地模式行为不变。
@@ -21,8 +22,8 @@ onMounted(() => {
     :class="{ 'dark-mode': isDark }"
     :theme="theme"
     :theme-overrides="themeOverrides"
-    :locale="zhCN"
-    :date-locale="dateZhCN"
+    :locale="naiveLocale"
+    :date-locale="naiveDateLocale"
   >
     <NaiveProvider>
       <router-view />

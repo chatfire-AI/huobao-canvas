@@ -34,7 +34,7 @@
           ref="searchInput"
           v-model="query"
           type="text"
-          placeholder="搜索模型或厂商…"
+          :placeholder="$t('canvas.modelPicker.searchPlaceholder')"
           spellcheck="false"
         />
       </div>
@@ -66,7 +66,7 @@
             <svg-icon v-if="item.value === value" icon="tabler:check" class="model-option-check" />
           </button>
         </template>
-        <div v-if="!filteredGroups.length" class="model-picker-empty">无匹配模型</div>
+        <div v-if="!filteredGroups.length" class="model-picker-empty">{{ $t('canvas.modelPicker.noMatch') }}</div>
       </div>
     </div>
   </n-popover>
@@ -74,8 +74,12 @@
 
 <script setup>
 import { computed, nextTick, ref, watch } from 'vue'
+import { useI18n } from 'vue-i18n'
+import { i18n } from '@/locales'
 import { resolveModelIcon } from '@/utils/tools'
 import { useTheme } from '@/composables/useTheme'
+
+const { t } = useI18n()
 
 const { isDark } = useTheme()
 // 图标主题变体跟随明暗切换（computed 内引用，响应式重算）
@@ -84,7 +88,7 @@ const iconTheme = computed(() => (isDark.value ? 'dark' : 'light'))
 const props = defineProps({
   options: { type: Array, default: () => [] },
   value: { type: String, default: '' },
-  placeholder: { type: String, default: '选择模型' },
+  placeholder: { type: String, default: () => i18n.global.t('canvas.modelPicker.selectModel') },
   disabled: { type: Boolean, default: false },
 })
 const emit = defineEmits(['select'])
@@ -101,7 +105,7 @@ const FACTORY_LABELS = {
 
 const factoryLabel = (code) => {
   const key = String(code || '').trim().toLowerCase()
-  return FACTORY_LABELS[key] || (code ? String(code) : '其他')
+  return FACTORY_LABELS[key] || (code ? String(code) : t('canvas.modelPicker.otherFactory'))
 }
 
 // 归一化选项并保留原始顺序(上游已按上线时间倒序)

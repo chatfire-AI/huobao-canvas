@@ -2,9 +2,9 @@
   <div class="canvas-group-node">
     <div class="group-title">
       <span><svg-icon icon="tabler:category" /></span>
-      <NodeTitle :id="id" :title="data.title || '分组'" />
+      <NodeTitle :id="id" :title="data.title || $t('canvas.nodeTypes.group')" />
     </div>
-    <span class="group-layout">自由布局</span>
+    <span class="group-layout">{{ $t('canvas.groupNode.freeLayout') }}</span>
     <!-- 分组级连接桩：从组内所有节点批量连线 -->
     <Handle
       id="left"

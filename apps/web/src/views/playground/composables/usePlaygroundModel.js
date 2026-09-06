@@ -3,6 +3,7 @@ import { getModelByName, getModelByFullName, getModelTypes, getModelPage } from 
 import { getLocalCategoryData, getLocalModel } from '@/api/localCatalog'
 import { getCatalogMode } from '@/config'
 import { map2list } from '@/utils/tools'
+import { i18n } from '@/locales'
 
 export function usePlaygroundModel() {
   const modelNames = ref([])
@@ -16,14 +17,15 @@ export function usePlaygroundModel() {
   const drawerWidth = computed(() => window.innerWidth < 640 ? '100%' : 520)
 
   const MODEL_TYPE_TAG = {
-    '1': { label: '对话', type: 'info' },
-    '2': { label: '图片', type: 'success' },
-    '3': { label: '视频', type: 'warning' },
+    '1': { labelKey: 'playground.model.typeChat', type: 'info' },
+    '2': { labelKey: 'playground.model.typeImage', type: 'success' },
+    '3': { labelKey: 'playground.model.typeVideo', type: 'warning' },
   }
 
   const modelTypeLabel = (type) => {
     const first = String(type || '').split(',')[0].trim()
-    return MODEL_TYPE_TAG[first]?.label || '其他'
+    const labelKey = MODEL_TYPE_TAG[first]?.labelKey
+    return labelKey ? i18n.global.t(labelKey) : i18n.global.t('playground.model.other')
   }
 
   const modelTypeTagType = (type) => {
@@ -44,7 +46,7 @@ export function usePlaygroundModel() {
           if (query && !model.name.toLowerCase().includes(query)
               && !(model.fullName || '').toLowerCase().includes(query)
               && !(model.factory || '').toLowerCase().includes(query)) continue
-          const key = model.factory || '其他'
+          const key = model.factory || i18n.global.t('playground.model.other')
           const dedupKey = `${key}:${model.name}`
           if (seen.has(dedupKey)) continue
           seen.add(dedupKey)
@@ -110,7 +112,7 @@ export function usePlaygroundModel() {
         if (typeModels.length > 0) {
           const factoryMap = {}
           typeModels.forEach(model => {
-            const factory = model.factory || '其他'
+            const factory = model.factory || i18n.global.t('playground.model.other')
             if (!factoryMap[factory]) {
               factoryMap[factory] = []
             }

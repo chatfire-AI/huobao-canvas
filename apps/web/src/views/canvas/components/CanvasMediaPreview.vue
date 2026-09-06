@@ -7,14 +7,14 @@
         @click="close"
         @keydown.esc="close"
       >
-        <button type="button" class="preview-close" title="关闭 (Esc)" @click.stop="close">
+        <button type="button" class="preview-close" :title="$t('canvas.preview.closeTitle')" @click.stop="close">
           <svg-icon icon="tabler:x" />
         </button>
         <img
           v-if="type === 'image'"
           class="preview-media"
           :src="url"
-          alt="预览"
+          :alt="$t('canvas.preview.alt')"
           @click.stop
         />
         <video

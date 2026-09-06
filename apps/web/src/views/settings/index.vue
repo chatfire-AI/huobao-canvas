@@ -1,6 +1,7 @@
 <script setup>
 import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
+import { useI18n } from 'vue-i18n'
 import {
   listProviders, getProvider, buildProviderAuthHeaders, providerTestUrl,
   effectiveProviderBaseUrl,
@@ -15,14 +16,16 @@ import {
 } from '@/config'
 import {
   readCatalogOverrides, setModelDisabled, setProviderHidden,
-  upsertCustomModel, removeCustomModel, MODEL_TYPE_MAP,
+  upsertCustomModel, removeCustomModel, MODEL_TYPE_MAP, getLocalModelTypes,
 } from '@/api/localCatalog'
 import { protocolRegistry } from '@/views/playground/protocols/registry.js'
 import { appFetch } from '@/utils/desktopBridge.js'
 import { isServerRunMode, testProviderOnServer } from '@/api/canvasServer.js'
 import { resolveModelIcon } from '@/utils/tools'
 import { useTheme } from '@/composables/useTheme'
+import LocaleSwitcher from '@/components/common/LocaleSwitcher.vue'
 
+const { t } = useI18n()
 const { isDark } = useTheme()
 // 厂商图标主题变体跟随明暗切换
 const iconTheme = computed(() => (isDark.value ? 'dark' : 'light'))
@@ -57,7 +60,7 @@ async function startDownload() {
   try {
     updateState.value = await desktopBridge.downloadUpdate()
   } catch (error) {
-    updateState.value = { ...updateState.value, status: 'error', error: error?.message || '下载失败' }
+    updateState.value = { ...updateState.value, status: 'error', error: error?.message || t('settings.desktop.downloadFailed') }
   }
 }
 
@@ -99,7 +102,7 @@ const GATEWAY_PROVIDER_PREFIX = {
 const chatfireQuickSetup = async () => {
   const key = cfQuickKey.value.trim()
   if (!key) {
-    window.$message?.warning('请粘贴 Huobao API Key')
+    window.$message?.warning(t('settings.chatfire.pasteKeyRequired'))
     return
   }
   cfQuickTesting.value = true
@@ -107,7 +110,7 @@ const chatfireQuickSetup = async () => {
     // 相对路径走同源：浏览器经 vite proxy / nginx，Electron 内经内嵌 server 的 proxy 路由
     const resp = await appFetch('/v1/models', { headers: { Authorization: `Bearer ${key}` } })
     if (!resp.ok) {
-      window.$message?.warning(`Key 校验返回 ${resp.status}，已保存，请确认 Key 有效`)
+      window.$message?.warning(t('settings.chatfire.keyCheckReturned', { status: resp.status }))
     }
     setGatewayBaseUrl(PUBLIC_API_BASE_URL)
     addApiKey(key, 'Huobao')
@@ -123,11 +126,11 @@ const chatfireQuickSetup = async () => {
     // 同步刷新厂商卡片的 baseUrl 输入框（baseInputs 是本地态，不随 localStorage 自动更新）
     baseInputs.value = Object.fromEntries(providers.map((p) => [p.id, effectiveProviderBaseUrl(p)]))
     cfQuickKey.value = ''
-    window.$message?.success('已接入 Huobao：12 家厂商已自动配置好 Key 与网关地址，返回画布即可使用')
+    window.$message?.success(t('settings.chatfire.setupSuccess'))
   } catch (error) {
     console.error('[chatfireQuickSetup]', error)
     const detail = [error?.message, error?.stack?.split('\n')[1]?.trim()].filter(Boolean).join(' @ ')
-    window.$message?.error(`连接失败：${detail || error}（请检查网络后重试）`, { duration: 8000 })
+    window.$message?.error(t('settings.chatfire.connectFailed', { detail: detail || error }), { duration: 8000 })
   } finally {
     cfQuickTesting.value = false
   }
@@ -164,12 +167,12 @@ const handleProviderHidden = (id, hidden) => {
 const saveProviderKey = (id) => {
   const key = (keyInputs.value[id] || '').trim()
   if (!key) {
-    window.$message?.warning('请输入 API Key')
+    window.$message?.warning(t('settings.providers.enterApiKey'))
     return
   }
   providerKeys.value = setProviderApiKey(id, key)
   keyInputs.value[id] = ''
-  window.$message?.success('API Key 已保存')
+  window.$message?.success(t('settings.providers.keySaved'))
 }
 
 const clearProviderKey = (id) => {
@@ -181,7 +184,7 @@ const saveProviderBase = (provider) => {
   const value = (baseInputs.value[provider.id] || '').trim().replace(/\/$/, '')
   providerKeys.value = setProviderBaseUrl(provider.id, value === provider.baseUrl ? '' : value)
   baseInputs.value[provider.id] = effectiveProviderBaseUrl(provider)
-  window.$message?.success('baseUrl 已保存')
+  window.$message?.success(t('settings.providers.baseUrlSaved'))
 }
 
 const resetProviderBase = (provider) => {
@@ -197,14 +200,14 @@ const maskKey = (key) => {
 const testProvider = async (provider) => {
   const key = providerKeys.value[provider.id]?.key || ''
   if (!key) {
-    window.$message?.warning('请先保存该厂商的 API Key')
+    window.$message?.warning(t('settings.providers.saveKeyFirst'))
     return
   }
   const override = (baseInputs.value[provider.id] || '').trim().replace(/\/$/, '')
   const useOverride = override && override !== provider.baseUrl
   const url = providerTestUrl(provider, useOverride ? override : '')
   if (!url) {
-    window.$message?.info('该厂商暂无连通测试端点，保存即可')
+    window.$message?.info(t('settings.providers.noTestEndpoint'))
     return
   }
   testing.value[provider.id] = true
@@ -213,17 +216,17 @@ const testProvider = async (provider) => {
     if (await isServerRunMode()) {
       const result = await testProviderOnServer(provider.id)
       testResults.value[provider.id] = result.ok ? 'ok' : (result.status ? `HTTP ${result.status}` : 'fail')
-      if (result.ok) window.$message?.success(`${provider.label} 连通正常`)
-      else window.$message?.warning(`${provider.label} ${result.message || '连通失败'}，请检查 Key`)
+      if (result.ok) window.$message?.success(t('settings.providers.testOkMessage', { label: provider.label }))
+      else window.$message?.warning(t('settings.providers.testFailed', { label: provider.label, detail: result.message || t('settings.providers.testFailedDefault') }))
       return
     }
     const resp = await appFetch(url, { headers: buildProviderAuthHeaders(provider, key) })
     testResults.value[provider.id] = resp.ok ? 'ok' : `HTTP ${resp.status}`
-    if (resp.ok) window.$message?.success(`${provider.label} 连通正常`)
-    else window.$message?.warning(`${provider.label} 返回 ${resp.status}，请检查 Key`)
+    if (resp.ok) window.$message?.success(t('settings.providers.testOkMessage', { label: provider.label }))
+    else window.$message?.warning(t('settings.providers.testHttpError', { label: provider.label, status: resp.status }))
   } catch (error) {
     testResults.value[provider.id] = 'fail'
-    window.$message?.error(`连通测试失败：${error?.message || error}`)
+    window.$message?.error(t('settings.providers.testError', { detail: error?.message || error }))
   } finally {
     testing.value[provider.id] = false
   }
@@ -302,11 +305,11 @@ const openEditModel = (row, providerId) => {
 const saveModel = () => {
   const f = modelForm.value
   if (!f.name.trim()) {
-    window.$message?.warning('请填写模型名称')
+    window.$message?.warning(t('settings.models.nameRequired'))
     return
   }
   if (!f.path.trim()) {
-    window.$message?.warning('请填写端点路径')
+    window.$message?.warning(t('settings.models.pathRequired'))
     return
   }
   let parsedSchema = null
@@ -314,7 +317,7 @@ const saveModel = () => {
     try {
       parsedSchema = JSON.parse(f.schemaJson)
     } catch (error) {
-      window.$message?.error(`Schema JSON 解析失败：${error.message}`)
+      window.$message?.error(t('settings.models.schemaParseFailed', { detail: error.message }))
       return
     }
   }
@@ -325,7 +328,7 @@ const saveModel = () => {
     providerId: f.providerId,
     providerCode: f.providerId,
     type: f.type,
-    typeName: MODEL_TYPE_MAP[f.type] || '对话',
+    typeName: MODEL_TYPE_MAP[f.type] || MODEL_TYPE_MAP['1'],
     enable: true,
     launchTime: new Date().toISOString().slice(0, 10),
     endpoints: [{
@@ -340,15 +343,15 @@ const saveModel = () => {
   })
   overrides.value = readCatalogOverrides()
   showModelEditor.value = false
-  window.$message?.success('模型已保存')
+  window.$message?.success(t('settings.models.saved'))
 }
 
 const deleteModel = (name) => {
   window.$dialog?.warning({
-    title: '删除模型配置',
-    content: `确认删除 ${name} 的自定义配置？（预设模型删除后恢复为内置定义）`,
-    positiveText: '删除',
-    negativeText: '取消',
+    title: t('settings.models.deleteTitle'),
+    content: t('settings.models.deleteContent', { name }),
+    positiveText: t('common.delete'),
+    negativeText: t('common.cancel'),
     onPositiveClick: () => {
       removeCustomModel(name)
       overrides.value = readCatalogOverrides()
@@ -357,6 +360,8 @@ const deleteModel = (name) => {
 }
 
 const typeTagType = (type) => ({ '1': 'info', '2': 'success', '3': 'warning' }[String(type).split(',')[0]] || 'default')
+// 类型 tag 展示标签按当前语言取（数据契约 MODEL_TYPE_MAP 保持中文，仅展示层翻译）
+const modelTypeDisplay = (type) => getLocalModelTypes()[String(type).split(',')[0]] || type
 </script>
 
 <template>
@@ -365,11 +370,11 @@ const typeTagType = (type) => ({ '1': 'info', '2': 'success', '3': 'warning' }[S
     <aside class="settings-nav">
       <button type="button" class="back-btn" @click="router.push('/canvas')">
         <SvgIcon icon="tabler:arrow-left" />
-        <span>返回画布</span>
+        <span>{{ $t('settings.nav.backToCanvas') }}</span>
       </button>
 
       <div class="nav-group">
-        <div class="nav-group-title">聚合网关</div>
+        <div class="nav-group-title">{{ $t('settings.nav.gatewayGroup') }}</div>
         <button
           type="button"
           class="nav-item nav-chatfire"
@@ -378,12 +383,12 @@ const typeTagType = (type) => ({ '1': 'info', '2': 'success', '3': 'warning' }[S
         >
           <img src="/icons/huobao.png" class="nav-icon-img" alt="火宝 Huobao" />
           <span class="nav-label">火宝 Huobao</span>
-          <span v-if="cfCurrentKey && catalogMode === 'gateway'" class="status-dot on" title="已接入"></span>
+          <span v-if="cfCurrentKey && catalogMode === 'gateway'" class="status-dot on" :title="$t('settings.chatfire.connected')"></span>
         </button>
       </div>
 
       <div class="nav-group nav-providers">
-        <div class="nav-group-title">厂商官方直连</div>
+        <div class="nav-group-title">{{ $t('settings.nav.providersGroup') }}</div>
         <button
           v-for="p in providers" :key="p.id"
           type="button"
@@ -394,13 +399,13 @@ const typeTagType = (type) => ({ '1': 'info', '2': 'success', '3': 'warning' }[S
           <img v-if="p.icon" :src="resolveModelIcon(p.icon, iconTheme)" class="nav-icon-img" :alt="p.label" />
           <span v-else class="nav-icon">{{ p.label.slice(0, 1) }}</span>
           <span class="nav-label">{{ p.label }}</span>
-          <span v-if="providerKeys[p.id]?.key" class="status-dot on" title="已配置 Key"></span>
+          <span v-if="providerKeys[p.id]?.key" class="status-dot on" :title="$t('settings.nav.keyConfigured')"></span>
         </button>
       </div>
 
       <!-- 桌面版（Electron preload 注入 canvasDesktop 时可见） -->
       <div v-if="desktopBridge" class="nav-group">
-        <div class="nav-group-title">桌面版</div>
+        <div class="nav-group-title">{{ $t('settings.nav.desktopGroup') }}</div>
         <button
           type="button"
           class="nav-item"
@@ -408,9 +413,13 @@ const typeTagType = (type) => ({ '1': 'info', '2': 'success', '3': 'warning' }[S
           @click="activeSection = 'desktop'"
         >
           <span class="nav-icon"><SvgIcon icon="tabler:device-desktop" /></span>
-          <span class="nav-label">应用更新</span>
-          <span v-if="updateState.status === 'available'" class="status-dot on" title="发现新版本"></span>
+          <span class="nav-label">{{ $t('settings.nav.appUpdate') }}</span>
+          <span v-if="updateState.status === 'available'" class="status-dot on" :title="$t('settings.desktop.newVersionFound')"></span>
         </button>
+      </div>
+
+      <div class="nav-footer">
+        <LocaleSwitcher />
       </div>
     </aside>
 
@@ -421,24 +430,23 @@ const typeTagType = (type) => ({ '1': 'info', '2': 'success', '3': 'warning' }[S
         <div class="pane-head">
           <img src="/icons/huobao.png" class="pane-icon" alt="火宝 Huobao" />
           <h1>火宝 Huobao</h1>
-          <n-tag v-if="cfCurrentKey" type="success">已接入</n-tag>
+          <n-tag v-if="cfCurrentKey" type="success">{{ $t('settings.chatfire.connected') }}</n-tag>
         </div>
         <p class="pane-desc">
-          一个 Key 使用全部 10+ 厂商的聚合模型，按量计费，无需逐厂商注册。
-          粘贴 Key 一键接入，自动为 11 家厂商配置好网关地址与 Key。
-          <a href="https://firemux.com" target="_blank" rel="noopener">前往 firemux.com 注册获取 Key →</a>
+          {{ $t('settings.chatfire.desc') }}
+          <a href="https://firemux.com" target="_blank" rel="noopener">{{ $t('settings.chatfire.registerLink') }}</a>
         </p>
 
         <div class="card">
           <div class="field-row">
-            <span class="field-label">网关地址</span>
+            <span class="field-label">{{ $t('settings.chatfire.gatewayUrl') }}</span>
             <span class="saved-mask">{{ PUBLIC_API_BASE_URL }}</span>
           </div>
           <div class="field-row">
             <span class="field-label">API Key</span>
             <template v-if="cfCurrentKey">
               <span class="saved-mask">{{ maskKey(cfCurrentKey) }}</span>
-              <n-button text type="error" size="small" @click="chatfireDisconnect">断开接入</n-button>
+              <n-button text type="error" size="small" @click="chatfireDisconnect">{{ $t('settings.chatfire.disconnect') }}</n-button>
             </template>
             <template v-else>
               <n-input
@@ -448,7 +456,7 @@ const typeTagType = (type) => ({ '1': 'info', '2': 'success', '3': 'warning' }[S
                 placeholder="sk-..."
                 @keyup.enter="chatfireQuickSetup"
               />
-              <n-button type="primary" :loading="cfQuickTesting" @click="chatfireQuickSetup">一键接入</n-button>
+              <n-button type="primary" :loading="cfQuickTesting" @click="chatfireQuickSetup">{{ $t('settings.chatfire.quickSetup') }}</n-button>
             </template>
           </div>
         </div>
@@ -459,9 +467,9 @@ const typeTagType = (type) => ({ '1': 'info', '2': 'success', '3': 'warning' }[S
         <div class="pane-head">
           <img v-if="activeProvider.icon" :src="resolveModelIcon(activeProvider.icon, iconTheme)" class="pane-icon" :alt="activeProvider.label" />
           <h1>{{ activeProvider.label }}</h1>
-          <a :href="activeProvider.docsUrl" target="_blank" rel="noopener" class="docs-link">官方文档 →</a>
+          <a :href="activeProvider.docsUrl" target="_blank" rel="noopener" class="docs-link">{{ $t('settings.providers.docsLink') }}</a>
           <div class="pane-head-right">
-            <span class="switch-label">启用</span>
+            <span class="switch-label">{{ $t('settings.providers.enable') }}</span>
             <n-switch
               :value="!isProviderHidden(activeProvider.id)"
               @update:value="(v) => handleProviderHidden(activeProvider.id, !v)"
@@ -469,51 +477,51 @@ const typeTagType = (type) => ({ '1': 'info', '2': 'success', '3': 'warning' }[S
           </div>
         </div>
         <p class="pane-desc">
-          官方地址 <code>{{ activeProvider.baseUrl }}</code>（默认经内置反代访问）。
-          baseUrl 可改为自己的中转地址：绝对地址浏览器直连（CORS 自负），相对路径走同源。
+          {{ $t('settings.providers.descOfficial') }} <code>{{ activeProvider.baseUrl }}</code>{{ $t('settings.providers.descProxyNote') }}
+          {{ $t('settings.providers.descCustom') }}
         </p>
 
         <!-- 连接配置 -->
         <div class="card">
-          <div class="card-title">连接</div>
+          <div class="card-title">{{ $t('settings.providers.connection') }}</div>
           <div class="field-row">
             <span class="field-label">baseUrl</span>
             <n-input v-model:value="baseInputs[activeProvider.id]" :placeholder="activeProvider.baseUrl" />
-            <n-button @click="saveProviderBase(activeProvider)">保存</n-button>
+            <n-button @click="saveProviderBase(activeProvider)">{{ $t('common.save') }}</n-button>
             <n-button
               v-if="baseInputs[activeProvider.id] && baseInputs[activeProvider.id] !== activeProvider.baseUrl"
               text type="warning"
               @click="resetProviderBase(activeProvider)"
-            >重置</n-button>
+            >{{ $t('common.reset') }}</n-button>
           </div>
           <div class="field-row">
             <span class="field-label">API Key</span>
             <template v-if="providerKeys[activeProvider.id]?.key">
               <span class="saved-mask">{{ maskKey(providerKeys[activeProvider.id].key) }}</span>
-              <n-button size="small" :loading="testing[activeProvider.id]" @click="testProvider(activeProvider)">测试连通</n-button>
-              <span v-if="testResults[activeProvider.id] === 'ok'" class="test-ok">✓ 正常</span>
+              <n-button size="small" :loading="testing[activeProvider.id]" @click="testProvider(activeProvider)">{{ $t('settings.providers.testConnection') }}</n-button>
+              <span v-if="testResults[activeProvider.id] === 'ok'" class="test-ok">{{ $t('settings.providers.testOkTag') }}</span>
               <span v-else-if="testResults[activeProvider.id]" class="test-fail">{{ testResults[activeProvider.id] }}</span>
-              <n-button text type="error" size="small" @click="clearProviderKey(activeProvider.id)">清除</n-button>
+              <n-button text type="error" size="small" @click="clearProviderKey(activeProvider.id)">{{ $t('settings.providers.clear') }}</n-button>
             </template>
             <template v-else>
               <n-input
                 v-model:value="keyInputs[activeProvider.id]"
                 type="password"
                 show-password-on="click"
-                placeholder="粘贴 API Key"
+                :placeholder="$t('settings.providers.keyPlaceholder')"
                 @keyup.enter="saveProviderKey(activeProvider.id)"
               />
-              <n-button type="primary" @click="saveProviderKey(activeProvider.id)">保存</n-button>
+              <n-button type="primary" @click="saveProviderKey(activeProvider.id)">{{ $t('common.save') }}</n-button>
             </template>
           </div>
-          <p class="card-hint">Key 仅保存在当前浏览器 localStorage，不会上传到任何服务器。</p>
+          <p class="card-hint">{{ $t('settings.providers.keyHint') }}</p>
         </div>
 
         <!-- 模型管理 -->
         <div class="card">
           <div class="card-head">
-            <div class="card-title">模型（{{ modelsOfProvider(activeProvider.id).length }}）</div>
-            <n-button size="small" @click="openAddModel(activeProvider.id)">+ 添加模型</n-button>
+            <div class="card-title">{{ $t('settings.models.sectionTitle', { count: modelsOfProvider(activeProvider.id).length }) }}</div>
+            <n-button size="small" @click="openAddModel(activeProvider.id)">{{ $t('settings.models.addModel') }}</n-button>
           </div>
           <div
             v-for="row in modelsOfProvider(activeProvider.id)" :key="row.model.name"
@@ -524,18 +532,18 @@ const typeTagType = (type) => ({ '1': 'info', '2': 'success', '3': 'warning' }[S
               <span class="model-id">{{ row.model.name }}</span>
             </div>
             <n-tag size="tiny" :type="typeTagType(row.model.type)">
-              {{ MODEL_TYPE_MAP[String(row.model.type).split(',')[0]] || row.model.type }}
+              {{ modelTypeDisplay(row.model.type) }}
             </n-tag>
-            <n-tag v-if="row.overridden" size="tiny" type="warning">已改</n-tag>
-            <n-tag v-else-if="row.custom" size="tiny" type="info">自定义</n-tag>
+            <n-tag v-if="row.overridden" size="tiny" type="warning">{{ $t('settings.models.overridden') }}</n-tag>
+            <n-tag v-else-if="row.custom" size="tiny" type="info">{{ $t('settings.models.custom') }}</n-tag>
             <n-switch
               size="small"
               :value="!row.disabled"
               @update:value="(v) => handleModelDisabled(row.model.name, !v)"
             />
-            <n-button text size="tiny" @click="openEditModel(row, activeProvider.id)">编辑</n-button>
+            <n-button text size="tiny" @click="openEditModel(row, activeProvider.id)">{{ $t('common.edit') }}</n-button>
             <n-button v-if="row.custom" text type="error" size="tiny" @click="deleteModel(row.model.name)">
-              {{ row.overridden ? '恢复预设' : '删除' }}
+              {{ row.overridden ? $t('settings.models.restorePreset') : $t('common.delete') }}
             </n-button>
           </div>
         </div>
@@ -544,77 +552,77 @@ const typeTagType = (type) => ({ '1': 'info', '2': 'success', '3': 'warning' }[S
       <!-- 桌面版：应用更新 -->
       <section v-else-if="activeSection === 'desktop' && desktopBridge" class="pane">
         <div class="pane-head">
-          <h1>应用更新</h1>
-          <n-tag v-if="updateState.status === 'up-to-date'" type="success">已是最新</n-tag>
-          <n-tag v-else-if="updateState.status === 'available'" type="warning">发现新版本</n-tag>
+          <h1>{{ $t('settings.nav.appUpdate') }}</h1>
+          <n-tag v-if="updateState.status === 'up-to-date'" type="success">{{ $t('settings.desktop.upToDate') }}</n-tag>
+          <n-tag v-else-if="updateState.status === 'available'" type="warning">{{ $t('settings.desktop.newVersionFound') }}</n-tag>
         </div>
         <p class="pane-desc">
-          当前版本 v{{ updateState.currentVersion || '—' }}（Electron {{ desktopBridge.versions?.electron }}）。
-          更新包来自 GitHub Releases，下载后自动校验完整性（sha256）。
+          {{ $t('settings.desktop.descCurrent', { version: updateState.currentVersion || '—', electron: desktopBridge.versions?.electron }) }}
+          {{ $t('settings.desktop.descSource') }}
         </p>
 
         <div class="card">
           <div class="field-row">
-            <span class="field-label">版本检查</span>
-            <n-button type="primary" :loading="updateState.status === 'checking'" @click="checkForUpdate">检查更新</n-button>
-            <span v-if="updateState.status === 'up-to-date'" class="test-ok">✓ 当前已是最新版本</span>
-            <span v-else-if="updateState.status === 'available'">新版本 v{{ updateState.latestVersion }}</span>
+            <span class="field-label">{{ $t('settings.desktop.versionCheck') }}</span>
+            <n-button type="primary" :loading="updateState.status === 'checking'" @click="checkForUpdate">{{ $t('settings.desktop.checkUpdate') }}</n-button>
+            <span v-if="updateState.status === 'up-to-date'" class="test-ok">{{ $t('settings.desktop.upToDateDetail') }}</span>
+            <span v-else-if="updateState.status === 'available'">{{ $t('settings.desktop.newVersion', { version: updateState.latestVersion }) }}</span>
             <span v-else-if="updateState.status === 'error'" class="test-fail">{{ updateState.error }}</span>
           </div>
           <div
             v-if="['available', 'downloading', 'downloaded'].includes(updateState.status)"
             class="field-row"
           >
-            <span class="field-label">更新 v{{ updateState.latestVersion }}</span>
+            <span class="field-label">{{ $t('settings.desktop.updateTo', { version: updateState.latestVersion }) }}</span>
             <n-progress
               v-if="updateState.status === 'downloading'"
               type="line"
               :percentage="updateProgress"
               style="flex: 1"
             />
-            <n-button v-if="updateState.status === 'available'" @click="startDownload">下载更新</n-button>
-            <n-button v-if="updateState.status === 'downloaded'" type="primary" @click="applyUpdate">安装并重启</n-button>
+            <n-button v-if="updateState.status === 'available'" @click="startDownload">{{ $t('settings.desktop.downloadUpdate') }}</n-button>
+            <n-button v-if="updateState.status === 'downloaded'" type="primary" @click="applyUpdate">{{ $t('settings.desktop.installAndRestart') }}</n-button>
           </div>
         </div>
       </section>
     </main>
 
     <!-- 模型编辑弹窗 -->
-    <n-modal v-model:show="showModelEditor" preset="card" :title="editingModel ? `编辑模型 ${editingModel}` : '添加模型'" style="width: 640px">
+    <n-modal v-model:show="showModelEditor" preset="card" :title="editingModel ? $t('settings.models.editTitle', { name: editingModel }) : $t('settings.models.addTitle')" style="width: 640px">
       <n-form label-placement="left" label-width="90">
-        <n-form-item label="模型名称">
-          <n-input v-model:value="modelForm.name" :disabled="!!editingModel" placeholder="厂商 API 实际模型名，如 gpt-5.1" />
+        <n-form-item :label="$t('settings.models.fieldName')">
+          <n-input v-model:value="modelForm.name" :disabled="!!editingModel" :placeholder="$t('settings.models.namePlaceholder')" />
         </n-form-item>
-        <n-form-item label="厂商">
+        <n-form-item :label="$t('settings.models.fieldProvider')">
           <n-select v-model:value="modelForm.providerId" :disabled="!!editingModel" :options="providers.map(p => ({ label: p.label, value: p.id }))" />
         </n-form-item>
-        <n-form-item label="能力类型">
+        <n-form-item :label="$t('settings.models.fieldType')">
           <n-radio-group v-model:value="modelForm.type">
-            <n-radio-button value="1">对话</n-radio-button>
-            <n-radio-button value="2">图片</n-radio-button>
-            <n-radio-button value="3">视频</n-radio-button>
+            <n-radio-button value="1">{{ $t('settings.models.typeChat') }}</n-radio-button>
+            <n-radio-button value="2">{{ $t('settings.models.typeImage') }}</n-radio-button>
+            <n-radio-button value="3">{{ $t('settings.models.typeVideo') }}</n-radio-button>
           </n-radio-group>
         </n-form-item>
-        <n-form-item label="端点路径">
-          <n-input v-model:value="modelForm.path" placeholder="/official/{厂商}/... 或 /v1/..." />
+        <n-form-item :label="$t('settings.models.fieldPath')">
+          <n-input v-model:value="modelForm.path" :placeholder="$t('settings.models.pathPlaceholder')" />
         </n-form-item>
-        <n-form-item label="协议格式">
+        <n-form-item :label="$t('settings.models.fieldProtocol')">
           <n-select v-model:value="modelForm.protocolKey" :options="Object.keys(protocolRegistry).map(k => ({ label: k, value: k }))" />
         </n-form-item>
-        <n-form-item label="响应模式">
+        <n-form-item :label="$t('settings.models.fieldResponseMode')">
           <n-radio-group v-model:value="modelForm.responseMode">
-            <n-radio-button value="SYNC">同步</n-radio-button>
-            <n-radio-button value="ASYNC">异步任务</n-radio-button>
+            <n-radio-button value="SYNC">{{ $t('settings.models.sync') }}</n-radio-button>
+            <n-radio-button value="ASYNC">{{ $t('settings.models.async') }}</n-radio-button>
           </n-radio-group>
         </n-form-item>
-        <n-form-item label="能力">
+        <n-form-item :label="$t('settings.models.fieldCapability')">
           <n-radio-group v-model:value="modelForm.capability">
             <n-radio-button value="CHAT">CHAT</n-radio-button>
             <n-radio-button value="IMAGE">IMAGE</n-radio-button>
             <n-radio-button value="VIDEO">VIDEO</n-radio-button>
           </n-radio-group>
         </n-form-item>
-        <n-form-item label="参数 Schema">
+        <n-form-item :label="$t('settings.models.fieldSchema')">
           <n-input
             v-model:value="modelForm.schemaJson"
             type="textarea"
@@ -625,8 +633,8 @@ const typeTagType = (type) => ({ '1': 'info', '2': 'success', '3': 'warning' }[S
       </n-form>
       <template #footer>
         <div class="editor-footer">
-          <n-button @click="showModelEditor = false">取消</n-button>
-          <n-button type="primary" @click="saveModel">保存</n-button>
+          <n-button @click="showModelEditor = false">{{ $t('common.cancel') }}</n-button>
+          <n-button type="primary" @click="saveModel">{{ $t('common.save') }}</n-button>
         </div>
       </template>
     </n-modal>
@@ -674,6 +682,14 @@ const typeTagType = (type) => ({ '1': 'info', '2': 'success', '3': 'warning' }[S
   display: flex;
   flex-direction: column;
   gap: 2px;
+}
+
+.nav-footer {
+  margin-top: auto;
+  padding-top: 12px;
+  border-top: 1px solid var(--cf-border);
+  display: flex;
+  justify-content: flex-start;
 }
 
 .nav-providers {

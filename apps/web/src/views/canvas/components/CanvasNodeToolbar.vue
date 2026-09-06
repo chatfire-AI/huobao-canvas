@@ -7,7 +7,7 @@
   >
     <button v-if="supportsMedia && resultUrl" type="button" @click="openPreview">
       <svg-icon icon="tabler:external-link" />
-      预览
+      {{ $t('canvas.nodeToolbar.preview') }}
     </button>
     <a
       v-if="supportsMedia"
@@ -21,11 +21,11 @@
       @click="handleDownload"
     >
       <svg-icon icon="tabler:download" />
-      下载
+      {{ $t('common.download') }}
     </a>
     <button class="delete-action" type="button" @click="emit('delete')">
       <svg-icon icon="tabler:trash" />
-      删除
+      {{ $t('common.delete') }}
     </button>
   </div>
 </template>

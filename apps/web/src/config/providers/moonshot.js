@@ -1,4 +1,4 @@
-import { ep, model, schema, messagesField, maxTokensField } from './_shared.js'
+import { ep, model, schema, messagesField, maxTokensField, t } from './_shared.js'
 
 const provider = {
   id: 'moonshot',
@@ -13,7 +13,10 @@ const provider = {
 
 // Kimi K2.6/K2.7/K3 全系 temperature 不可修改（K3 传非默认值会报错），schema 均不含采样参数；
 // 三者均支持图像/视频多模态输入
-provider.models = [
+// models 用 getter 定义：每次读取重建，schema 内文案（t()）跟随语言切换
+Object.defineProperty(provider, 'models', {
+  enumerable: true,
+  get: () => [
   model(provider, {
     name: 'kimi-k3',
     fullName: 'Kimi K3',
@@ -47,6 +50,7 @@ provider.models = [
       chatConfig: { supportImage: true },
     }),
   }),
-]
+  ],
+})
 
 export default provider

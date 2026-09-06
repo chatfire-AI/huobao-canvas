@@ -1,5 +1,5 @@
 import { ref, computed } from 'vue'
-import { getEndpointBehavior, DEFAULT_CHAT_PARAMS, DEFAULT_IMAGE_PARAMS, DEFAULT_VIDEO_PARAMS } from '../constants/index'
+import { getEndpointBehavior, getDefaultChatParams, getDefaultImageParams, getDefaultVideoParams } from '../constants/index'
 import { endpointCapability, resolveModelEndpoints } from '../utils/modelEndpoints'
 import { mergeEndpointSchema } from '../utils/mergeEndpointSchema.js'
 import { createInputTransformEngine, getNestedValue } from '@/utils/inputTransform.js'
@@ -32,11 +32,13 @@ export function usePlaygroundSchema() {
     if (Array.isArray(endpoints) && endpoints.length > 0) return endpoints
     const typeName = modelData.value.typeName || ''
     const legacy = modelData.value.endpoint
-    if (typeName.includes('视频'))
+    // 优先按类型码（'1'对话/'2'图片/'3'视频）判定；typeName 已本地化，中文匹配仅兜底历史数据
+    const typeCodes = String(modelData.value.type || '').split(',').map((s) => s.trim())
+    if (typeCodes.includes('3') || typeName.includes('视频'))
       return [{ path: legacy ? `/v1${legacy}` : '/v1/videos/generations', contentType: 'JSON', queryPath: '/v1/videos/{taskId}' }]
-    if (typeName.includes('图片'))
+    if (typeCodes.includes('2') || typeName.includes('图片'))
       return [{ path: legacy ? `/v1${legacy}` : '/v1/images/generations', contentType: 'JSON' }]
-    if (typeName.includes('对话') || typeName.includes('文本'))
+    if (typeCodes.includes('1') || typeName.includes('对话') || typeName.includes('文本'))
       return [{ path: '/v1/chat/completions', contentType: 'JSON' }]
     if (legacy) return [{ path: `/v1${legacy}`, contentType: 'JSON' }]
     return [{ path: '/v1/chat/completions', contentType: 'JSON' }]
@@ -124,13 +126,13 @@ export function usePlaygroundSchema() {
       const capability = endpointCapability(selectedEndpoint.value)
       const { behavior } = getEndpointBehavior(endpointPath, capability)
       if (behavior === 'chat') {
-        schemaFields.value = DEFAULT_CHAT_PARAMS
+        schemaFields.value = getDefaultChatParams()
       } else if (capability === 'image' || /image/.test(endpointPath)) {
-        schemaFields.value = DEFAULT_IMAGE_PARAMS
+        schemaFields.value = getDefaultImageParams()
       } else if (capability === 'video' || behavior === 'async' || /video/.test(endpointPath)) {
-        schemaFields.value = DEFAULT_VIDEO_PARAMS
+        schemaFields.value = getDefaultVideoParams()
       } else {
-        schemaFields.value = DEFAULT_CHAT_PARAMS
+        schemaFields.value = getDefaultChatParams()
       }
     } else {
       schemaFields.value = merged.input

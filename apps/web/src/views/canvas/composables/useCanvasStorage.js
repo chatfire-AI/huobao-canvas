@@ -1,4 +1,5 @@
 import { computed, reactive, ref } from 'vue'
+import { i18n } from '@/locales'
 import {
   CANVAS_CURRENT_PROJECT_KEY,
   DEFAULT_CANVAS_PROJECT_ID,
@@ -10,6 +11,7 @@ import {
 import { createServerStore } from '@/api/canvasServer.js'
 
 const nowIso = () => new Date().toISOString()
+const t = (key, args) => i18n.global.t(key, args)
 const RESULT_OWNERSHIP_KEYS = [
   'resultOwnerNodeId',
   'resultIndex',
@@ -53,12 +55,14 @@ function createCanvasProject(name) {
   const timestamp = nowIso()
   return {
     id: `canvas_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`,
-    name: name || `画布 ${new Date().toLocaleString('zh-CN', {
-      month: '2-digit',
-      day: '2-digit',
-      hour: '2-digit',
-      minute: '2-digit',
-    })}`,
+    name: name || t('canvas.project.nameWithTime', {
+      time: new Date().toLocaleString(i18n.global.locale.value, {
+        month: '2-digit',
+        day: '2-digit',
+        hour: '2-digit',
+        minute: '2-digit',
+      }),
+    }),
     createdAt: timestamp,
     updatedAt: timestamp,
   }
@@ -67,10 +71,10 @@ function createCanvasProject(name) {
 function getNextProjectName(projects) {
   const names = new Set(projects.map((item) => item.name))
   let index = projects.length + 1
-  while (names.has(`画布 ${index}`)) {
+  while (names.has(t('canvas.project.defaultNewName', { n: index }))) {
     index += 1
   }
-  return `画布 ${index}`
+  return t('canvas.project.defaultNewName', { n: index })
 }
 
 /**
@@ -277,7 +281,7 @@ export function useCanvasStorage(options = {}) {
   const createProject = async (name, { activate = true } = {}) => {
     const projects = await listProjects()
     if (projects.length >= MAX_CANVAS_PROJECTS) {
-      throw new Error(`最多创建 ${MAX_CANVAS_PROJECTS} 个画布`)
+      throw new Error(t('canvas.project.maxReached', { max: MAX_CANVAS_PROJECTS }))
     }
 
     const project = createCanvasProject(name || getNextProjectName(projects))
@@ -321,9 +325,9 @@ export function useCanvasStorage(options = {}) {
 
   const renameProject = async (projectId, name) => {
     const trimmed = String(name || '').trim()
-    if (!trimmed) throw new Error('画布名称不能为空')
+    if (!trimmed) throw new Error(t('canvas.project.nameEmpty'))
     const project = await serverStore.getProject(projectId)
-    if (!project) throw new Error('画布不存在')
+    if (!project) throw new Error(t('canvas.project.notFound'))
     project.name = trimmed
     project.updatedAt = nowIso()
     await serverStore.putProject(project)
@@ -347,7 +351,7 @@ export function useCanvasStorage(options = {}) {
       storageErrors.delete(projectId)
       saveStates.set(projectId, 'saved')
     } catch (error) {
-      storageErrors.set(projectId, error?.message || '画布保存失败')
+      storageErrors.set(projectId, error?.message || t('canvas.project.saveFailed'))
       saveStates.set(projectId, 'error')
       throw error
     }

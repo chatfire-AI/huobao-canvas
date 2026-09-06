@@ -1,4 +1,4 @@
-import { ep, model, promptField, schema } from './_shared.js'
+import { ep, model, promptField, schema, t } from './_shared.js'
 
 const provider = {
   id: 'vidu',
@@ -25,25 +25,28 @@ const viduQuery = {
 
 // 文生视频字段（q3 系列：resolution 540p/720p/1080p，aspect_ratio 含 3:4/4:3）
 const q3Text2VideoInput = () => [
-  promptField('一条龙飞过云雾缭绕的群山，细雨飘落'),
-  { key: 'duration', label: '时长(秒)', type: 'number', min: 1, max: 16, defaultValue: 5 },
-  { key: 'resolution', label: '分辨率', type: 'select', defaultValue: '720p',
+  promptField(t('prompts.dragonMountains')),
+  { key: 'duration', label: t('fields.durationSec'), type: 'number', min: 1, max: 16, defaultValue: 5 },
+  { key: 'resolution', label: t('fields.resolution'), type: 'select', defaultValue: '720p',
     options: ['540p', '720p', '1080p'] },
-  { key: 'aspect_ratio', label: '宽高比', type: 'select', defaultValue: '16:9',
+  { key: 'aspect_ratio', label: t('fields.aspectRatio'), type: 'select', defaultValue: '16:9',
     options: ['16:9', '9:16', '3:4', '4:3', '1:1'] },
 ]
 
 // 参考生视频字段（q3 系列参考图 1–7 张；宽高比仅 16:9/9:16/1:1）
 const q3ReferenceVideoInput = ({ durationMin = 3, resolutions = ['540p', '720p', '1080p'] } = {}) => [
   promptField(),
-  { key: 'images', label: '参考图', type: 'images', min: 1, max: 7, required: true },
-  { key: 'duration', label: '时长(秒)', type: 'number', min: durationMin, max: 16, defaultValue: 5 },
-  { key: 'resolution', label: '分辨率', type: 'select', defaultValue: '720p', options: resolutions },
-  { key: 'aspect_ratio', label: '宽高比', type: 'select', defaultValue: '16:9',
+  { key: 'images', label: t('fields.sourceImage'), type: 'images', min: 1, max: 7, required: true },
+  { key: 'duration', label: t('fields.durationSec'), type: 'number', min: durationMin, max: 16, defaultValue: 5 },
+  { key: 'resolution', label: t('fields.resolution'), type: 'select', defaultValue: '720p', options: resolutions },
+  { key: 'aspect_ratio', label: t('fields.aspectRatio'), type: 'select', defaultValue: '16:9',
     options: ['16:9', '9:16', '1:1'] },
 ]
 
-provider.models = [
+// models 用 getter 定义：每次读取重建，schema 内文案（t()）跟随语言切换
+Object.defineProperty(provider, 'models', {
+  enumerable: true,
+  get: () => [
   model(provider, {
     // 官方模型名（主仓 vidu-q3-* 是库内别名，直连必须用官方名）
     name: 'viduq3-pro',
@@ -53,15 +56,15 @@ provider.models = [
     endpoints: [
       ep(P, '/ent/v2/text2video', {
         capability: 'VIDEO', responseMode: 'ASYNC', protocolKey: 'async-video',
-        canvasModeLabel: '文生视频', query: viduQuery,
+        canvasModeLabel: t('canvasMode.t2v'), query: viduQuery,
       }),
       ep(P, '/ent/v2/img2video', {
         capability: 'VIDEO', responseMode: 'ASYNC', protocolKey: 'async-video',
-        canvasModeLabel: '图生视频', query: viduQuery,
+        canvasModeLabel: t('canvasMode.i2v'), query: viduQuery,
       }),
       ep(P, '/ent/v2/start-end2video', {
         capability: 'VIDEO', responseMode: 'ASYNC', protocolKey: 'async-video',
-        canvasModeLabel: '首尾帧视频', query: viduQuery,
+        canvasModeLabel: t('canvasMode.firstLast'), query: viduQuery,
       }),
     ],
     modelSchema: schema({
@@ -72,9 +75,9 @@ provider.models = [
         [`${P}/ent/v2/img2video`]: schema({
           input: [
             promptField(),
-            { key: 'image', label: '首帧图', type: 'image', required: true },
-            { key: 'duration', label: '时长(秒)', type: 'number', min: 1, max: 16, defaultValue: 5 },
-            { key: 'resolution', label: '分辨率', type: 'select', defaultValue: '720p',
+            { key: 'image', label: t('fields.firstFrame'), type: 'image', required: true },
+            { key: 'duration', label: t('fields.durationSec'), type: 'number', min: 1, max: 16, defaultValue: 5 },
+            { key: 'resolution', label: t('fields.resolution'), type: 'select', defaultValue: '720p',
               options: ['540p', '720p', '1080p'] },
           ],
           inputBindings: { sourceImage: 'image' },
@@ -90,10 +93,10 @@ provider.models = [
         [`${P}/ent/v2/start-end2video`]: schema({
           input: [
             promptField(),
-            { key: 'image', label: '首帧图', type: 'image', required: true },
-            { key: 'last_image', label: '尾帧图', type: 'image', required: true },
-            { key: 'duration', label: '时长(秒)', type: 'number', min: 1, max: 16, defaultValue: 5 },
-            { key: 'resolution', label: '分辨率', type: 'select', defaultValue: '720p',
+            { key: 'image', label: t('fields.firstFrame'), type: 'image', required: true },
+            { key: 'last_image', label: t('fields.lastFrame'), type: 'image', required: true },
+            { key: 'duration', label: t('fields.durationSec'), type: 'number', min: 1, max: 16, defaultValue: 5 },
+            { key: 'resolution', label: t('fields.resolution'), type: 'select', defaultValue: '720p',
               options: ['540p', '720p', '1080p'] },
           ],
           inputBindings: { sourceImage: 'image', lastFrameImage: 'last_image' },
@@ -117,19 +120,19 @@ provider.models = [
     endpoints: [
       ep(P, '/ent/v2/text2video', {
         capability: 'VIDEO', responseMode: 'ASYNC', protocolKey: 'async-video',
-        canvasModeLabel: '文生视频', query: viduQuery,
+        canvasModeLabel: t('canvasMode.t2v'), query: viduQuery,
       }),
       ep(P, '/ent/v2/img2video', {
         capability: 'VIDEO', responseMode: 'ASYNC', protocolKey: 'async-video',
-        canvasModeLabel: '图生视频', query: viduQuery,
+        canvasModeLabel: t('canvasMode.i2v'), query: viduQuery,
       }),
       ep(P, '/ent/v2/reference2video', {
         capability: 'VIDEO', responseMode: 'ASYNC', protocolKey: 'async-video',
-        canvasModeLabel: '参考生视频', query: viduQuery,
+        canvasModeLabel: t('canvasMode.r2v'), query: viduQuery,
       }),
       ep(P, '/ent/v2/start-end2video', {
         capability: 'VIDEO', responseMode: 'ASYNC', protocolKey: 'async-video',
-        canvasModeLabel: '首尾帧视频', query: viduQuery,
+        canvasModeLabel: t('canvasMode.firstLast'), query: viduQuery,
       }),
     ],
     modelSchema: schema({
@@ -140,9 +143,9 @@ provider.models = [
         [`${P}/ent/v2/img2video`]: schema({
           input: [
             promptField(),
-            { key: 'image', label: '首帧图', type: 'image', required: true },
-            { key: 'duration', label: '时长(秒)', type: 'number', min: 1, max: 16, defaultValue: 5 },
-            { key: 'resolution', label: '分辨率', type: 'select', defaultValue: '720p',
+            { key: 'image', label: t('fields.firstFrame'), type: 'image', required: true },
+            { key: 'duration', label: t('fields.durationSec'), type: 'number', min: 1, max: 16, defaultValue: 5 },
+            { key: 'resolution', label: t('fields.resolution'), type: 'select', defaultValue: '720p',
               options: ['540p', '720p', '1080p'] },
           ],
           inputBindings: { sourceImage: 'image' },
@@ -163,10 +166,10 @@ provider.models = [
         [`${P}/ent/v2/start-end2video`]: schema({
           input: [
             promptField(),
-            { key: 'image', label: '首帧图', type: 'image', required: true },
-            { key: 'last_image', label: '尾帧图', type: 'image', required: true },
-            { key: 'duration', label: '时长(秒)', type: 'number', min: 1, max: 16, defaultValue: 5 },
-            { key: 'resolution', label: '分辨率', type: 'select', defaultValue: '720p',
+            { key: 'image', label: t('fields.firstFrame'), type: 'image', required: true },
+            { key: 'last_image', label: t('fields.lastFrame'), type: 'image', required: true },
+            { key: 'duration', label: t('fields.durationSec'), type: 'number', min: 1, max: 16, defaultValue: 5 },
+            { key: 'resolution', label: t('fields.resolution'), type: 'select', defaultValue: '720p',
               options: ['540p', '720p', '1080p'] },
           ],
           inputBindings: { sourceImage: 'image', lastFrameImage: 'last_image' },
@@ -191,7 +194,7 @@ provider.models = [
     endpoints: [
       ep(P, '/ent/v2/reference2video', {
         capability: 'VIDEO', responseMode: 'ASYNC', protocolKey: 'async-video',
-        canvasModeLabel: '参考生视频', query: viduQuery,
+        canvasModeLabel: t('canvasMode.r2v'), query: viduQuery,
       }),
     ],
     modelSchema: schema({
@@ -209,6 +212,7 @@ provider.models = [
       },
     }),
   }),
-]
+  ],
+})
 
 export default provider

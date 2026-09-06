@@ -4,6 +4,8 @@
  * specs(视频按秒等)过于复杂,不在前端估算。
  */
 
+import { i18n } from '@/locales'
+
 function toNumber(value) {
   if (value == null) return null
   const n = typeof value === 'number' ? value : parseFloat(value)
@@ -23,7 +25,9 @@ export function formatMoney(value) {
   return s || '0'
 }
 
-const UNIT_LABELS = { image: '张', call: '次', second: '秒', token: '1M tokens' }
+const UNIT_LABEL_KEYS = { image: 'playground.pricing.unitImage', call: 'playground.pricing.unitCall', second: 'playground.pricing.unitSecond' }
+
+const unitLabel = (unit) => (unit === 'token' ? '1M tokens' : (UNIT_LABEL_KEYS[unit] ? i18n.global.t(UNIT_LABEL_KEYS[unit]) : ''))
 
 /** 侧边栏/列表用的短价格文案:如 "¥3.2/¥16"、"¥0.28/张"、"按规格计费" */
 export function shortPriceText(model) {
@@ -35,15 +39,15 @@ export function shortPriceText(model) {
     const parts = []
     if (toNumber(model.inputPrice) != null) parts.push(`¥${formatMoney(model.inputPrice)}`)
     if (toNumber(model.outputPrice) != null) parts.push(`¥${formatMoney(model.outputPrice)}`)
-    return parts.length ? `${parts.join('/')}/${UNIT_LABELS[unit] || ''}` : ''
+    return parts.length ? `${parts.join('/')}/${unitLabel(unit)}` : ''
   }
   if (type === 'unified') {
     const price = toNumber(model.price)
     if (price == null) return ''
-    const unitLabel = UNIT_LABELS[unit]
-    return unitLabel ? `¥${formatMoney(price)}/${unitLabel}` : `¥${formatMoney(price)}`
+    const label = unitLabel(unit)
+    return label ? `¥${formatMoney(price)}/${label}` : `¥${formatMoney(price)}`
   }
-  if (type === 'specs') return '按规格计费'
+  if (type === 'specs') return i18n.global.t('playground.pricing.perSpecs')
   return ''
 }
 

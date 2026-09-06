@@ -26,8 +26,11 @@
 
 <script setup>
 import { computed, onMounted, onUnmounted } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { CANVAS_NODE_TYPES } from '../constants/nodeTypes.js'
 import { getCanvasNodeMeta, getConnectableNodeTypes } from '../utils/connectionRules.js'
+
+const { t } = useI18n()
 
 // 与节点卡片一致的类型标识色
 const TYPE_ACCENTS = {
@@ -69,10 +72,10 @@ const items = computed(() => {
 
 const title = computed(() => {
   if (props.sourceTypes.length) {
-    return props.side === 'left' ? '添加输入节点' : '引用选中节点生成'
+    return props.side === 'left' ? t('canvas.dropMenu.addInput') : t('canvas.dropMenu.useSelected')
   }
-  if (!props.sourceType) return '添加节点'
-  return props.side === 'left' ? '添加输入节点' : '引用该节点生成'
+  if (!props.sourceType) return t('canvas.dropMenu.addNode')
+  return props.side === 'left' ? t('canvas.dropMenu.addInput') : t('canvas.dropMenu.useNode')
 })
 
 const menuStyle = computed(() => {

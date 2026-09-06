@@ -1,5 +1,6 @@
 import { computed, nextTick, ref, shallowRef, toRaw } from 'vue'
 import { useVueFlow } from '@vue-flow/core'
+import { i18n } from '@/locales'
 import {
   ACTIVE_CANVAS_NODE_TYPES,
   CANVAS_NODE_TYPES,
@@ -9,6 +10,8 @@ import {
 import { isConnectionAllowed } from '../utils/connectionRules.js'
 import { computeGroupBounds, computeLayeredLayout } from '../utils/graphLayout.js'
 import { sanitizeCanvasGraph } from '../utils/graphSerialization.js'
+
+const t = (key, args) => i18n.global.t(key, args)
 
 // 节点身份一律 UUID：名称（data.title）允许用户自由修改/重复，身份与连线只靠 id
 // （randomUUID 仅在安全上下文可用，http 局域网访问时回退时间戳+随机串）
@@ -191,7 +194,7 @@ export function useCanvasGraph() {
     const data = options.data ? clonePlain(options.data) : getNodeDefaults(nodeType)
     // 系统默认名按当前画布唯一化（图片 / 图片 2 / 图片 3…）；显式传入的 title 不动
     if (!options.data?.title) {
-      data.title = uniqueNodeTitle(nodes.value, data.title || getNodeDefaults(nodeType).title || '节点')
+      data.title = uniqueNodeTitle(nodes.value, data.title || getNodeDefaults(nodeType).title || t('canvas.nodeTypes.node'))
     }
     const node = {
       id,
@@ -685,7 +688,7 @@ export function useCanvasGraph() {
         data: {
           ...copiedData,
           status: copiedStatus,
-          title: uniqueNodeTitle(nodes.value, `${node.data?.title || '节点'} 副本`),
+          title: uniqueNodeTitle(nodes.value, t('canvas.graph.copySuffix', { title: node.data?.title || t('canvas.nodeTypes.node') })),
           payload: stripCanvasResultOwnership(copiedData.payload || {}, { clearTask: true }),
           updatedAt: Date.now(),
         },
@@ -835,7 +838,7 @@ export function useCanvasGraph() {
       const data = {
         ...clonePlain(owner.data || {}),
         status: NODE_STATUS.SUCCESS,
-        title: `${owner.data?.title || '结果'} ${index + 1}`,
+        title: t('canvas.graph.resultTitle', { title: owner.data?.title || t('canvas.graph.resultFallback'), n: index + 1 }),
         payload: {
           ...siblingPayload,
           resultType: runResult.resultType || siblingPayload.resultType,

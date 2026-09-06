@@ -6,21 +6,21 @@
           <svg-icon :icon="dockMeta.icon" />
         </span>
         <strong class="dock-title">{{ node?.data?.title || dockMeta.label }}</strong>
-        <span class="reference-title">参考内容</span>
-        <span class="reference-note">上传或 @ 引用素材</span>
+        <span class="reference-title">{{ $t('canvas.promptDock.referenceTitle') }}</span>
+        <span class="reference-note">{{ $t('canvas.promptDock.referenceNote') }}</span>
         <div class="dock-head-right">
           <label v-if="canUploadAsset" class="reference-add" :class="{ 'is-disabled': running }">
             <svg-icon icon="tabler:plus" />
-            添加参考
+            {{ $t('canvas.promptDock.addReference') }}
             <input type="file" accept="image/*" :disabled="running" @change="handleFileChange" />
           </label>
-          <span class="dock-hint">Enter 生成 · @ 引用已连接素材</span>
+          <span class="dock-hint">{{ $t('canvas.promptDock.hint') }}</span>
         </div>
       </div>
 
       <!-- 参考内容区:已连接的素材缩略图 -->
       <div class="reference-section">
-        <div v-if="connectedInputs.length" class="reference-strip" aria-label="已连接的参考素材">
+        <div v-if="connectedInputs.length" class="reference-strip" :aria-label="$t('canvas.promptDock.referenceAria')">
           <n-popover
             v-for="(input, inputIndex) in connectedInputs"
             :key="input.id"
@@ -34,26 +34,26 @@
               <div
                 class="reference-item"
                 :class="{ 'is-text-ref': !input.url }"
-                :title="input.url ? input.label : `${input.label}（点击查看全文）`"
+                :title="input.url ? input.label : $t('canvas.promptDock.clickToView', { label: input.label })"
               >
                 <img v-if="input.url" :src="input.url" :alt="input.label" />
                 <span v-else class="reference-fallback">
                   <svg-icon :icon="getCanvasPromptDockMeta(input.type).icon" />
                   <span>{{ input.text || input.label }}</span>
                 </span>
-                <span v-if="input.type !== 'textNode'" class="reference-index">图{{ mediaInputIndex(inputIndex) }}</span>
+                <span v-if="input.type !== 'textNode'" class="reference-index">{{ $t('canvas.promptDock.imageRef', { n: mediaInputIndex(inputIndex) }) }}</span>
               </div>
             </template>
             <div class="reference-pop">
               <div class="reference-pop-title">{{ input.label }}</div>
-              <div class="reference-pop-text">{{ input.text || '（该节点暂无生成内容）' }}</div>
+              <div class="reference-pop-text">{{ input.text || $t('canvas.promptDock.noContent') }}</div>
             </div>
           </n-popover>
         </div>
       </div>
 
       <div class="prompt-area">
-        <div v-if="mentionOpen" class="mention-menu" role="listbox" aria-label="引用节点">
+        <div v-if="mentionOpen" class="mention-menu" role="listbox" :aria-label="$t('canvas.promptDock.mentionAria')">
           <button
             v-for="(item, index) in mentionItems"
             :key="item.id"
@@ -73,14 +73,14 @@
             <span v-if="item.snippet" class="mention-snippet">{{ item.snippet }}</span>
             <span class="mention-type">{{ mentionTypeLabel(item.type) }}</span>
           </button>
-          <div v-if="!mentionItems.length" class="mention-empty">暂无已连接的图片/视频素材</div>
+          <div v-if="!mentionItems.length" class="mention-empty">{{ $t('canvas.promptDock.mentionEmpty') }}</div>
         </div>
         <textarea
           ref="promptInput"
           v-model="prompt"
           class="prompt-input"
           :placeholder="promptPlaceholder"
-          :aria-label="`${dockMeta.label}提示词`"
+          :aria-label="$t('canvas.promptDock.promptAria', { label: dockMeta.label })"
           :disabled="running"
           @input="handlePromptInput"
           @keydown="handlePromptKeydown"
@@ -96,7 +96,7 @@
           </span>
           <span v-else-if="!node?.data?.payload?.notice && (running || ['running', 'waiting'].includes(node?.data?.status))" class="waiting-copy">
             <svg-icon icon="tabler:loader-2" />
-            {{ pollingTaskId ? '任务已提交，正在等待结果…' : '正在生成…' }}
+            {{ pollingTaskId ? $t('canvas.promptDock.waitingTask') : $t('canvas.promptDock.generating') }}
           </span>
         </div>
       </div>
@@ -151,7 +151,7 @@
                 </div>
               </div>
               <div v-if="countField" class="params-group">
-                <div class="params-group-label">{{ countField.label || '数量' }}</div>
+                <div class="params-group-label">{{ countField.label || $t('canvas.promptDock.countLabel') }}</div>
                 <div class="params-group-options">
                   <button
                     v-for="option in countOptions"
@@ -162,7 +162,7 @@
                     :disabled="running"
                     @click="updateFormField(countField.key, option.value)"
                   >
-                    {{ option.label }}张
+                    {{ $t('canvas.promptDock.countValue', { n: option.label }) }}
                   </button>
                 </div>
               </div>
@@ -180,11 +180,11 @@
             :class="{ 'is-loading': running }"
             type="submit"
             :disabled="!canSubmit"
-            :title="running ? '生成中' : (hasResult ? '重新生成（结果生成到下方新节点）' : '生成')"
-            aria-label="生成"
+            :title="running ? $t('canvas.promptDock.generatingShort') : (hasResult ? $t('canvas.promptDock.regenerateTitle') : $t('canvas.promptDock.generate'))"
+            :aria-label="$t('canvas.promptDock.generate')"
           >
             <svg-icon :icon="running ? 'tabler:loader-2' : (hasResult ? 'tabler:refresh' : 'tabler:sparkles')" />
-            <span>{{ running ? '生成中' : (hasResult ? '重新生成' : '生成') }}</span>
+            <span>{{ running ? $t('canvas.promptDock.generatingShort') : (hasResult ? $t('canvas.promptDock.regenerate') : $t('canvas.promptDock.generate')) }}</span>
           </button>
         </div>
       </div>
@@ -192,17 +192,20 @@
 
     <div class="desktop-notice">
       <svg-icon icon="tabler:device-desktop" />
-      <strong>请在桌面端使用画布编辑器</strong>
-      <span>需要至少 900px 的可用宽度。</span>
+      <strong>{{ $t('canvas.promptDock.desktopOnly') }}</strong>
+      <span>{{ $t('canvas.promptDock.desktopWidth') }}</span>
     </div>
   </form>
 </template>
 
 <script setup>
 import { computed, nextTick, ref, watch } from 'vue'
+import { useI18n } from 'vue-i18n'
 import ModelPicker from '@/components/ModelPicker.vue'
 import { CANVAS_NODE_TYPES, NODE_MODEL_TYPE_MAP, getCanvasPromptDockMeta } from '../constants/nodeTypes'
 import { partitionCanvasFields } from '../utils/editorFields'
+
+const { t } = useI18n()
 
 const props = defineProps({
   node: { type: Object, default: null },
@@ -233,7 +236,7 @@ const hasResult = computed(() => props.node?.data?.status === 'success'
   && Boolean(props.node?.data?.payload?.parsedResults?.length || props.node?.data?.payload?.url))
 // placeholder 只保留引导语，快捷键说明统一由头部 hint 展示，避免重复
 const promptPlaceholder = computed(() => (
-  String(dockMeta.value.placeholder || '').split(/，|,/)[0] || '输入提示词'
+  String(dockMeta.value.placeholder || '').split(/，|,/)[0] || t('canvas.promptDock.placeholderFallback')
 ))
 const dockTypeClass = computed(() => ({
   [CANVAS_NODE_TYPES.TEXT]: 'is-text',
@@ -260,7 +263,7 @@ const countOptions = computed(() => {
 // 单个参数的当前值文案
 const fieldValueLabel = (field) => {
   const value = props.formData[field.key]
-  if (value === undefined || value === null || value === '') return '默认'
+  if (value === undefined || value === null || value === '') return t('canvas.promptDock.defaultValue')
   const options = props.formatOptions(field.options || field.enum || [])
   const matched = options.find((option) => String(option.value) === String(value))
   return matched?.label ?? value
@@ -271,9 +274,9 @@ const paramsSummary = computed(() => {
   const parts = sizeFields.value.map((field) => fieldValueLabel(field))
   if (countField.value) {
     const countVal = props.formData[countField.value.key]
-    if (countVal != null && countVal !== '') parts.push(`${countVal}张`)
+    if (countVal != null && countVal !== '') parts.push(t('canvas.promptDock.countValue', { n: countVal }))
   }
-  return parts.filter(Boolean).join(' · ') || '参数设置'
+  return parts.filter(Boolean).join(' · ') || t('canvas.promptDock.paramsSummary')
 })
 
 // 比例类字段：面板中用网格+矩形图标展示
@@ -298,7 +301,7 @@ const hasNodeImage = computed(() => {
 })
 const canUploadAsset = computed(() => props.node?.type === CANVAS_NODE_TYPES.IMAGE && !hasNodeImage.value)
 const modelSelectPlaceholder = computed(() => (
-  props.modelOptions.length ? dockMeta.value.modelPlaceholder : `暂无${dockMeta.value.label}模型`
+  props.modelOptions.length ? dockMeta.value.modelPlaceholder : t('canvas.promptDock.noModel', { label: dockMeta.value.label })
 ))
 // 有结果时允许空输入直接「重新生成」(沿用节点已有提示词)
 const canSubmit = computed(() => (prompt.value.trim().length > 0 || hasResult.value) && !props.running)
@@ -334,13 +337,13 @@ const mentionItems = computed(() => {
 })
 
 const MENTION_TYPE_META = {
-  [CANVAS_NODE_TYPES.TEXT]: { icon: 'tabler:text-caption', label: '文本' },
-  [CANVAS_NODE_TYPES.IMAGE]: { icon: 'tabler:photo', label: '图片' },
-  [CANVAS_NODE_TYPES.VIDEO]: { icon: 'tabler:video', label: '视频' },
+  [CANVAS_NODE_TYPES.TEXT]: { icon: 'tabler:text-caption', labelKey: 'canvas.nodeTypes.text' },
+  [CANVAS_NODE_TYPES.IMAGE]: { icon: 'tabler:photo', labelKey: 'canvas.nodeTypes.image' },
+  [CANVAS_NODE_TYPES.VIDEO]: { icon: 'tabler:video', labelKey: 'canvas.nodeTypes.video' },
 }
 
 const mentionIcon = (type) => MENTION_TYPE_META[type]?.icon || 'tabler:circle'
-const mentionTypeLabel = (type) => MENTION_TYPE_META[type]?.label || '节点'
+const mentionTypeLabel = (type) => t(MENTION_TYPE_META[type]?.labelKey || 'canvas.nodeTypes.node')
 // 媒体参考序号:只数图片/视频节点(与请求 images[] 注入顺序一致)
 const mediaInputIndex = (index) =>
   (props.connectedInputs || []).slice(0, index + 1).filter((input) => input.type !== 'textNode').length
@@ -371,7 +374,7 @@ function pickMention(item) {  if (!item) return
   const caret = el?.selectionStart ?? prompt.value.length
   // @ 引用替换为「图N」位置标记(即梦式):N = 该素材在已连接媒体参考中的序号
   // (与「参考内容」条上的 图1/图2… 一致),模型可理解"图1/图2"指代关系
-  const token = `图${item.mediaIndex || 1}`
+  const token = t('canvas.promptDock.imageRef', { n: item.mediaIndex || 1 })
   const before = prompt.value.slice(0, mentionStart.value)
   const after = prompt.value.slice(caret)
   const cleaned = before + `${token} ` + after
