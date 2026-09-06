@@ -142,6 +142,16 @@
           <svg-icon icon="tabler:key" />
         </button>
       </div>
+      <a
+        class="github-entry"
+        href="https://github.com/chatfire-AI/huobao-canvas"
+        target="_blank"
+        rel="noopener"
+        title="开源地址：觉得好用就点个 Star ⭐"
+      >
+        <svg-icon icon="tabler:brand-github" />
+        <span>Star</span>
+      </a>
       <button
         type="button"
         class="tips-toggle"
@@ -349,6 +359,32 @@ function formatProjectMeta(item) {
   &:hover {
     border-color: var(--cf-brand);
     background: var(--cf-brand-soft-strong);
+  }
+}
+
+// ── GitHub 入口 ──
+.github-entry {
+  min-height: 32px;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 0 10px;
+  border: 1px solid var(--cf-border);
+  border-radius: 9px;
+  background: color-mix(in srgb, var(--cf-bg-elevated) 88%, transparent);
+  color: var(--cf-text-tertiary);
+  font-size: 12px;
+  font-weight: 800;
+  text-decoration: none;
+  cursor: pointer;
+  transition: color 0.13s ease, border-color 0.13s ease, background 0.13s ease;
+
+  svg { width: 15px; height: 15px; }
+
+  &:hover {
+    color: var(--cf-text-primary);
+    border-color: var(--cf-border-strong);
+    background: var(--cf-bg-subtle);
   }
 }
 
