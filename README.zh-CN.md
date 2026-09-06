@@ -4,7 +4,7 @@
 
 开源的节点式 AI 创作画布：在无限画布上串联 12 家厂商的文本 / 图像 / 视频生成模型，自带 API Key 即可使用。
 
-[在线体验](https://marketing.chatfire.site/huobao-canvas/)
+[在线体验](https://marketing.firemux.com/huobao-canvas/)
 
 ![Vue](https://img.shields.io/badge/Vue-3.5-4FC08D?logo=vue.js)
 ![Vite](https://img.shields.io/badge/Vite-5-646CFF?logo=vite)
@@ -46,8 +46,8 @@ pnpm dev        # http://localhost:8021
 
 | 环境变量 | 默认值 | 说明 |
 |---|---|---|
-| `VITE_API_BASE_URL` | `https://api.chatfire.site` | 推理端点（任意 OpenAI 兼容网关） |
-| `VITE_UPSTREAM` | `https://api.chatfire.site` | dev server 代理目标 |
+| `VITE_API_BASE_URL` | `https://api.firemux.com` | 推理端点（任意 OpenAI 兼容网关） |
+| `VITE_UPSTREAM` | `https://api.firemux.com` | dev server 代理目标 |
 
 ## 贡献
 

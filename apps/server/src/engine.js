@@ -30,7 +30,7 @@ const applyInputTransform = createInputTransformEngine()
 const RETRYABLE_HTTP_STATUSES = new Set([408, 425, 429])
 const NONTERMINAL_TASK_STATUSES = new Set(['PENDING', 'QUEUED', 'PROCESSING', 'RUNNING'])
 const GATEWAY_MOUNT_RE = /^\/(v1|v1beta|sys|qwen|volcengine|vidu|minimax|xai|zhipu)\//
-const PUBLIC_GATEWAY = 'https://api.chatfire.site'
+const PUBLIC_GATEWAY = 'https://api.firemux.com'
 // 异步任务轮询预算：720 次 × 10s = 2h（长视频友好；浏览器版是 120×5s）
 const POLL_MAX_ATTEMPTS = 720
 const POLL_INTERVAL = 10000
@@ -528,5 +528,30 @@ export function createRunEngine({ db, statements, dataDir }) {
     },
     getCatalog,
     filesDir,
+    /**
+     * 反代目标解析（routes/proxy.js 用）：
+     * /official/{providerId}/* → 厂商官方地址（含 settings baseUrl 覆盖）；
+     * 网关挂载前缀（v1/sys/qwen…）→ 网关地址。无法解析返回 null。
+     * 返回 { url, auth }——auth 是服务端 Key 计算的鉴权头，调用方未带鉴权时兜底注入；
+     * Key 缺失不阻断转发（auth 为 null，渲染端自带的鉴权头照常透传）。
+     */
+    resolveProxyTarget: (pathname) => {
+      const official = String(pathname || '').match(/^\/official\/([A-Za-z0-9_-]+)(\/.*)?$/)
+      if (official) {
+        const provider = getProvider(official[1])
+        if (!provider) return null
+        try { return resolveTarget(provider, pathname) } catch { /* 无 Key 时退化为仅 URL 解析 */ }
+        let target = applyProviderBaseUrl(provider, pathname)
+        if (!/^https?:\/\//.test(target) && target.startsWith(provider.proxyPrefix)) {
+          target = provider.baseUrl + target.slice(provider.proxyPrefix.length)
+        }
+        return /^https?:\/\//.test(target) ? { url: target, auth: null } : null
+      }
+      if (GATEWAY_MOUNT_RE.test(pathname)) {
+        const key = globalKey()
+        return { url: gatewayBase() + pathname, auth: key ? { Authorization: `Bearer ${key}` } : null }
+      }
+      return null
+    },
   }
 }

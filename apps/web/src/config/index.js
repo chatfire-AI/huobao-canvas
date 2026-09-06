@@ -8,16 +8,16 @@
 const viteEnv = typeof import.meta !== 'undefined' ? import.meta.env : undefined
 const appConfig = typeof window !== 'undefined' ? (window.__APP_CONFIG__ || {}) : {}
 
-/** 推理/目录请求基地址：dev 默认空串走同源 vite proxy；prod 默认 ChatFire 公共 API。
+/** 推理/目录请求基地址：dev 默认空串走同源 vite proxy；prod 默认 Huobao 公共 API。
  *  注意用 ?? 而非 ||：Docker 部署会显式注入空串（同源走 nginx 反代），空串是有效值。 */
-export const PUBLIC_API_BASE_URL = 'https://api.chatfire.site'
+export const PUBLIC_API_BASE_URL = 'https://api.firemux.com'
 
 export const API_BASE_URL =
   appConfig.apiBaseUrl ??
   viteEnv?.VITE_API_BASE_URL ??
   (viteEnv?.DEV ? '' : PUBLIC_API_BASE_URL)
 
-/** 模型目录模式默认值：'official'（厂商官方直连，默认）| 'gateway'（ChatFire 网关） */
+/** 模型目录模式默认值：'official'（厂商官方直连，默认）| 'gateway'（Huobao 网关） */
 export const DEFAULT_CATALOG_MODE =
   appConfig.catalogMode || viteEnv?.VITE_CATALOG_MODE || 'official'
 
@@ -38,7 +38,7 @@ export const setCatalogMode = (mode) => {
 
 const GATEWAY_BASE_STORAGE = 'chatfire_canvas_gateway_base'
 
-/** ChatFire 网关 baseUrl：用户设置（localStorage）优先，默认部署配置 */
+/** Huobao 网关 baseUrl：用户设置（localStorage）优先，默认部署配置 */
 export const getGatewayBaseUrl = () => {
   try {
     return window.localStorage.getItem(GATEWAY_BASE_STORAGE) || API_BASE_URL

@@ -19,6 +19,40 @@ const CURRENT_KEY_STORAGE = 'chatfire_canvas_current_key'
 const PROVIDER_KEYS_STORAGE = 'chatfire_canvas_provider_keys'
 const GATEWAY_BASE_STORAGE = 'chatfire_canvas_gateway_base'
 
+// 网关域名迁移：api.chatfire.site → api.firemux.com（本地/服务端旧配置自动改写）
+const HOST_MIGRATIONS = [
+  ['api.chatfire.site', 'api.firemux.com'],
+  ['chatfire.site', 'firemux.com'],
+]
+
+export const normalizeGatewayHost = (value) => {
+  if (typeof value !== 'string' || !value) return value
+  let next = value
+  for (const [from, to] of HOST_MIGRATIONS) next = next.replaceAll(from, to)
+  return next
+}
+
+/** 把已存储的网关地址/厂商 baseUrl 覆盖里的旧域名改写为新域名（幂等） */
+export const migrateStoredGatewayHosts = () => {
+  const gateway = backend.readRaw(GATEWAY_BASE_STORAGE)
+  if (gateway) {
+    const next = normalizeGatewayHost(gateway)
+    if (next !== gateway) backend.writeRaw(GATEWAY_BASE_STORAGE, next)
+  }
+  const providers = read(PROVIDER_KEYS_STORAGE, {})
+  let touched = false
+  for (const cfg of Object.values(providers)) {
+    if (cfg?.baseUrl) {
+      const next = normalizeGatewayHost(cfg.baseUrl)
+      if (next !== cfg.baseUrl) {
+        cfg.baseUrl = next
+        touched = true
+      }
+    }
+  }
+  if (touched) write(PROVIDER_KEYS_STORAGE, providers)
+}
+
 // ── 存储后端（默认 localStorage；Node/服务端可注入替换）──
 const backend = {
   readRaw: (storageKey) => {
@@ -41,7 +75,10 @@ const backend = {
 }
 
 /** 注入存储后端（apps/server engine 启动时调用；浏览器端不使用） */
-export const setKeyStoreBackend = (impl) => Object.assign(backend, impl)
+export const setKeyStoreBackend = (impl) => {
+  Object.assign(backend, impl)
+  migrateStoredGatewayHosts()
+}
 
 const read = (storageKey, fallback) => {
   const raw = backend.readRaw(storageKey)
@@ -56,6 +93,9 @@ const read = (storageKey, fallback) => {
 const write = (storageKey, value) => {
   backend.writeRaw(storageKey, JSON.stringify(value))
 }
+
+// 启动即迁移本地已存旧域名（Node 端默认后端读不到值，安全空转）
+migrateStoredGatewayHosts()
 
 // ── 服务端镜像（fire-and-forget，防抖合并）──
 let mirrorTimer = null
@@ -76,7 +116,14 @@ export const importMirrorSnapshot = (snapshot, { override = false } = {}) => {
   for (const [name, value] of Object.entries(snapshot)) {
     if (value == null) continue
     const local = backend.readRaw(name)
-    const incoming = typeof value === 'string' ? value : JSON.stringify(value)
+    // 旧网关域名的字符串值（网关地址、厂商 baseUrl 覆盖）导入时一并改写
+    const normalized = typeof value === 'string' ? normalizeGatewayHost(value) : value
+    if (name === PROVIDER_KEYS_STORAGE && normalized && typeof normalized === 'object') {
+      for (const cfg of Object.values(normalized)) {
+        if (cfg?.baseUrl) cfg.baseUrl = normalizeGatewayHost(cfg.baseUrl)
+      }
+    }
+    const incoming = typeof normalized === 'string' ? normalized : JSON.stringify(normalized)
     if (!override && local === incoming) continue
     backend.writeRaw(name, incoming)
     touched = true

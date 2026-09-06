@@ -4,7 +4,7 @@
 
 An open-source, node-based AI creation canvas. Chain text, image, and video generation models from 12 providers on an infinite canvas — bring your own API key.
 
-[Live Demo](https://marketing.chatfire.site/huobao-canvas/)
+[Live Demo](https://marketing.firemux.com/huobao-canvas/)
 
 ![Vue](https://img.shields.io/badge/Vue-3.5-4FC08D?logo=vue.js)
 ![Vite](https://img.shields.io/badge/Vite-5-646CFF?logo=vite)
@@ -45,8 +45,8 @@ Open the app, go to **Settings** (top-right), paste an API key for any provider,
 
 | Env var | Default | Description |
 |---|---|---|
-| `VITE_API_BASE_URL` | `https://api.chatfire.site` | Inference endpoint (any OpenAI-compatible gateway) |
-| `VITE_UPSTREAM` | `https://api.chatfire.site` | Dev-server proxy target |
+| `VITE_API_BASE_URL` | `https://api.firemux.com` | Inference endpoint (any OpenAI-compatible gateway) |
+| `VITE_UPSTREAM` | `https://api.firemux.com` | Dev-server proxy target |
 
 ## Contributing
 

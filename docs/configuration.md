@@ -10,14 +10,14 @@ ChatFire Canvas 的所有可变项都通过环境变量 / 运行时配置注入�
 
 | 项 | 环境变量 | 默认值 | 说明 |
 |---|---|---|---|
-| 推理基地址 | `VITE_API_BASE_URL` / `apiBaseUrl` | dev: 空串（同源代理）；prod: `https://api.chatfire.site` | 模型生成与目录请求基地址，可指向任意 OpenAI 兼容网关 |
-| dev 代理目标 | `VITE_UPSTREAM` | `https://api.chatfire.site` | 仅 dev server 使用 |
+| 推理基地址 | `VITE_API_BASE_URL` / `apiBaseUrl` | dev: 空串（同源代理）；prod: `https://api.firemux.com` | 模型生成与目录请求基地址，可指向任意 OpenAI 兼容网关 |
+| dev 代理目标 | `VITE_UPSTREAM` | `https://api.firemux.com` | 仅 dev server 使用 |
 
 ## Docker 部署环境变量（docker-compose）
 
 | 变量 | 默认值 | 说明 |
 |---|---|---|
-| `UPSTREAM` | `https://api.chatfire.site` | nginx 反代的推理上游（容器内） |
+| `UPSTREAM` | `https://api.firemux.com` | nginx 反代的推理上游（容器内） |
 | `API_BASE_URL` | 空 | 写入 `config.js` 的 `apiBaseUrl`，留空 = 同源反代（推荐，规避 CORS） |
 | `EXPIRE_DAYS` | `7` | 媒体保留天数提示 |
 

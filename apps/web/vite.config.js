@@ -8,7 +8,7 @@ import autoprefixer from "autoprefixer";
 import { NaiveUiResolver } from "unplugin-vue-components/resolvers";
 
 // 推理上游：默认 ChatFire 公共 API，可用 VITE_UPSTREAM 指向任意 OpenAI 兼容网关
-const upstream = process.env.VITE_UPSTREAM || "https://api.chatfire.site";
+const upstream = process.env.VITE_UPSTREAM || "https://api.firemux.com";
 
 // 浏览器 fetch 会自动带 Origin（localhost），上游严格 CORS 校验非白名单 Origin 直接 403。
 // changeOrigin 只改 Host 不改 Origin，需在代理层统一剥掉（等价于服务端直连语义）。
@@ -46,7 +46,7 @@ export default defineConfig({
   server: {
     host: "0.0.0.0",
     port: process.env.PORT || 8022,
-    // Tauri devUrl 钉死 8021：端口被占时直接报错，禁止静默顺延（否则桌面窗口白屏）
+    // 钉死端口：被占时直接报错，禁止静默顺延（Electron dev 经 CANVAS_DEV_URL 指到本端口）
     strictPort: true,
     proxy: {
       // 注意：/v1 前缀会吞掉 /v1beta，/v1beta 必须排在 /v1 之前
@@ -59,7 +59,7 @@ export default defineConfig({
       "/minimax": { target: upstream, changeOrigin: true, ...stripOrigin },
       "/xai": { target: upstream, changeOrigin: true, ...stripOrigin },
       "/zhipu": { target: upstream, changeOrigin: true, ...stripOrigin },
-      // 画布存储服务（apps/server，SQLite；未启动时前端自动回退 IndexedDB）
+      // 画布存储服务（apps/server，SQLite；未启动时画布保存/读取不可用）
       "/api": {
         target: process.env.VITE_CANVAS_SERVER || "http://localhost:16812",
         changeOrigin: true,

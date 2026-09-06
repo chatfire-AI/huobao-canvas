@@ -1,4 +1,4 @@
-// 图标托管在前端本地 public/icons 下（原 CDN ffile.chatfire.site 已停用）
+// 图标托管在前端本地 public/icons 下（原 CDN ffile.chatfire.site 已停用（域名现归属 firemux.com））
 const ICON_BASE_URL = `${import.meta.env.BASE_URL}icons/dark/`
 // 历史数据可能存的是旧 CDN 完整 URL，统一提取文件名走本地
 const LEGACY_CDN_PATTERN = /^https?:\/\/[^/]+\/cf\/chatfire-media\/icon\/(?:dark|light)\//

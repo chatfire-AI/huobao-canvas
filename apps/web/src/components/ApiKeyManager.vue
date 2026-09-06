@@ -67,7 +67,7 @@ const handleSave = async () => {
     <div class="api-key-manager">
       <p class="hint">
         Key 仅保存在当前浏览器 localStorage，不会上传到任何服务器。
-        默认端点为 ChatFire 公共 API（可在部署配置中切换为任意 OpenAI 兼容端点）。
+        默认端点为 Huobao 公共 API（可在部署配置中切换为任意 OpenAI 兼容端点）。
       </p>
       <div class="add-form">
         <n-input

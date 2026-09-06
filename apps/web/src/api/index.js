@@ -2,9 +2,9 @@
  * 模型目录客户端（只读）
  *
  * 数据源策略：
- *  - 默认请求 `${API_BASE_URL}/sys/model/*`（ChatFire 网关的公开模型目录，
+ *  - 默认请求 `${API_BASE_URL}/sys/model/*`（Huobao 网关的公开模型目录，
  *    返回完整 schema：端点、参数定义、输入输出契约）
- *  - 若目录接口不可用（非 ChatFire 端点），回退 OpenAI 标准 `/v1/models`，
+ *  - 若目录接口不可用（非 Huobao 端点），回退 OpenAI 标准 `/v1/models`，
  *    仅提供模型名列表，参数表单退化为端点默认 schema
  *
  * 响应包：{ code: 200, data: ... }，非 200 抛出 Error(message)。

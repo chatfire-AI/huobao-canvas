@@ -261,7 +261,7 @@ export function useRequestPipeline({ getNestedValue, wait = defaultWait }) {
     if (!taskId) throw taskError('任务标识无效', 'terminal')
 
     // 厂商官方直连的异步任务：按端点 query 配置轮询（官方任务查询端点 + 厂商状态映射）；
-    // 无 query 配置保持 ChatFire 网关的归一化任务查询。
+    // 无 query 配置保持 Huobao 网关的归一化任务查询。
     const vendorQuery = taskLink?.query || null
     const authHeaders = taskLink?.providerId
       ? buildProviderAuthHeaders(getProvider(taskLink.providerId), getProviderApiKey(taskLink.providerId) || apiKey)
@@ -351,7 +351,7 @@ export function useRequestPipeline({ getNestedValue, wait = defaultWait }) {
         continue
       }
 
-      // ── ChatFire 网关归一化任务判定 ──
+      // ── Huobao 网关归一化任务判定 ──
       const status = String(data?.status || '').toUpperCase()
       if (status === 'COMPLETED' || status === 'SUCCEEDED') {
         const extraction = extractMediaResult(data?.result, taskLink?.resultType || 'text', null, getNestedValue)

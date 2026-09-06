@@ -1,5 +1,5 @@
 <script setup>
-import { computed, ref } from 'vue'
+import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import {
   listProviders, getProvider, buildProviderAuthHeaders, providerTestUrl,
@@ -27,19 +27,64 @@ const router = useRouter()
 // ── 导航：chatfire / 厂商 id ──
 const activeSection = ref('chatfire')
 const providers = listProviders()
+
+// ── 桌面版：应用更新（Electron preload 注入 window.canvasDesktop） ──
+const desktopBridge = typeof window !== 'undefined' ? window.canvasDesktop || null : null
+const updateState = ref({ status: 'idle', currentVersion: '' })
+const updateProgress = ref(0)
+let unsubscribeUpdateProgress = null
+
+async function refreshUpdateState() {
+  if (!desktopBridge) return
+  updateState.value = await desktopBridge.getUpdateState()
+  if (typeof updateState.value.downloadProgress === 'number') {
+    updateProgress.value = updateState.value.downloadProgress
+  }
+}
+
+async function checkForUpdate() {
+  if (!desktopBridge) return
+  updateState.value = await desktopBridge.checkUpdate()
+}
+
+async function startDownload() {
+  if (!desktopBridge) return
+  try {
+    updateState.value = await desktopBridge.downloadUpdate()
+  } catch (error) {
+    updateState.value = { ...updateState.value, status: 'error', error: error?.message || '下载失败' }
+  }
+}
+
+async function applyUpdate() {
+  if (!desktopBridge) return
+  await desktopBridge.applyUpdate()
+}
+
+onMounted(() => {
+  if (!desktopBridge) return
+  refreshUpdateState()
+  unsubscribeUpdateProgress = desktopBridge.onUpdateProgress((percent) => {
+    updateProgress.value = percent
+  })
+})
+
+onBeforeUnmount(() => {
+  unsubscribeUpdateProgress?.()
+})
 const activeProvider = computed(() => getProvider(activeSection.value))
 
 // ── 通用设置 ──
 // 目录模式固定在官方直连（UI 开关已移除）；catalogMode 仅用于一键接入状态点与断开逻辑
 const catalogMode = ref(getCatalogMode())
 
-// ── ChatFire（火宝）一键配置 ──
+// ── Huobao（火宝）一键配置 ──
 const cfQuickKey = ref('')
 const cfQuickTesting = ref(false)
 const cfCurrentKey = ref(getCurrentApiKey())
 
 // 一键接入时各厂商 baseUrl 覆盖的网关挂载前缀（'' = 网关根路径 /v1、/v1beta 等）。
-// 以 ChatFire 网关适配为主：预设路径经 applyProviderBaseUrl 前缀替换后恰好落在网关挂载点上。
+// 以 Huobao 网关适配为主：预设路径经 applyProviderBaseUrl 前缀替换后恰好落在网关挂载点上。
 const GATEWAY_PROVIDER_PREFIX = {
   openai: '', anthropic: '', gemini: '', deepseek: '', moonshot: '', xiaomi: '',
   xai: '', minimax: '', volcengine: '/volcengine', qwen: '/qwen', vidu: '/vidu',
@@ -49,21 +94,21 @@ const GATEWAY_PROVIDER_PREFIX = {
 const chatfireQuickSetup = async () => {
   const key = cfQuickKey.value.trim()
   if (!key) {
-    window.$message?.warning('请粘贴 ChatFire API Key')
+    window.$message?.warning('请粘贴 Huobao API Key')
     return
   }
   cfQuickTesting.value = true
   try {
-    // 相对路径：浏览器走同源反代（vite proxy / nginx），桌面端由 desktopBridge 解析为网关直连
+    // 相对路径走同源：浏览器经 vite proxy / nginx，Electron 内经内嵌 server 的 proxy 路由
     const resp = await appFetch('/v1/models', { headers: { Authorization: `Bearer ${key}` } })
     if (!resp.ok) {
       window.$message?.warning(`Key 校验返回 ${resp.status}，已保存，请确认 Key 有效`)
     }
     setGatewayBaseUrl(PUBLIC_API_BASE_URL)
-    addApiKey(key, 'ChatFire')
+    addApiKey(key, 'Huobao')
     setCurrentApiKey(key)
     cfCurrentKey.value = key
-    // 厂商一键接入：baseUrl 指向网关挂载前缀 + ChatFire Key 直接赋值，
+    // 厂商一键接入：baseUrl 指向网关挂载前缀 + Huobao Key 直接赋值，
     // 厂商卡片即刻可用（官方直连语义不变，清空覆盖即恢复厂商官方域名）
     for (const [providerId, prefix] of Object.entries(GATEWAY_PROVIDER_PREFIX)) {
       setProviderApiKey(providerId, key)
@@ -73,7 +118,7 @@ const chatfireQuickSetup = async () => {
     // 同步刷新厂商卡片的 baseUrl 输入框（baseInputs 是本地态，不随 localStorage 自动更新）
     baseInputs.value = Object.fromEntries(providers.map((p) => [p.id, effectiveProviderBaseUrl(p)]))
     cfQuickKey.value = ''
-    window.$message?.success('已接入 ChatFire：12 家厂商已自动配置好 Key 与网关地址，返回画布即可使用')
+    window.$message?.success('已接入 Huobao：12 家厂商已自动配置好 Key 与网关地址，返回画布即可使用')
   } catch (error) {
     console.error('[chatfireQuickSetup]', error)
     const detail = [error?.message, error?.stack?.split('\n')[1]?.trim()].filter(Boolean).join(' @ ')
@@ -326,8 +371,8 @@ const typeTagType = (type) => ({ '1': 'info', '2': 'success', '3': 'warning' }[S
           :class="{ active: activeSection === 'chatfire' }"
           @click="activeSection = 'chatfire'"
         >
-          <img src="/icons/huobao.png" class="nav-icon-img" alt="火宝 ChatFire" />
-          <span class="nav-label">火宝 ChatFire</span>
+          <img src="/icons/huobao.png" class="nav-icon-img" alt="火宝 Huobao" />
+          <span class="nav-label">火宝 Huobao</span>
           <span v-if="cfCurrentKey && catalogMode === 'gateway'" class="status-dot on" title="已接入"></span>
         </button>
       </div>
@@ -347,21 +392,36 @@ const typeTagType = (type) => ({ '1': 'info', '2': 'success', '3': 'warning' }[S
           <span v-if="providerKeys[p.id]?.key" class="status-dot on" title="已配置 Key"></span>
         </button>
       </div>
+
+      <!-- 桌面版（Electron preload 注入 canvasDesktop 时可见） -->
+      <div v-if="desktopBridge" class="nav-group">
+        <div class="nav-group-title">桌面版</div>
+        <button
+          type="button"
+          class="nav-item"
+          :class="{ active: activeSection === 'desktop' }"
+          @click="activeSection = 'desktop'"
+        >
+          <span class="nav-icon"><SvgIcon icon="tabler:device-desktop" /></span>
+          <span class="nav-label">应用更新</span>
+          <span v-if="updateState.status === 'available'" class="status-dot on" title="发现新版本"></span>
+        </button>
+      </div>
     </aside>
 
     <!-- 右侧详情 -->
     <main class="settings-main">
-      <!-- 火宝 ChatFire -->
+      <!-- 火宝 Huobao -->
       <section v-if="activeSection === 'chatfire'" class="pane">
         <div class="pane-head">
-          <img src="/icons/huobao.png" class="pane-icon" alt="火宝 ChatFire" />
-          <h1>火宝 ChatFire</h1>
+          <img src="/icons/huobao.png" class="pane-icon" alt="火宝 Huobao" />
+          <h1>火宝 Huobao</h1>
           <n-tag v-if="cfCurrentKey" type="success">已接入</n-tag>
         </div>
         <p class="pane-desc">
           一个 Key 使用全部 10+ 厂商的聚合模型，按量计费，无需逐厂商注册。
           粘贴 Key 一键接入，自动为 11 家厂商配置好网关地址与 Key。
-          <a href="https://chatfire.site" target="_blank" rel="noopener">前往 chatfire.site 注册获取 Key →</a>
+          <a href="https://firemux.com" target="_blank" rel="noopener">前往 firemux.com 注册获取 Key →</a>
         </p>
 
         <div class="card">
@@ -472,6 +532,43 @@ const typeTagType = (type) => ({ '1': 'info', '2': 'success', '3': 'warning' }[S
             <n-button v-if="row.custom" text type="error" size="tiny" @click="deleteModel(row.model.name)">
               {{ row.overridden ? '恢复预设' : '删除' }}
             </n-button>
+          </div>
+        </div>
+      </section>
+
+      <!-- 桌面版：应用更新 -->
+      <section v-else-if="activeSection === 'desktop' && desktopBridge" class="pane">
+        <div class="pane-head">
+          <h1>应用更新</h1>
+          <n-tag v-if="updateState.status === 'up-to-date'" type="success">已是最新</n-tag>
+          <n-tag v-else-if="updateState.status === 'available'" type="warning">发现新版本</n-tag>
+        </div>
+        <p class="pane-desc">
+          当前版本 v{{ updateState.currentVersion || '—' }}（Electron {{ desktopBridge.versions?.electron }}）。
+          更新包来自 GitHub Releases，下载后自动校验完整性（sha256）。
+        </p>
+
+        <div class="card">
+          <div class="field-row">
+            <span class="field-label">版本检查</span>
+            <n-button type="primary" :loading="updateState.status === 'checking'" @click="checkForUpdate">检查更新</n-button>
+            <span v-if="updateState.status === 'up-to-date'" class="test-ok">✓ 当前已是最新版本</span>
+            <span v-else-if="updateState.status === 'available'">新版本 v{{ updateState.latestVersion }}</span>
+            <span v-else-if="updateState.status === 'error'" class="test-fail">{{ updateState.error }}</span>
+          </div>
+          <div
+            v-if="['available', 'downloading', 'downloaded'].includes(updateState.status)"
+            class="field-row"
+          >
+            <span class="field-label">更新 v{{ updateState.latestVersion }}</span>
+            <n-progress
+              v-if="updateState.status === 'downloading'"
+              type="line"
+              :percentage="updateProgress"
+              style="flex: 1"
+            />
+            <n-button v-if="updateState.status === 'available'" @click="startDownload">下载更新</n-button>
+            <n-button v-if="updateState.status === 'downloaded'" type="primary" @click="applyUpdate">安装并重启</n-button>
           </div>
         </div>
       </section>
