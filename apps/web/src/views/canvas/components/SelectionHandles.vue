@@ -19,69 +19,31 @@
 </template>
 
 <script setup>
-import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
-import { useVueFlow } from '@vue-flow/core'
+import { computed, onBeforeUnmount, ref } from 'vue'
+import { useSelectionRect } from '../composables/useSelectionRect'
 
 const props = defineProps({
   nodes: { type: Array, default: () => [] },
-  dragTick: { type: Number, default: 0 },
   // (side, targetNodeId) => boolean：当前选区以该方向连到目标节点是否可行
   canConnect: { type: Function, default: null },
 })
 
 const emit = defineEmits(['connect', 'connect-blank'])
 
-const { viewport } = useVueFlow()
-
-const bbox = ref(null)
-const visible = computed(() => props.nodes.length >= 2 && Boolean(bbox.value))
-
-function updatePosition() {
-  if (props.nodes.length < 2) {
-    bbox.value = null
-    return
-  }
-  const rects = props.nodes
-    .map((node) => document.querySelector(`.vue-flow__node[data-id="${node.id}"]`)?.getBoundingClientRect())
-    .filter(Boolean)
-  if (!rects.length) {
-    bbox.value = null
-    return
-  }
-  bbox.value = {
-    left: Math.min(...rects.map((rect) => rect.left)),
-    right: Math.max(...rects.map((rect) => rect.right)),
-    top: Math.min(...rects.map((rect) => rect.top)),
-    bottom: Math.max(...rects.map((rect) => rect.bottom)),
-  }
-}
+// 屏幕坐标包围盒：拖拽/平移/缩放实时跟随
+const rect = useSelectionRect(() => props.nodes)
+const visible = computed(() => props.nodes.length >= 2 && Boolean(rect.value))
 
 const HANDLE_OFFSET = 28
 
 const handleStyles = computed(() => {
-  if (!bbox.value) return {}
-  const midY = (bbox.value.top + bbox.value.bottom) / 2
+  if (!rect.value) return {}
+  const midY = (rect.value.top + rect.value.bottom) / 2
   return {
-    left: { left: `${bbox.value.left - HANDLE_OFFSET}px`, top: `${midY}px` },
-    right: { left: `${bbox.value.right + HANDLE_OFFSET}px`, top: `${midY}px` },
+    left: { left: `${rect.value.left - HANDLE_OFFSET}px`, top: `${midY}px` },
+    right: { left: `${rect.value.right + HANDLE_OFFSET}px`, top: `${midY}px` },
   }
 })
-
-watch(
-  () => [
-    props.nodes.map((node) => node.id).join(','),
-    props.dragTick,
-    viewport.value.x,
-    viewport.value.y,
-    viewport.value.zoom,
-  ],
-  async () => {
-    await nextTick()
-    updatePosition()
-  },
-)
-
-onMounted(updatePosition)
 
 // ── 从选框句柄拉线 ──
 const dragState = ref(null)
@@ -98,11 +60,11 @@ function hitNodeId(clientX, clientY, { includeSelected = false } = {}) {
 }
 
 function startDrag(side, event) {
-  if (event.button !== 0 || !bbox.value) return
+  if (event.button !== 0 || !rect.value) return
   event.preventDefault()
   event.stopPropagation()
-  const anchorX = side === 'left' ? bbox.value.left - HANDLE_OFFSET : bbox.value.right + HANDLE_OFFSET
-  const anchorY = (bbox.value.top + bbox.value.bottom) / 2
+  const anchorX = side === 'left' ? rect.value.left - HANDLE_OFFSET : rect.value.right + HANDLE_OFFSET
+  const anchorY = (rect.value.top + rect.value.bottom) / 2
   dragState.value = { side, anchorX, anchorY, x: event.clientX, y: event.clientY, valid: false }
   window.addEventListener('pointermove', onDragMove)
   window.addEventListener('pointerup', onDragEnd, { once: true })

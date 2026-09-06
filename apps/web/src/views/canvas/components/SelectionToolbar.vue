@@ -31,17 +31,16 @@
 </template>
 
 <script setup>
-import { computed, nextTick, onMounted, ref, watch } from 'vue'
+import { computed } from 'vue'
 import { CANVAS_NODE_TYPES } from '../constants/nodeTypes'
+import { useSelectionRect } from '../composables/useSelectionRect'
 
 const props = defineProps({
   nodes: { type: Array, default: () => [] },
-  dragTick: { type: Number, default: 0 },
 })
 
 defineEmits(['duplicate', 'group', 'ungroup', 'layout-horizontal', 'layout-vertical', 'delete'])
 
-const style = ref({ left: '-9999px', top: '-9999px' })
 const count = computed(() => props.nodes.length)
 const canGroup = computed(() => count.value >= 2 && props.nodes.every((node) => (
   node.type !== CANVAS_NODE_TYPES.GROUP && !node.parentNode
@@ -51,29 +50,15 @@ const isSingleGroup = computed(() => (
 ))
 const visible = computed(() => count.value >= 2 || isSingleGroup.value)
 
-function updatePosition() {
-  if (!visible.value) return
-
-  const rects = props.nodes
-    .map((node) => document.querySelector(`.vue-flow__node[data-id="${node.id}"]`)?.getBoundingClientRect())
-    .filter(Boolean)
-  if (!rects.length) return
-
-  const left = Math.min(...rects.map((rect) => rect.left))
-  const right = Math.max(...rects.map((rect) => rect.right))
-  const top = Math.min(...rects.map((rect) => rect.top))
-  style.value = {
-    left: `${left + (right - left) / 2}px`,
-    top: `${Math.max(12, top - 46)}px`,
+// 屏幕坐标包围盒：拖拽/平移/缩放实时跟随
+const rect = useSelectionRect(() => props.nodes)
+const style = computed(() => {
+  if (!rect.value) return { left: '-9999px', top: '-9999px' }
+  return {
+    left: `${(rect.value.left + rect.value.right) / 2}px`,
+    top: `${Math.max(12, rect.value.top - 46)}px`,
   }
-}
-
-watch(() => [props.nodes.map((node) => node.id).join(','), props.dragTick], async () => {
-  await nextTick()
-  updatePosition()
 })
-
-onMounted(updatePosition)
 </script>
 
 <style scoped lang="scss">

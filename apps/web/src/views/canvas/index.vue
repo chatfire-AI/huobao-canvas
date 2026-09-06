@@ -107,7 +107,6 @@
 
       <SelectionToolbar
         :nodes="selectionToolbarNodes"
-        :drag-tick="dragTick"
         @duplicate="handleDuplicateSelected"
         @group="handleGroupSelected"
         @ungroup="handleUngroupSelected"
@@ -118,7 +117,6 @@
 
       <SelectionHandles
         :nodes="selectionToolbarNodes"
-        :drag-tick="dragTick"
         :can-connect="canSelectionConnectTo"
         @connect="handleSelectionHandleConnect"
         @connect-blank="handleSelectionConnectBlank"
