@@ -1,6 +1,6 @@
 <template>
   <div class="ai-canvas-page">
-    <section class="canvas-workspace">
+    <section class="canvas-workspace" @pointerdown.capture="handleSelectionAreaPointerDown" @click.capture="handleWorkspaceClickCapture">
       <CanvasToolbar
         :project-id="projectId"
         :project-name="project?.name || '默认画布'"
@@ -203,6 +203,7 @@ import SelectionToolbar from './components/SelectionToolbar.vue'
 import SelectionHandles from './components/SelectionHandles.vue'
 import CanvasEdge from './components/edges/CanvasEdge.vue'
 import { useCanvasHistory } from './composables/useCanvasHistory'
+import { useSelectionRect } from './composables/useSelectionRect'
 import TextNode from './components/nodes/TextNode.vue'
 import ImageNode from './components/nodes/ImageNode.vue'
 import VideoNode from './components/nodes/VideoNode.vue'
@@ -301,7 +302,7 @@ const connectionMenu = ref(null)
 const pendingConnection = ref(null)
 const dragTick = ref(0)
 const isDragging = ref(false)
-const { screenToFlowCoordinate } = useVueFlow()
+const { screenToFlowCoordinate, viewport, findNode, updateNodePositions } = useVueFlow()
 let removeFallbackConnectionListeners = null
 let promptDockPositionFrame = 0
 let promptDockResizeObserver = null
@@ -316,6 +317,7 @@ const {
   selectedEdgeId,
   selectedNode,
   selectedNodes,
+  selectedNodeIds,
   hasSelection,
   setGraph,
   toGraph,
@@ -876,6 +878,7 @@ onBeforeUnmount(() => {
   for (const url of assetObjectUrls.values()) URL.revokeObjectURL(url)
   assetObjectUrls.clear()
   window.removeEventListener('keydown', handleCanvasKeydown)
+  window.removeEventListener('pointermove', handleSelectionAreaMove)
   window.removeEventListener('resize', requestPromptDockPositionUpdate)
   document.removeEventListener('visibilitychange', handleVisibilitySave)
   promptDockResizeObserver?.disconnect()
@@ -1288,6 +1291,8 @@ function spawnRegenerationCopy(node) {
     data: {
       ...JSON.parse(JSON.stringify(node.data || {})),
       status: NODE_STATUS.IDLE,
+      // 重新生成副本视为新节点：清空 title 交给 addNode 生成唯一系统名
+      title: '',
       payload,
     },
   })
@@ -1401,6 +1406,14 @@ function handleSelectionChange({ nodes: selectedNodes = [], edges: selectedEdges
 function handlePaneClick() {
   clearSelection()
   connectionMenu.value = null
+}
+
+// 选区拖拽松手后的 click：capture 阶段拦在 pane 之前，
+// 否则 vue-flow 的 pane onClick 会 removeSelectedElements 清空选区
+function handleWorkspaceClickCapture(event) {
+  if (!suppressNextPaneClick) return
+  suppressNextPaneClick = false
+  event.stopPropagation()
 }
 
 function handleNodeDrag(event) {
@@ -1701,6 +1714,78 @@ function handleSelectionConnectBlank({ side, screenX, screenY }) {
     sourceType: '',
     selectionTypes: types,
   }
+}
+
+// ── 选区空白处拖拽：移动整个选区（本版 vue-flow 未渲染 NodesSelection，自行实现）──
+const selectionAreaRect = useSelectionRect(() => selectionToolbarNodes.value)
+let selectionAreaDrag = null
+let suppressNextPaneClick = false
+
+function handleSelectionAreaPointerDown(event) {
+  if (event.button !== 0) return
+  const ids = selectedNodeIds.value
+  if (ids.length < 2) return
+  // 节点/句柄/连线/悬浮控件各自有交互，不接管
+  if (event.target?.closest?.(
+    '.vue-flow__node, .vue-flow__handle, .vue-flow__edge, .selection-handle, .selection-toolbar, '
+    + '.connection-drop-menu, .canvas-prompt-dock, .vue-flow__minimap, .vue-flow__controls, .canvas-toolbar',
+  )) return
+  const rect = selectionAreaRect.value
+  if (!rect) return
+  const { clientX: x, clientY: y } = event
+  if (x < rect.left || x > rect.right || y < rect.top || y > rect.bottom) return
+
+  // 接管本次拖拽：stopPropagation 阻止 pane 收到 pointerdown
+  // （pan-on-drag 不含左键时 pane 左键 = 框选，会 removeSelectedElements 清空选区）
+  event.stopPropagation()
+  selectionAreaDrag = { lastX: x, lastY: y, moved: false }
+  window.addEventListener('pointermove', handleSelectionAreaMove)
+  window.addEventListener('pointerup', handleSelectionAreaUp, { once: true })
+}
+
+function handleSelectionAreaMove(event) {
+  const drag = selectionAreaDrag
+  if (!drag) return
+  const zoom = viewport.value.zoom || 1
+  const dx = (event.clientX - drag.lastX) / zoom
+  const dy = (event.clientY - drag.lastY) / zoom
+  drag.lastX = event.clientX
+  drag.lastY = event.clientY
+  if (!drag.moved) {
+    drag.moved = true
+    isDragging.value = true
+    setEdgeGlow(selectedNodeIds.value)
+  }
+  const ids = new Set(selectedNodeIds.value)
+  const updates = []
+  for (const id of ids) {
+    const node = findNode(id)
+    if (!node) continue
+    if (node.parentNode && ids.has(node.parentNode)) continue // 父级在选区内，随父级移动
+    // 走 store 的 updateNodePositions（期望绝对坐标，内部自行减去父级偏移），
+    // 由 store → v-model 正常回写，不直接改 nodes.value 避免与 store 状态打架
+    const base = node.computedPosition || node.position || { x: 0, y: 0 }
+    updates.push({
+      id,
+      position: { x: base.x + dx, y: base.y + dy },
+      from: node.position,
+      dimensions: node.dimensions,
+      ...(node.parentNode ? { parentNode: node.parentNode } : {}),
+    })
+  }
+  if (updates.length) updateNodePositions(updates, true, true)
+}
+
+function handleSelectionAreaUp() {
+  window.removeEventListener('pointermove', handleSelectionAreaMove)
+  const drag = selectionAreaDrag
+  selectionAreaDrag = null
+  if (!drag?.moved) return
+  suppressNextPaneClick = true // 拖拽结束后的 click 不能清空选区
+  isDragging.value = false
+  dragTick.value += 1
+  scheduleGraphSave()
+  if (pulsingEdgeIds.value.size) scheduleEdgeGlowClear()
 }
 
 function handleGroupSelected() {
@@ -2029,12 +2114,10 @@ async function handleAssetUpload(file) {
   background: color-mix(in srgb, var(--cf-brand) 6%, transparent);
 }
 
-// 多选后 Vue Flow 会在选区包围盒上盖一层 nodesselection-rect（pointer-events: all），
-// 把节点边缘的 + 连接桩全部挡住；改为穿透，选中态也能直接从任意节点拉线。
-// 拖动任意已选节点依然会整体移动选区，不受影响。
-:deep(.vue-flow__nodesselection-rect) {
-  pointer-events: none;
-}
+// 本版 vue-flow 不渲染 NodesSelection 矩形，选区整体拖拽由
+// handleSelectionAreaPointerDown 自行实现（见 script）
+
+
 
 :deep(.vue-flow__connection-path) {
   stroke: var(--cf-brand);
