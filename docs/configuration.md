@@ -15,11 +15,14 @@ ChatFire Canvas 的所有可变项都通过环境变量 / 运行时配置注入�
 
 ## Docker 部署环境变量（docker-compose）
 
+单镜像一体化：vite 前端产物 + Node 服务端（esbuild 单文件 bundle，复用桌面端内嵌模式），静态托管 / `/api` / 网关与厂商反代同一进程出。数据持久化在命名卷 `canvas-data`（SQLite + 结果文件），Watchtower 服务每日自动更新镜像。
+
 | 变量 | 默认值 | 说明 |
 |---|---|---|
-| `UPSTREAM` | `https://api.firemux.com` | nginx 反代的推理上游（容器内） |
-| `API_BASE_URL` | 空 | 写入 `config.js` 的 `apiBaseUrl`，留空 = 同源反代（推荐，规避 CORS） |
-| `EXPIRE_DAYS` | `7` | 媒体保留天数提示 |
+| `UPSTREAM` | `https://api.firemux.com` | 推理网关默认地址（engine 网关兜底；设置页「网关地址」仍优先） |
+| `API_BASE_URL` | 空 | 容器启动时由 `docker/entrypoint.sh` 写入 `config.js` 的 `apiBaseUrl`，留空 = 同源（推荐，规避 CORS） |
+| `WATCHTOWER_TOKEN` | `please-change-me` | Watchtower HTTP API 令牌（app 侧 label 已启用 `--label-enable`） |
+| `HUOBAO_VERSION` | `dev` | 构建时注入的版本号（发布镜像时指定） |
 
 ## 模型目录模式
 
@@ -39,8 +42,8 @@ ChatFire Canvas 的所有可变项都通过环境变量 / 运行时配置注入�
 
 ### 反代与 DNS 注意
 
-- `/official/*` 反代在 dev（vite proxy）与生产（nginx）均已内置；nginx 使用运行时 resolver + `proxy_ssl_server_name on`（SNI）+ `ipv6=off`
-- 若宿主机有代理工具（Clash fake-ip 等）污染容器 DNS：compose 已默认指定公共 DNS（223.5.5.5）；海外厂商若需走本机代理，移除 `dns:` 配置改用宿主机 DNS
+- `/official/*` 与网关挂载前缀的反代在 dev（vite proxy）与生产（镜像内 Node 服务端 `routes/proxy.js`，与桌面端内嵌同一条代码路径）均已内置；Node fetch/undici 自动处理 SNI 与解压，并剥离 `Origin` 头（对齐原 nginx `proxy_set_header Origin ""`，防严格 CORS 上游 403）
+- 若宿主机有代理工具（Clash fake-ip 等）污染容器 DNS：海外厂商若需走本机代理，可给容器配置 `dns:` 指向宿主机 DNS 或公共 DNS
 - api.x.ai 等域名存在 DNS 污染，无代理环境直连可能失败
 
 

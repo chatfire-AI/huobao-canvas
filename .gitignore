@@ -40,3 +40,6 @@ apps/desktop/release/
 
 # canvas server 本地数据（SQLite + 运行产物文件）
 apps/server/data/
+
+# desktop 运行冒烟测试（bundle 默认 DATA_DIR）
+apps/desktop/data/

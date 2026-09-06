@@ -17,10 +17,12 @@ const OFFICIAL_RE = /^\/official\/[A-Za-z0-9_-]+(\/|$)/
 const PROXY_METHODS = ['GET', 'POST', 'PUT', 'DELETE', 'PATCH']
 
 // 请求侧剥离：hop-by-hop + 长度/编码类（body 以流重发，长度由 undici 重算；
-// 不带 accept-encoding 让上游尽量回 identity，省去二次解压问题）
+// 不带 accept-encoding 让上游尽量回 identity，省去二次解压问题）。
+// origin 必须剥掉（对齐 nginx 反代 proxy_set_header Origin ""）：浏览器同源 POST 自带
+// 部署域名 Origin，严格 CORS 校验的上游对非白名单 Origin 直接 403
 const STRIP_REQUEST_HEADERS = new Set([
   'host', 'connection', 'content-length', 'accept-encoding', 'keep-alive',
-  'transfer-encoding', 'upgrade',
+  'transfer-encoding', 'upgrade', 'origin',
 ])
 // 响应侧剥离：undici 已自动解压，原 content-encoding/length 不再成立
 const STRIP_RESPONSE_HEADERS = new Set([

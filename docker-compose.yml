@@ -1,32 +1,45 @@
-services:
-  web:
-    build: ./apps/web
-    ports:
-      - "8080:80"
-    # 显式公共 DNS：规避本机代理（Clash 等）fake-ip 污染容器内 nginx 上游解析。
-    # 海外厂商（openai/xai/anthropic/gemini）若需走本机代理，请移除这两行改用宿主机 DNS。
-    dns:
-      - 223.5.5.5
-      - 119.29.29.29
-    environment:
-      # 推理上游：默认 ChatFire 公共 API，可改为任意 OpenAI 兼容网关
-      UPSTREAM: ${UPSTREAM:-https://api.chatfire.site}
-      # 浏览器侧请求基地址：默认空串（同源，走 nginx 反代）
-      API_BASE_URL: ${API_BASE_URL:-}
-      # 画布存储服务（SQLite）
-      CANVAS_SERVER: http://server:16812
-    restart: unless-stopped
+# 火宝画布 Docker 一体化部署：应用 + Watchtower（自动拉新镜像重建容器）
+#
+# 使用：
+#   1. 复制 .env.example 为 .env 并修改 WATCHTOWER_TOKEN（两端必须一致；不用自动更新可删掉 watchtower 服务）
+#   2. docker compose up -d
+#   3. 访问 http://localhost:8080
+#
+# 数据持久化在命名卷 canvas-data（SQLite 画布 / Key 镜像 / 运行队列 / 生成的结果文件）。
 
-  # 画布存储 + 运行引擎：SQLite 持久化 + 全量模型调用服务端执行（runs 队列）
-  server:
+services:
+  app:
+    image: huobao/huobao-canvas:latest
     build:
       context: .
-      dockerfile: apps/server/Dockerfile
+      args:
+        # 构建时注入版本号（发布镜像时务必指定，如 HUOBAO_VERSION=1.2.0）
+        HUOBAO_VERSION: ${HUOBAO_VERSION:-dev}
+    ports:
+      - "8080:16812"
     environment:
-      PORT: 16812
-      DATA_DIR: /data
+      # 推理上游：默认 Huobao 公共 API，可改为任意 OpenAI 兼容网关（设置页仍可按用户覆盖）
+      UPSTREAM: ${UPSTREAM:-https://api.firemux.com}
+      # 浏览器侧请求基地址：默认空串（同源，由镜像内服务端直出/反代）
+      API_BASE_URL: ${API_BASE_URL:-}
     volumes:
-      - canvas-data:/data
+      - canvas-data:/app/data
+    labels:
+      # Watchtower --label-enable：只更新显式标记的容器
+      com.centurylinklabs.watchtower.enable: "true"
+    restart: unless-stopped
+
+  watchtower:
+    image: containrrr/watchtower:latest
+    command: >
+      --http-api-update
+      --http-api-token ${WATCHTOWER_TOKEN:-please-change-me}
+      --label-enable
+      --cleanup
+      --rolling-restart
+      --interval 86400
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
     restart: unless-stopped
 
 volumes:

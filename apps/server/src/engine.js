@@ -30,7 +30,9 @@ const applyInputTransform = createInputTransformEngine()
 const RETRYABLE_HTTP_STATUSES = new Set([408, 425, 429])
 const NONTERMINAL_TASK_STATUSES = new Set(['PENDING', 'QUEUED', 'PROCESSING', 'RUNNING'])
 const GATEWAY_MOUNT_RE = /^\/(v1|v1beta|sys|qwen|volcengine|vidu|minimax|xai|zhipu)\//
-const PUBLIC_GATEWAY = 'https://api.firemux.com'
+// 部署默认网关：UPSTREAM 环境变量（Docker 单镜像部署注入，对齐原 nginx 反代语义）> 内置公共 API；
+// 设置页「网关地址」仍优先于两者
+const PUBLIC_GATEWAY = process.env.UPSTREAM?.replace(/\/$/, '') || 'https://api.firemux.com'
 // 异步任务轮询预算：720 次 × 10s = 2h（长视频友好；浏览器版是 120×5s）
 const POLL_MAX_ATTEMPTS = 720
 const POLL_INTERVAL = 10000

@@ -1,6 +1,6 @@
 # ChatFire Canvas（火宝画布）
 
-[English](./README.md)
+[English](./README.md) | [日本語](./README.ja.md) | [한국어](./README.ko.md)
 
 开源的节点式 AI 创作画布：在无限画布上串联 12 家厂商的文本 / 图像 / 视频生成模型，自带 API Key 即可使用。
 
@@ -8,7 +8,7 @@
 
 ![Vue](https://img.shields.io/badge/Vue-3.5-4FC08D?logo=vue.js)
 ![Vite](https://img.shields.io/badge/Vite-5-646CFF?logo=vite)
-![Docker](https://img.shields.io/badge/Docker-compose-2496ED?logo=docker)
+![Docker](https://img.shields.io/badge/Docker-huobao%2Fhuobao--canvas-2496ED?logo=docker)
 [![License](https://img.shields.io/badge/License-CC%20BY--NC--SA%204.0-lightgrey.svg)](https://creativecommons.org/licenses/by-nc-sa/4.0/)
 
 > **v2.0 全面重构中**：本分支为重构版（monorepo + 12 家厂商官方适配）。v1 旧版代码与文档保留在 [`legacy/v1`](../../tree/legacy/v1) 分支。
@@ -19,17 +19,28 @@
 - 🔗 **节点串联**：上游节点输出可作为下游输入（文生图 → 图生视频）
 - 🧩 **内置 12 家厂商官方格式**：OpenAI、Anthropic、Gemini、Qwen、火山、DeepSeek、MiniMax、Moonshot、智谱、xAI、Vidu、小米 MiMo，含官方出入参适配
 - ⚙️ **设置页**：按厂商配置 API Key、连通测试、模型启停、自定义模型
-- 🔑 **BYOK**：API Key 仅存浏览器本地，不经过任何服务端
-- 💾 **本地优先**：项目数据保存在 IndexedDB（Dexie），无需注册账号
-- ☁️ **可选媒体持久化**：生成素材可直传自有对象存储桶（TOS / COS / S3 兼容，BYOS 凭证仅存本地）或自建存储服务
-- 🔄 **双目录模式**：官方直连（默认，独立可用）或接入任意 ChatFire/OpenAI 兼容网关
+- 🖥️ **服务端运行队列**：模型调用经服务端执行，刷新 / 换浏览器任务不丢，异步视频任务自动轮询（预算 2 小时），画布数据存 SQLite
+- 🔑 **BYOK**：API Key 默认存浏览器本地；自部署时自动镜像到服务端（换浏览器无缝接管）
+- 🌍 **四语界面**：简体中文 / English / 日本語 / 한국어，界面内一键切换
+- 🔄 **双目录模式**：厂商官方直连（默认，独立可用）或接入任意 ChatFire/OpenAI 兼容网关
+- 📦 **多种部署**：Docker 单镜像一体化（amd64 / arm64，Win / Mac / Linux 通用）· Electron 桌面版（Windows / macOS）
 
 ## 快速开始
 
 **Docker（推荐）**
 
 ```bash
-docker compose up -d        # http://localhost:8080
+docker run -d -p 8080:16812 -v canvas-data:/app/data huobao/huobao-canvas:latest
+# 打开 http://localhost:8080
+```
+
+镜像发布在 Docker Hub（[huobao/huobao-canvas](https://hub.docker.com/r/huobao/huobao-canvas)），多架构 `linux/amd64` + `linux/arm64`，Linux 服务器 / Windows / macOS 通用。
+
+或用 docker compose（附带 Watchtower 每日自动更新 + `.env` 配置）：
+
+```bash
+cp .env.example .env       # 按需修改 WATCHTOWER_TOKEN
+docker compose up -d       # http://localhost:8080
 ```
 
 **本地开发**
@@ -37,12 +48,22 @@ docker compose up -d        # http://localhost:8080
 ```bash
 cd apps/web
 pnpm install
-pnpm dev        # http://localhost:8021
+pnpm dev        # http://localhost:8022
 ```
 
-打开页面，进入右上角**设置**，为任意厂商填入 API Key，即可开始创作。Key 仅保存在浏览器 localStorage。
+打开页面，进入右上角**设置**，为任意厂商填入 API Key，即可开始创作。Key 默认保存在浏览器 localStorage（自部署时自动镜像到服务端）。
 
 ## 配置
+
+Docker 部署（`docker-compose.yml` / `.env`）：
+
+| 环境变量 | 默认值 | 说明 |
+|---|---|---|
+| `UPSTREAM` | `https://api.firemux.com` | 推理网关默认地址（任意 OpenAI 兼容网关；设置页仍可按用户覆盖） |
+| `API_BASE_URL` | 空 | 浏览器侧请求基地址，留空 = 同源（由镜像内服务端直出/反代） |
+| `WATCHTOWER_TOKEN` | `please-change-me` | Watchtower HTTP API 令牌，生产环境务必修改 |
+
+本地开发（`apps/web`）：
 
 | 环境变量 | 默认值 | 说明 |
 |---|---|---|

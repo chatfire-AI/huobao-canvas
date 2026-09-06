@@ -1,0 +1,15 @@
+# 版本控制与产物
+.git
+**/node_modules
+apps/web/dist
+apps/desktop/build
+apps/desktop/dist
+apps/desktop/release
+
+# 运行时数据（绝不能进镜像：SQLite + 生成的结果文件）
+apps/server/data
+
+# 本地环境
+.env
+*.log
+.DS_Store
