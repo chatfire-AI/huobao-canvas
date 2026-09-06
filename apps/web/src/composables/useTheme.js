@@ -38,23 +38,38 @@ export function useTheme() {
     return isDark.value
       ? {
           common: {
-            primaryColor: "#f97316",
-            primaryColorHover: "#fb923c",
-            primaryColorPressed: "#ea580c",
+            primaryColor: "#ffb076",
+            primaryColorHover: "#ffc194",
+            primaryColorPressed: "#f5934e",
             successColor: "#4ade80",
             warningColor: "#fbbf24",
             errorColor: "#f87171",
             infoColor: "#60a5fa",
-            // 浮层/表面对齐中性深灰令牌（variables.scss html.dark）
-            bodyColor: "#0a0a0a",
-            cardColor: "#1a1a1a",
-            modalColor: "#1a1a1a",
-            popoverColor: "#1a1a1a",
-            inputColor: "rgba(255, 255, 255, .05)",
-            actionColor: "rgba(255, 255, 255, .05)",
-            hoverColor: "rgba(255, 255, 255, .08)",
-            borderColor: "rgba(255, 255, 255, .08)",
-            dividerColor: "rgba(255, 255, 255, .08)",
+            // 浮层/表面/文本对齐 slate 蓝灰暗色令牌（variables.scss html.dark，
+            // 与 gateway/drama 同源）
+            bodyColor: "#0b0f16",
+            cardColor: "#131a24",
+            modalColor: "#131a24",
+            popoverColor: "#182230",
+            inputColor: "rgba(148, 163, 184, .08)",
+            actionColor: "rgba(148, 163, 184, .08)",
+            hoverColor: "rgba(148, 163, 184, .14)",
+            borderColor: "rgba(148, 163, 184, .14)",
+            dividerColor: "rgba(148, 163, 184, .14)",
+            textColor1: "#f1f5f9",
+            textColor2: "rgba(226, 232, 240, .65)",
+            textColor3: "#8b94a3",
+            fontWeight: "400",
+            fontWeightStrong: "600",
+          },
+          Card: {
+            borderRadius: "14px",
+          },
+          Dropdown: {
+            color: "#182230",
+            optionColorHover: "rgba(255, 176, 118, .14)",
+            borderRadius: "10px",
+            padding: "6px",
           },
           Dialog: {
             borderRadius: "16px",
@@ -72,6 +87,16 @@ export function useTheme() {
             warningColor: "#d97706",
             errorColor: "#dc2626",
             infoColor: "#2563eb",
+            fontWeight: "400",
+            fontWeightStrong: "600",
+          },
+          Card: {
+            borderRadius: "14px",
+          },
+          Dropdown: {
+            optionColorHover: "rgba(249, 115, 22, .1)",
+            borderRadius: "10px",
+            padding: "6px",
           },
           Dialog: {
             borderRadius: "16px",

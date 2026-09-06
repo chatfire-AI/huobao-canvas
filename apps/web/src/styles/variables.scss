@@ -54,25 +54,25 @@
 // ============ Design Tokens (dark) ============
 html.dark {
   color-scheme: dark;
-  // 中性深灰基调（参考 LibTV），不用蓝紫色倾向的 slate 色系
-  --cf-bg-page: #0a0a0a;
-  --cf-bg-surface: #141414;
-  --cf-bg-elevated: #1a1a1a;
-  --cf-bg-subtle: rgba(255, 255, 255, .05);
-  --cf-border: rgba(255, 255, 255, .08);
-  --cf-border-strong: rgba(255, 255, 255, .16);
-  // 画布连线：深灰底上保持清晰可见
-  --cf-edge-stroke: rgba(255, 255, 255, .3);
-  --cf-text-primary: #f5f5f5;
-  --cf-text-secondary: rgba(255, 255, 255, .55);
-  --cf-text-tertiary: rgba(255, 255, 255, .35);
+  // slate 蓝灰暗色体系——与 chatfire-gateway(platform) / huobao-drama 完全同源
+  --cf-bg-page: #0b0f16;
+  --cf-bg-surface: #131a24;
+  --cf-bg-elevated: #182230;
+  --cf-bg-subtle: rgba(148, 163, 184, .08);
+  --cf-border: rgba(148, 163, 184, .14);
+  --cf-border-strong: rgba(148, 163, 184, .28);
+  // 画布连线：slate 系加深一档，保证深灰底上可见
+  --cf-edge-stroke: rgba(148, 163, 184, .45);
+  --cf-text-primary: #f1f5f9;
+  --cf-text-secondary: rgba(226, 232, 240, .65);
+  --cf-text-tertiary: #8b94a3;
   --cf-text-on-brand: #2a1503;
-  // 品牌色与 LOGO/节点高亮同色（饱和橙），不用浅桃色——低透明度叠在深灰上会发棕发闷
-  --cf-brand: #f97316;
-  --cf-brand-hover: #fb923c;
-  --cf-brand-pressed: #ea580c;
-  --cf-brand-soft: rgba(249, 115, 22, .16);
-  --cf-brand-soft-strong: rgba(249, 115, 22, .26);
+  // 暗色品牌色提亮为蜜桃橙（gateway/drama 同值），叠 slate 底不发闷
+  --cf-brand: #ffb076;
+  --cf-brand-hover: #ffc194;
+  --cf-brand-pressed: #f5934e;
+  --cf-brand-soft: rgba(255, 176, 118, .14);
+  --cf-brand-soft-strong: rgba(255, 176, 118, .24);
   --cf-success: #4ade80;
   --cf-success-soft: rgba(74, 222, 128, .14);
   --cf-warning: #fbbf24;
@@ -89,7 +89,7 @@ html.dark {
 
   // ============ Playground（演武场）Tokens(灰 + 橙点缀 · dark) ============
   // 主色引用 --cf-brand,自动跟随暗色品牌值;仅渐变在此覆盖为暗色适配
-  --pg-accent-gradient: linear-gradient(135deg, #f97316 0%, #fb923c 100%);
+  --pg-accent-gradient: linear-gradient(135deg, #ffb076 0%, #ff9a5c 100%);
   --pg-method-post: #60a5fa;
   --pg-method-get: #4ade80;
   --pg-method-other: #8b94a3;
