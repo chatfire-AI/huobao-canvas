@@ -1185,10 +1185,19 @@ function updatePromptDockPosition() {
   const nodeRect = nodeEl?.getBoundingClientRect()
   if (!nodeRect) return
 
-  // 节点工具条：悬浮在选中节点上方
+  // 节点工具条：悬浮在选中节点上方；节点被底部提示词码头遮挡时，
+  // 钳制到码头之上，避免工具条压进输入栏区域。
+  // dock 底部固定距视口底 14px（见 promptDockStyle），用 offsetHeight 推导顶边——
+  // 不读 getBoundingClientRect（dock 首次出现时当帧定位还是 -9999 旧值，会错钳到屏幕顶）
+  const dockEl = document.querySelector('.canvas-prompt-dock')
+  const dockTop = dockEl ? window.innerHeight - 14 - (dockEl.offsetHeight || 184) : null
+  let toolbarTop = Math.max(12, nodeRect.top - 48)
+  if (dockTop != null && nodeRect.bottom > dockTop) {
+    toolbarTop = Math.max(12, dockTop - 46)
+  }
   nodeToolbarStyle.value = {
     left: `${nodeRect.left + nodeRect.width / 2}px`,
-    top: `${Math.max(12, nodeRect.top - 48)}px`,
+    top: `${toolbarTop}px`,
   }
   // 提示词码头：底部居中悬浮命令条（即梦/剪映式工作台布局）
   promptDockStyle.value = {
