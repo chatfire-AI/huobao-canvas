@@ -3,7 +3,7 @@ import { ep, model, schema, messagesField, temperatureField, maxTokensField } fr
 const provider = {
   id: 'zhipu',
   label: '智谱 GLM',
-  icon: '',
+  icon: 'zhipu-color.png',
   docsUrl: 'https://docs.bigmodel.cn/cn/api',
   baseUrl: 'https://open.bigmodel.cn',
   proxyPrefix: '/official/zhipu',

@@ -75,6 +75,11 @@
 <script setup>
 import { computed, nextTick, ref, watch } from 'vue'
 import { resolveModelIcon } from '@/utils/tools'
+import { useTheme } from '@/composables/useTheme'
+
+const { isDark } = useTheme()
+// 图标主题变体跟随明暗切换（computed 内引用，响应式重算）
+const iconTheme = computed(() => (isDark.value ? 'dark' : 'light'))
 
 const props = defineProps({
   options: { type: Array, default: () => [] },
@@ -102,7 +107,7 @@ const factoryLabel = (code) => {
 // 归一化选项并保留原始顺序(上游已按上线时间倒序)
 const items = computed(() => props.options.map((option) => ({
   ...option,
-  iconUrl: option.icon ? resolveModelIcon(option.icon) : '',
+  iconUrl: option.icon ? resolveModelIcon(option.icon, iconTheme.value) : '',
   factoryKey: String(option.factory || '').trim().toLowerCase() || 'other',
 })))
 

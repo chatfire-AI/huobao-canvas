@@ -3,7 +3,7 @@ import { ep, model, promptField, schema } from './_shared.js'
 const provider = {
   id: 'vidu',
   label: 'Vidu',
-  icon: '',
+  icon: 'vidu-color.png',
   docsUrl: 'https://platform.vidu.com/docs',
   baseUrl: 'https://api.vidu.cn',
   proxyPrefix: '/official/vidu',

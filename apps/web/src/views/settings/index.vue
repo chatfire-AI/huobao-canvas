@@ -21,6 +21,11 @@ import { protocolRegistry } from '@/views/playground/protocols/registry.js'
 import { appFetch } from '@/utils/desktopBridge.js'
 import { isServerRunMode, testProviderOnServer } from '@/api/canvasServer.js'
 import { resolveModelIcon } from '@/utils/tools'
+import { useTheme } from '@/composables/useTheme'
+
+const { isDark } = useTheme()
+// 厂商图标主题变体跟随明暗切换
+const iconTheme = computed(() => (isDark.value ? 'dark' : 'light'))
 
 const router = useRouter()
 
@@ -386,7 +391,7 @@ const typeTagType = (type) => ({ '1': 'info', '2': 'success', '3': 'warning' }[S
           :class="{ active: activeSection === p.id, muted: isProviderHidden(p.id) }"
           @click="activeSection = p.id"
         >
-          <img v-if="p.icon" :src="resolveModelIcon(p.icon)" class="nav-icon-img" :alt="p.label" />
+          <img v-if="p.icon" :src="resolveModelIcon(p.icon, iconTheme)" class="nav-icon-img" :alt="p.label" />
           <span v-else class="nav-icon">{{ p.label.slice(0, 1) }}</span>
           <span class="nav-label">{{ p.label }}</span>
           <span v-if="providerKeys[p.id]?.key" class="status-dot on" title="已配置 Key"></span>
@@ -452,7 +457,7 @@ const typeTagType = (type) => ({ '1': 'info', '2': 'success', '3': 'warning' }[S
       <!-- 厂商详情 -->
       <section v-else-if="activeProvider" class="pane">
         <div class="pane-head">
-          <img v-if="activeProvider.icon" :src="resolveModelIcon(activeProvider.icon)" class="pane-icon" :alt="activeProvider.label" />
+          <img v-if="activeProvider.icon" :src="resolveModelIcon(activeProvider.icon, iconTheme)" class="pane-icon" :alt="activeProvider.label" />
           <h1>{{ activeProvider.label }}</h1>
           <a :href="activeProvider.docsUrl" target="_blank" rel="noopener" class="docs-link">官方文档 →</a>
           <div class="pane-head-right">

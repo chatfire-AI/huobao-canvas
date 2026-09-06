@@ -3,7 +3,7 @@ import { ep, model, messagesField, temperatureField, maxTokensField, promptField
 const provider = {
   id: 'qwen',
   label: '阿里百炼 Qwen',
-  icon: '',
+  icon: 'qwen-color.png',
   docsUrl: 'https://help.aliyun.com/zh/model-studio/developer-reference',
   baseUrl: 'https://dashscope.aliyuncs.com',
   proxyPrefix: '/official/qwen',
