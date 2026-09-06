@@ -111,12 +111,20 @@ export function useCanvasGraph() {
 
   const setGraph = (graph = {}) => {
     const allowedTypes = new Set(ACTIVE_CANVAS_NODE_TYPES)
-    const nextNodes = Array.isArray(graph.nodes)
+    const nextNodes = (Array.isArray(graph.nodes)
       ? graph.nodes.filter((node) => allowedTypes.has(node.type))
-      : []
-    const nextNodesById = new Map(nextNodes.map((node) => [node.id, node]))
+      : [])
+    // 孤儿节点兜底（撤销/重做回放不经过 repairCanvasGraphForLoad）：
+    // parentNode 指向不存在的分组时剥离父子关系，避免 Vue Flow 变更循环
+    const nodeIds = new Set(nextNodes.map((node) => node.id))
+    const safeNodes = nextNodes.map((node) => (
+      node.parentNode && !nodeIds.has(node.parentNode)
+        ? { ...node, parentNode: undefined, extent: undefined }
+        : node
+    ))
+    const nextNodesById = new Map(safeNodes.map((node) => [node.id, node]))
     const seenEdgeIds = new Set()
-    nodes.value = nextNodes
+    nodes.value = safeNodes
     edges.value = Array.isArray(graph.edges)
       ? graph.edges
         .filter((edge) => isCanvasConnectionDirectionAllowed(edge))

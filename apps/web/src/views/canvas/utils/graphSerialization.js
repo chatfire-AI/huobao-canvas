@@ -172,6 +172,11 @@ export function repairCanvasGraphForLoad(graph = {}) {
   return {
     ...clean,
     nodes: clean.nodes.map((node) => {
+      // 孤儿节点：parentNode 指向已删除的分组——剥离父子关系，
+      // 否则 Vue Flow 反复报 missing parent 并陷入变更循环
+      if (node.parentNode && !parentIds.has(node.parentNode)) {
+        node = { ...node, parentNode: undefined, extent: undefined }
+      }
       if (parentIds.has(node.parentNode) && (node.position?.x < 0 || node.position?.y < 0)) {
         const recovered = node.computedPosition
         if (recovered?.x >= 0 && recovered?.y >= 0) {

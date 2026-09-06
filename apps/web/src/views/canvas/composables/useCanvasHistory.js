@@ -82,25 +82,32 @@ export function useCanvasHistory({ nodes, edges, setGraph, isSystemMutation = ()
     if (!coalesceTimer) return
     clearTimeout(coalesceTimer)
     coalesceTimer = 0
+    // 快照只在结算时做一次：拖拽期间 watcher 每帧触发，仅重置计时器
     const { snapshot, fingerprint } = takeSnapshot()
-    if (fingerprint === baselineFingerprint) return
+    if (fingerprint === baselineFingerprint) return // 纯选中/尺寸回填等噪音变更
     past.value.push(baselineSnapshot)
     if (past.value.length > HISTORY_LIMIT) past.value.shift()
     syncBaseline(snapshot, fingerprint)
     future.value = []
   }
 
-  watch([nodes, edges], () => {
+  // 系统变更（任务运行/项目切换）：防抖后只同步基线，不产生撤销步
+  const settleSystem = () => {
+    if (!coalesceTimer) return
+    clearTimeout(coalesceTimer)
+    coalesceTimer = 0
     const { snapshot, fingerprint } = takeSnapshot()
-    if (fingerprint === baselineFingerprint) return
-    if (Date.now() < suppressUntil || isSystemMutation()) {
-      syncBaseline(snapshot, fingerprint)
+    syncBaseline(snapshot, fingerprint)
+  }
+
+  watch([nodes, edges], () => {
+    if (Date.now() < suppressUntil) {
       clearTimeout(coalesceTimer)
-      coalesceTimer = 0
+      coalesceTimer = setTimeout(settleSystem, COALESCE_MS)
       return
     }
     clearTimeout(coalesceTimer)
-    coalesceTimer = setTimeout(settle, COALESCE_MS)
+    coalesceTimer = setTimeout(isSystemMutation() ? settleSystem : settle, COALESCE_MS)
   })
 
   const applySnapshot = (snapshot) => {

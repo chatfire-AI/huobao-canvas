@@ -118,10 +118,6 @@
     </div>
 
     <div class="toolbar-right">
-      <span class="save-state" :class="saveState" :title="storageError || saveLabel">
-        <span class="save-state-dot" aria-hidden="true"></span>
-        {{ saveLabel }}
-      </span>
       <div class="api-key-control" v-if="showApiKeyControl">
         <span>API Key</span>
         <n-select
@@ -255,18 +251,7 @@ function commitRename() {
   renamingValue.value = ''
 }
 
-const saveLabel = computed(() => {
-  if (props.controlsLocked) return '任务信息保存中'
-  if (props.saveState === 'error' && props.storageError) return `保存失败：${props.storageError}`
-  const map = {
-    idle: '本地画布',
-    saving: '保存中',
-    saved: '已自动保存',
-    error: '保存失败',
-  }
-  return map[props.saveState] || '本地画布'
-})
-
+// 保存状态不在工具栏展示（自动保存静默进行，出错时由页面级 message 提示）
 const currentProject = computed(() => (
   props.projectOptions.find((item) => item.value === props.projectId) || {
     label: props.projectName || '默认画布',
@@ -496,60 +481,6 @@ button {
   &:hover:not(:disabled) {
     background: var(--cf-bg-subtle);
     color: var(--cf-text-primary);
-  }
-}
-
-// ── 保存状态 chip ──
-.save-state {
-  max-width: 200px;
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  overflow: hidden;
-  padding: 3px 10px;
-  border-radius: 999px;
-  background: var(--cf-bg-subtle);
-  color: var(--cf-text-tertiary);
-  font-size: 11.5px;
-  font-weight: 750;
-  white-space: nowrap;
-}
-
-.save-state-dot {
-  width: 6px;
-  height: 6px;
-  flex-shrink: 0;
-  border-radius: 999px;
-  background: var(--cf-border-strong);
-}
-
-.save-state.saving .save-state-dot {
-  background: var(--cf-warning);
-  animation: save-pulse 1s ease-in-out infinite;
-}
-
-.save-state.saved {
-  color: var(--cf-success);
-
-  .save-state-dot {
-    background: var(--cf-success);
-  }
-}
-
-.save-state.error {
-  color: var(--cf-error);
-
-  .save-state-dot {
-    background: var(--cf-error);
-  }
-}
-
-@keyframes save-pulse {
-  0%, 100% {
-    opacity: 1;
-  }
-  50% {
-    opacity: 0.35;
   }
 }
 
