@@ -107,6 +107,7 @@ export default {
     selectModel: 'Please select a model first',
     missingRequired: 'Missing required parameters: {fields}',
     fieldSep: ', ',
+    referenceModeAutoSwitched: 'Reference image connected — switched to "{mode}"',
   },
   model: {
     factoryFallback: 'Model',
@@ -140,6 +141,7 @@ export default {
     countValue: '{n}',
     defaultValue: 'Default',
     paramsSummary: 'Parameters',
+    endpointModeLabel: 'Mode',
     placeholderFallback: 'Enter a prompt',
     noModel: 'No {label} models available',
     desktopOnly: 'Please use the canvas editor on desktop',

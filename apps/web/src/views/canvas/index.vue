@@ -144,7 +144,10 @@
         :format-options="formatOptions"
         :running="running"
         :polling-task-id="pollingTaskId"
+        :endpoint-options="endpointOptions"
+        :selected-endpoint-index="selectedEndpointIndex"
         @select-model="handleModelNameUpdate"
+        @select-endpoint="handleEndpointIndexUpdate"
         @update-prompt="handlePromptUpdate"
         @update-form-data="handleFormDataUpdate"
         @asset-upload="handleAssetUpload"
@@ -1331,6 +1334,37 @@ function spawnRegenerationCopy(node) {
   return newNode
 }
 
+// 端点 schema 是否接收图片输入：全局/端点级字段含 image/images 类型，或端点显式声明 inputBindings
+function endpointAcceptsImages(endpointPath) {
+  const raw = modelData.value?.modelSchema
+  let schema = {}
+  try { schema = typeof raw === 'string' ? JSON.parse(raw) : (raw || {}) } catch { schema = {} }
+  const ep = schema.endpointSchemas?.[endpointPath]
+  const fields = [...(schema.input || []), ...(ep?.input || [])]
+  return fields.some((field) => ['image', 'images'].includes(String(field?.type || '').toLowerCase()))
+    || Boolean(ep?.inputBindings)
+}
+
+// 连线参考自动切换：上游连了图片节点、当前端点（如「文生图」）不收参考图、
+// 模型另有可提交的图片端点（如「图片编辑」）→ 返回目标端点下标，否则 -1。
+// 避免 Dock 已展示「参考内容」但运行时静默丢弃参考（生成出长相无关的新图）
+function findReferenceCapableEndpoint(node) {
+  if (!getIncomingNodes(node.id).some(({ node: source }) => source?.type === CANVAS_NODE_TYPES.IMAGE)) return -1
+  const hasMediaField = (schemaFields.value || []).some((field) =>
+    ['image', 'images'].includes(String(field?.type || '').toLowerCase()))
+  if (hasMediaField) return -1
+  return parsedEndpoints.value.findIndex((endpoint, index) => {
+    if (index === selectedEndpointIndex.value) return false
+    const resolvedPath = resolveEndpointPath(
+      endpoint.path || '',
+      modelData.value?.name,
+      modelData.value?.providerCode || modelData.value?.factory,
+    )
+    if (isStreamEndpoint(endpoint) || !isCanvasSubmitEndpointMounted(resolvedPath)) return false
+    return endpointAcceptsImages(endpoint.path)
+  })
+}
+
 async function runNodeFromDock(node) {
   const schemaRequest = beginSchemaRequest(node.id)
   const work = beginTaskWork(node.id, projectId.value)
@@ -1350,6 +1384,21 @@ async function runNodeFromDock(node) {
     applyEndpointSchema(selectedEndpoint.value?.path || '/v1/chat/completions')
     await nextTick()
     if (!isCurrentSchemaRequest(schemaRequest)) return
+    // 连线参考自动接入：上游连了图片而当前端点不收参考、模型另有图片端点时自动切换
+    const referenceEndpointIndex = findReferenceCapableEndpoint(node)
+    if (referenceEndpointIndex > -1) {
+      selectedEndpointIndex.value = referenceEndpointIndex
+      updateNodePayload(node.id, { endpointIndex: referenceEndpointIndex }, { userMutation: true })
+      await nextTick()
+      if (!isCurrentSchemaRequest(schemaRequest)) return
+      formDataOwnerNodeId.value = schemaRequest.nodeId
+      applyEndpointSchema(selectedEndpoint.value?.path || '/v1/chat/completions')
+      await nextTick()
+      if (!isCurrentSchemaRequest(schemaRequest)) return
+      window.$message?.info(t('canvas.run.referenceModeAutoSwitched', {
+        mode: endpointOptions.value[referenceEndpointIndex]?.label || '',
+      }))
+    }
     formDataOwnerNodeId.value = schemaRequest.nodeId
     formData.value = {
       ...formData.value,

@@ -107,6 +107,7 @@ export default {
     selectModel: '먼저 모델을 선택하세요',
     missingRequired: '필수 파라미터가 없습니다: {fields}',
     fieldSep: ', ',
+    referenceModeAutoSwitched: '연결된 참조 이미지가 있어 "{mode}"(으)로 자동 전환했습니다',
   },
   model: {
     factoryFallback: '모델',
@@ -140,6 +141,7 @@ export default {
     countValue: '{n}장',
     defaultValue: '기본값',
     paramsSummary: '파라미터 설정',
+    endpointModeLabel: '생성 모드',
     placeholderFallback: '프롬프트 입력',
     noModel: '{label} 모델이 없습니다',
     desktopOnly: '데스크톱에서 캔버스 에디터를 사용하세요',

@@ -110,6 +110,42 @@
             :disabled="running || !modelOptions.length"
             @select="$emit('select-model', $event || '')"
           />
+          <!-- 生成模式（端点）：连线参考是否生效由模式决定（如 文生图 不收参考图），必须可切换 -->
+          <n-popover
+            v-if="endpointOptions.length > 1"
+            trigger="click"
+            placement="top-start"
+            :show-arrow="false"
+            :disabled="running"
+            :z-index="2700"
+            raw
+          >
+            <template #trigger>
+              <button type="button" class="param-summary-chip endpoint-mode-chip" :disabled="running">
+                <span class="param-summary-text">{{ currentEndpointLabel }}</span>
+                <svg-icon icon="tabler:chevron-up" />
+              </button>
+            </template>
+            <div class="params-panel">
+              <div class="params-group">
+                <div class="params-group-label">{{ $t('canvas.promptDock.endpointModeLabel') }}</div>
+                <div class="params-group-options params-group-options-column">
+                  <button
+                    v-for="option in endpointOptions"
+                    :key="option.value"
+                    type="button"
+                    class="params-option"
+                    :class="{ active: selectedEndpointIndex === option.value }"
+                    :disabled="running || option.disabled"
+                    :title="option.disabled ? $t('canvas.model.endpointUnavailable') : option.label"
+                    @click="$emit('select-endpoint', option.value)"
+                  >
+                    {{ option.label }}
+                  </button>
+                </div>
+              </div>
+            </div>
+          </n-popover>
         </div>
 
         <div class="primary-controls">
@@ -219,11 +255,14 @@ const props = defineProps({
   formatOptions: { type: Function, required: true },
   running: { type: Boolean, default: false },
   pollingTaskId: { type: String, default: '' },
+  endpointOptions: { type: Array, default: () => [] },
+  selectedEndpointIndex: { type: Number, default: 0 },
 })
 
 const emit = defineEmits([
   'submit',
   'select-model',
+  'select-endpoint',
   'update-prompt',
   'update-form-data',
   'asset-upload',
@@ -231,6 +270,10 @@ const emit = defineEmits([
 
 const prompt = ref('')
 const dockMeta = computed(() => getCanvasPromptDockMeta(props.node?.type))
+// 生成模式（端点）：多端点模型（如 gpt-image-2 文生图/图片编辑）展示切换 chip
+const currentEndpointLabel = computed(() => (
+  props.endpointOptions.find((option) => option.value === props.selectedEndpointIndex)?.label || ''
+))
 // 节点已有成功结果:按钮切换为「重新生成」(点击后由画布复制副本节点到下方执行,不覆盖原结果)
 const hasResult = computed(() => props.node?.data?.status === 'success'
   && Boolean(props.node?.data?.payload?.parsedResults?.length || props.node?.data?.payload?.url))
@@ -881,6 +924,15 @@ function submit() {
 .model-control {
   min-width: 0;
   flex: 0 1 250px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+// 生成模式 chip（复用 param-summary-chip 外观）：限宽防挤掉模型选择器
+.endpoint-mode-chip {
+  flex-shrink: 0;
+  max-width: 132px;
 }
 
 .primary-controls {
@@ -969,6 +1021,17 @@ function submit() {
     display: grid;
     grid-template-columns: repeat(5, 1fr);
     gap: 6px;
+  }
+
+  // 生成模式等纵向单选项
+  &.params-group-options-column {
+    flex-direction: column;
+    align-items: stretch;
+
+    .params-option {
+      justify-content: flex-start;
+      width: 100%;
+    }
   }
 }
 

@@ -107,6 +107,7 @@ export default {
     selectModel: '先にモデルを選択してください',
     missingRequired: '必須パラメータが不足しています：{fields}',
     fieldSep: '、',
+    referenceModeAutoSwitched: '参照画像が接続されているため「{mode}」に自動切替しました',
   },
   model: {
     factoryFallback: 'モデル',
@@ -140,6 +141,7 @@ export default {
     countValue: '{n}枚',
     defaultValue: 'デフォルト',
     paramsSummary: 'パラメータ設定',
+    endpointModeLabel: '生成モード',
     placeholderFallback: 'プロンプトを入力',
     noModel: '{label}モデルがありません',
     desktopOnly: 'キャンバスエディターはデスクトップでご利用ください',

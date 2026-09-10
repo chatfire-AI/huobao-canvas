@@ -107,6 +107,7 @@ export default {
     selectModel: '请先选择模型',
     missingRequired: '缺少必填参数：{fields}',
     fieldSep: '、',
+    referenceModeAutoSwitched: '已连线参考图，自动切换到「{mode}」',
   },
   model: {
     factoryFallback: '模型',
@@ -140,6 +141,7 @@ export default {
     countValue: '{n}张',
     defaultValue: '默认',
     paramsSummary: '参数设置',
+    endpointModeLabel: '生成模式',
     placeholderFallback: '输入提示词',
     noModel: '暂无{label}模型',
     desktopOnly: '请在桌面端使用画布编辑器',
