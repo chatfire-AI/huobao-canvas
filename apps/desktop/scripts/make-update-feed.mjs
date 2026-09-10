@@ -33,12 +33,16 @@ const ARTIFACTS = [
 
 const sha256 = (file) => crypto.createHash('sha256').update(fs.readFileSync(file)).digest('hex')
 
+// GitHub 上传 asset 时把空格归一化为点号（"HuobaoCanvas Setup 1.0.0.exe" → "HuobaoCanvas.Setup.1.0.0.exe"），
+// feed URL 必须按归一化后的名字生成，否则应用内更新下载 404
+const assetName = (file) => file.replace(/ /g, '.')
+
 const platforms = {}
 for (const artifact of ARTIFACTS) {
   const filePath = path.join(RELEASE_DIR, artifact.file)
   if (!fs.existsSync(filePath)) continue
   platforms[artifact.platform] = {
-    url: `${baseUrl}/${encodeURIComponent(artifact.file)}`,
+    url: `${baseUrl}/${assetName(artifact.file)}`,
     sha256: sha256(filePath),
     size: fs.statSync(filePath).size,
   }
