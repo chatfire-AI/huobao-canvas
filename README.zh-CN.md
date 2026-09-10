@@ -110,7 +110,7 @@ docker run -d -p 8080:16812 -v canvas-data:/app/data huobao/huobao-canvas:latest
 # 打开 http://localhost:8080
 ```
 
-镜像发布在 [Docker Hub](https://hub.docker.com/r/huobao/huobao-canvas)，多架构 `linux/amd64` + `linux/arm64`。或用 compose（附 Watchtower 每日自动更新）：
+镜像发布在 [Docker Hub](https://hub.docker.com/r/huobao/huobao-canvas)，多架构 `linux/amd64` + `linux/arm64`（Linux 服务器 / Windows / macOS 通用），可指定版本标签（如 `huobao/huobao-canvas:1.0.0`）锁定版本。或用 compose（附 Watchtower 每日自动更新）：
 
 ```bash
 cp .env.example .env       # 按需修改 WATCHTOWER_TOKEN
@@ -214,6 +214,41 @@ pnpm feed
 
 ## 📦 部署指南
 
+### 🐳 Docker 部署（推荐服务器场景）
+
+**一行启动（拉取预构建镜像）**：
+
+```bash
+docker run -d --name huobao-canvas \
+  -p 8080:16812 \
+  -v canvas-data:/app/data \
+  huobao/huobao-canvas:latest
+```
+
+- **版本标签**：`latest` 滚动最新；锁定版本用 `huobao/huobao-canvas:1.0.0`（与 [GitHub Releases](https://github.com/chatfire-AI/huobao-canvas/releases) 同步）
+- **多架构**：`linux/amd64` + `linux/arm64`，x86 服务器 / ARM 服务器 / Windows / macOS 通用
+- **数据持久化**：命名卷 `canvas-data`（SQLite 画布 / Key 镜像 / 运行队列 / 生成结果文件），更新镜像不丢数据
+
+**本地构建（不拉镜像，源码构建）**：
+
+```bash
+git clone https://github.com/chatfire-AI/huobao-canvas.git && cd huobao-canvas
+docker build -t huobao-canvas:local .
+docker run -d -p 8080:16812 -v canvas-data:/app/data huobao-canvas:local
+```
+
+**docker compose（应用 + Watchtower 每日自动更新）**：
+
+```bash
+# 服务器上无需克隆仓库，两个文件即可
+curl -O https://raw.githubusercontent.com/chatfire-AI/huobao-canvas/master/docker-compose.yml
+curl -O https://raw.githubusercontent.com/chatfire-AI/huobao-canvas/master/.env.example
+mv .env.example .env   # 修改 WATCHTOWER_TOKEN（生产环境务必改）
+docker compose up -d   # http://localhost:8080
+```
+
+Watchtower 每日自检一次，Docker Hub 有新 `latest` 镜像时自动拉取重建容器（`--label-enable` 只更新本应用，`--cleanup` 清理旧镜像）。不用自动更新：删除 compose 里的 `watchtower` 服务，手动更新执行 `docker compose pull && docker compose up -d`。
+
 ### Docker 环境变量
 
 | 变量 | 默认值 | 说明 |
@@ -221,8 +256,8 @@ pnpm feed
 | `UPSTREAM` | `https://api.firemux.com` | 推理网关默认地址（设置页仍可按用户覆盖） |
 | `API_BASE_URL` | 空 | 浏览器侧请求基地址，留空 = 同源（推荐，规避 CORS） |
 | `WATCHTOWER_TOKEN` | `please-change-me` | Watchtower HTTP API 令牌，生产环境务必修改 |
-
-数据持久化：命名卷 `canvas-data` 挂载 `/app/data`（SQLite + 生成结果文件），更新镜像不丢数据。
+| `HUOBAO_VERSION` | `dev` | 构建时注入的版本号（发布镜像时指定，供「关于更新」比对） |
+| `PORT` | `16812` | 容器内监听端口（一般不改，改则同步调整 `-p` 映射） |
 
 ### 本地开发环境变量（apps/web）
 

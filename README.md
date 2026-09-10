@@ -110,7 +110,7 @@ docker run -d -p 8080:16812 -v canvas-data:/app/data huobao/huobao-canvas:latest
 # Open http://localhost:8080
 ```
 
-Multi-arch image (`linux/amd64` + `linux/arm64`) on [Docker Hub](https://hub.docker.com/r/huobao/huobao-canvas). Or use compose (Watchtower auto-updates daily):
+Multi-arch image (`linux/amd64` + `linux/arm64`, works on Linux servers / Windows / macOS) on [Docker Hub](https://hub.docker.com/r/huobao/huobao-canvas) — pin a version with its tag (e.g. `huobao/huobao-canvas:1.0.0`). Or use compose (Watchtower auto-updates daily):
 
 ```bash
 cp .env.example .env       # edit WATCHTOWER_TOKEN as needed
@@ -214,6 +214,41 @@ Clients check for updates on launch (override the feed URL with the `CANVAS_UPDA
 
 ## 📦 Deployment
 
+### 🐳 Docker (recommended for servers)
+
+**One-liner (prebuilt image)**:
+
+```bash
+docker run -d --name huobao-canvas \
+  -p 8080:16812 \
+  -v canvas-data:/app/data \
+  huobao/huobao-canvas:latest
+```
+
+- **Version tags**: `latest` tracks the newest build; pin a release with `huobao/huobao-canvas:1.0.0` (kept in sync with [GitHub Releases](https://github.com/chatfire-AI/huobao-canvas/releases))
+- **Multi-arch**: `linux/amd64` + `linux/arm64` — x86 servers, ARM servers, Windows, macOS
+- **Persistence**: named volume `canvas-data` (SQLite canvas / key mirror / run queue / generated files) — image updates keep your data
+
+**Build from source (no prebuilt image)**:
+
+```bash
+git clone https://github.com/chatfire-AI/huobao-canvas.git && cd huobao-canvas
+docker build -t huobao-canvas:local .
+docker run -d -p 8080:16812 -v canvas-data:/app/data huobao-canvas:local
+```
+
+**docker compose (app + Watchtower daily auto-updates)**:
+
+```bash
+# No need to clone the repo — two files are enough
+curl -O https://raw.githubusercontent.com/chatfire-AI/huobao-canvas/master/docker-compose.yml
+curl -O https://raw.githubusercontent.com/chatfire-AI/huobao-canvas/master/.env.example
+mv .env.example .env   # change WATCHTOWER_TOKEN (required in production)
+docker compose up -d   # http://localhost:8080
+```
+
+Watchtower checks daily and rebuilds the container when a new `latest` image lands on Docker Hub (`--label-enable` updates only this app, `--cleanup` prunes old images). Don't want auto-updates? Remove the `watchtower` service and update manually with `docker compose pull && docker compose up -d`.
+
 ### Docker Environment Variables
 
 | Variable | Default | Description |
@@ -221,8 +256,8 @@ Clients check for updates on launch (override the feed URL with the `CANVAS_UPDA
 | `UPSTREAM` | `https://api.firemux.com` | Default inference gateway (users can still override in Settings) |
 | `API_BASE_URL` | empty | Browser-side request base URL; empty = same origin (recommended, avoids CORS) |
 | `WATCHTOWER_TOKEN` | `please-change-me` | Watchtower HTTP API token — change it in production |
-
-Data persistence: named volume `canvas-data` mounts `/app/data` (SQLite + result files) — image updates keep your data.
+| `HUOBAO_VERSION` | `dev` | Version injected at build time (set it when publishing images; used by "About Updates") |
+| `PORT` | `16812` | In-container listen port (leave as is; if changed, adjust the `-p` mapping too) |
 
 ### Local Dev Environment Variables (apps/web)
 

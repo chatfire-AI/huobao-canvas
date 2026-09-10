@@ -110,7 +110,7 @@ docker run -d -p 8080:16812 -v canvas-data:/app/data huobao/huobao-canvas:latest
 # http://localhost:8080 を開く
 ```
 
-マルチアーキテクチャイメージ（`linux/amd64` + `linux/arm64`）を [Docker Hub](https://hub.docker.com/r/huobao/huobao-canvas) で公開。compose なら Watchtower が毎日自動更新：
+マルチアーキテクチャイメージ（`linux/amd64` + `linux/arm64`、Linux サーバー / Windows / macOS 共通）を [Docker Hub](https://hub.docker.com/r/huobao/huobao-canvas) で公開。バージョンタグ（例：`huobao/huobao-canvas:1.0.0`）で固定可能。compose なら Watchtower が毎日自動更新：
 
 ```bash
 cp .env.example .env       # 必要に応じて WATCHTOWER_TOKEN を変更
@@ -214,6 +214,41 @@ pnpm feed
 
 ## 📦 デプロイ
 
+### 🐳 Docker（サーバーに推奨）
+
+**ワンライナー（ビルド済みイメージを取得）**：
+
+```bash
+docker run -d --name huobao-canvas \
+  -p 8080:16812 \
+  -v canvas-data:/app/data \
+  huobao/huobao-canvas:latest
+```
+
+- **バージョンタグ**：`latest` は最新を追跡。リリース固定は `huobao/huobao-canvas:1.0.0`（[GitHub Releases](https://github.com/chatfire-AI/huobao-canvas/releases) と同期）
+- **マルチアーキ**：`linux/amd64` + `linux/arm64`——x86 / ARM サーバー、Windows、macOS 対応
+- **永続化**：名前付きボリューム `canvas-data`（SQLite キャンバス / Key ミラー / 実行キュー / 生成ファイル）——イメージ更新でもデータは保持
+
+**ソースからビルド（ビルド済みイメージを使わない）**：
+
+```bash
+git clone https://github.com/chatfire-AI/huobao-canvas.git && cd huobao-canvas
+docker build -t huobao-canvas:local .
+docker run -d -p 8080:16812 -v canvas-data:/app/data huobao-canvas:local
+```
+
+**docker compose（アプリ + Watchtower 毎日自動更新）**：
+
+```bash
+# リポジトリのクローン不要——2 ファイルだけで OK
+curl -O https://raw.githubusercontent.com/chatfire-AI/huobao-canvas/master/docker-compose.yml
+curl -O https://raw.githubusercontent.com/chatfire-AI/huobao-canvas/master/.env.example
+mv .env.example .env   # WATCHTOWER_TOKEN を変更（本番では必須）
+docker compose up -d   # http://localhost:8080
+```
+
+Watchtower は毎日チェックし、Docker Hub に新しい `latest` イメージがあれば自動で再構築（`--label-enable` で本アプリのみ更新、`--cleanup` で旧イメージ削除）。自動更新が不要なら compose の `watchtower` サービスを削除し、`docker compose pull && docker compose up -d` で手動更新。
+
 ### Docker 環境変数
 
 | 変数 | デフォルト | 説明 |
@@ -221,8 +256,8 @@ pnpm feed
 | `UPSTREAM` | `https://api.firemux.com` | 推論ゲートウェイのデフォルトアドレス（設定ページでユーザー上書き可能） |
 | `API_BASE_URL` | 空 | ブラウザ側リクエストのベース URL。空 = 同一オリジン（推奨、CORS 回避） |
 | `WATCHTOWER_TOKEN` | `please-change-me` | Watchtower HTTP API トークン。本番環境では必ず変更 |
-
-データ永続化：名前付きボリューム `canvas-data` を `/app/data` にマウント（SQLite + 結果ファイル）、イメージ更新でもデータは保持。
+| `HUOBAO_VERSION` | `dev` | ビルド時に注入するバージョン番号（イメージ公開時に指定、「アップデート情報」の比較に使用） |
+| `PORT` | `16812` | コンテナ内の待受ポート（通常は変更不要。変更時は `-p` マッピングも合わせる） |
 
 ### ローカル開発の環境変数（apps/web）
 

@@ -110,7 +110,7 @@ docker run -d -p 8080:16812 -v canvas-data:/app/data huobao/huobao-canvas:latest
 # http://localhost:8080 접속
 ```
 
-멀티 아키텍처 이미지(`linux/amd64` + `linux/arm64`)를 [Docker Hub](https://hub.docker.com/r/huobao/huobao-canvas)에서 제공. compose를 사용하면 Watchtower가 매일 자동 업데이트:
+멀티 아키텍처 이미지(`linux/amd64` + `linux/arm64`, Linux 서버 / Windows / macOS 공용)를 [Docker Hub](https://hub.docker.com/r/huobao/huobao-canvas)에서 제공. 버전 태그(예: `huobao/huobao-canvas:1.0.0`)로 고정 가능. compose를 사용하면 Watchtower가 매일 자동 업데이트:
 
 ```bash
 cp .env.example .env       # 필요에 따라 WATCHTOWER_TOKEN 수정
@@ -214,6 +214,41 @@ pnpm feed
 
 ## 📦 배포
 
+### 🐳 Docker(서버 권장)
+
+**한 줄 실행(빌드된 이미지 가져오기)**:
+
+```bash
+docker run -d --name huobao-canvas \
+  -p 8080:16812 \
+  -v canvas-data:/app/data \
+  huobao/huobao-canvas:latest
+```
+
+- **버전 태그**: `latest`는 최신 빌드를 추적. 릴리스 고정은 `huobao/huobao-canvas:1.0.0`([GitHub Releases](https://github.com/chatfire-AI/huobao-canvas/releases)와 동기화)
+- **멀티 아키텍처**: `linux/amd64` + `linux/arm64` — x86 / ARM 서버, Windows, macOS 지원
+- **영속화**: 이름 있는 볼륨 `canvas-data`(SQLite 캔버스 / Key 미러 / 실행 큐 / 생성 파일) — 이미지 업데이트에도 데이터 유지
+
+**소스에서 빌드(빌드된 이미지 미사용)**:
+
+```bash
+git clone https://github.com/chatfire-AI/huobao-canvas.git && cd huobao-canvas
+docker build -t huobao-canvas:local .
+docker run -d -p 8080:16812 -v canvas-data:/app/data huobao-canvas:local
+```
+
+**docker compose(앱 + Watchtower 매일 자동 업데이트)**:
+
+```bash
+# 리포지토리 클론 불필요 — 파일 2개면 충분
+curl -O https://raw.githubusercontent.com/chatfire-AI/huobao-canvas/master/docker-compose.yml
+curl -O https://raw.githubusercontent.com/chatfire-AI/huobao-canvas/master/.env.example
+mv .env.example .env   # WATCHTOWER_TOKEN 변경(프로덕션 필수)
+docker compose up -d   # http://localhost:8080
+```
+
+Watchtower는 매일 확인하여 Docker Hub에 새 `latest` 이미지가 있으면 컨테이너를 자동 재생성(`--label-enable`로 본 앱만 업데이트, `--cleanup`으로 구 이미지 정리). 자동 업데이트가 필요 없으면 compose의 `watchtower` 서비스를 삭제하고 `docker compose pull && docker compose up -d`로 수동 업데이트.
+
 ### Docker 환경 변수
 
 | 변수 | 기본값 | 설명 |
@@ -221,8 +256,8 @@ pnpm feed
 | `UPSTREAM` | `https://api.firemux.com` | 추론 게이트웨이 기본 주소(설정 페이지에서 사용자 재정의 가능) |
 | `API_BASE_URL` | 비어 있음 | 브라우저 측 요청 기본 URL. 비어 있음 = 동일 출처(권장, CORS 회피) |
 | `WATCHTOWER_TOKEN` | `please-change-me` | Watchtower HTTP API 토큰. 프로덕션에서는 반드시 변경 |
-
-데이터 영속화: 이름 있는 볼륨 `canvas-data`를 `/app/data`에 마운트(SQLite + 결과 파일), 이미지 업데이트에도 데이터 유지.
+| `HUOBAO_VERSION` | `dev` | 빌드 시 주입하는 버전 번호(이미지 배포 시 지정,「업데이트 정보」비교에 사용) |
+| `PORT` | `16812` | 컨테이너 내 수신 포트(보통 변경 불필요. 변경 시 `-p` 매핑도 함께 조정) |
 
 ### 로컬 개발 환경 변수(apps/web)
 
