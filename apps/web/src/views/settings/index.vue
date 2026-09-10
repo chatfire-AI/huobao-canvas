@@ -95,7 +95,7 @@ const cfCurrentKey = ref(getCurrentApiKey())
 // 以 Huobao 网关适配为主：预设路径经 applyProviderBaseUrl 前缀替换后恰好落在网关挂载点上。
 const GATEWAY_PROVIDER_PREFIX = {
   openai: '', anthropic: '', gemini: '', deepseek: '', moonshot: '', xiaomi: '',
-  xai: '', minimax: '', volcengine: '/volcengine', qwen: '/qwen', vidu: '/vidu',
+  minimax: '', volcengine: '/volcengine', qwen: '/qwen', vidu: '/vidu',
   zhipu: '/zhipu',
 }
 

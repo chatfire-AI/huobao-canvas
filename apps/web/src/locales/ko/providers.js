@@ -128,12 +128,6 @@ export default {
     imageFusionDesc: '이미지→이미지/다중 이미지 융합',
     seedream5ProImageDesc: '이미지→이미지/다중 참조 융합(참조+생성 이미지 ≤ 15장)',
   },
-  xai: {
-    reasoningDesc: '추론을 끌 수 없습니다',
-    images3: '참조 이미지(≤3장)',
-    sourceVideo: '소스 비디오(≤8.7초)',
-    qualityDesc: 'grok-imagine-image-2.0만 지원',
-  },
   xiaomi: {
     label: 'Xiaomi MiMo',
     temperatureDesc: '샘플링 온도. 높을수록 무작위. 사고 모드에서는 1.0으로 강제',

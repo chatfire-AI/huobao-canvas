@@ -6,9 +6,7 @@ export const openaiImage = {
   buildRequest({ modelName, formData, inputTransform, endpoint }) {
     const data = inputTransform ? inputTransform(formData) : formData
     const isEdit = /\/images\/edits/.test(endpoint?.path || '')
-    // xAI 的 /images/edits 只接受 JSON（image 需 {url} 对象包装），不走 multipart
-    const useFormData = isEdit && !(endpoint?.path || '').includes('/official/xai/')
-    return { body: { model: modelName, ...data }, contentType: useFormData ? 'formdata' : 'json' }
+    return { body: { model: modelName, ...data }, contentType: isEdit ? 'formdata' : 'json' }
   },
   parseStreamEvent() { return { text: '', imageParts: [], done: true } },
   extractText() { return '' },

@@ -2,7 +2,7 @@
 
 [English](./README.md) | [日本語](./README.ja.md) | [한국어](./README.ko.md)
 
-开源的节点式 AI 创作画布：在无限画布上串联 12 家厂商的文本 / 图像 / 视频生成模型，自带 API Key 即可使用。
+开源的节点式 AI 创作画布：在无限画布上串联 11 家厂商的文本 / 图像 / 视频生成模型，自带 API Key 即可使用。
 
 [在线体验](https://marketing.firemux.com/huobao-canvas/)
 
@@ -11,13 +11,13 @@
 ![Docker](https://img.shields.io/badge/Docker-huobao%2Fhuobao--canvas-2496ED?logo=docker)
 [![License](https://img.shields.io/badge/License-CC%20BY--NC--SA%204.0-lightgrey.svg)](https://creativecommons.org/licenses/by-nc-sa/4.0/)
 
-> **v2.0 全面重构中**：本分支为重构版（monorepo + 12 家厂商官方适配）。v1 旧版代码与文档保留在 [`legacy/v1`](../../tree/legacy/v1) 分支。
+> **v2.0 全面重构中**：本分支为重构版（monorepo + 11 家厂商官方适配）。v1 旧版代码与文档保留在 [`legacy/v1`](../../tree/legacy/v1) 分支。
 
 ## 特性
 
 - 🎨 **无限画布**：基于 Vue Flow，文本 / 图像 / 视频 / 分组四种节点 + 类型化连线规则
 - 🔗 **节点串联**：上游节点输出可作为下游输入（文生图 → 图生视频）
-- 🧩 **内置 12 家厂商官方格式**：OpenAI、Anthropic、Gemini、Qwen、火山、DeepSeek、MiniMax、Moonshot、智谱、xAI、Vidu、小米 MiMo，含官方出入参适配
+- 🧩 **内置 11 家厂商官方格式**：OpenAI、Anthropic、Gemini、Qwen、火山、DeepSeek、MiniMax、Moonshot、智谱、Vidu、小米 MiMo，含官方出入参适配
 - ⚙️ **设置页**：按厂商配置 API Key、连通测试、模型启停、自定义模型
 - 🖥️ **服务端运行队列**：模型调用经服务端执行，刷新 / 换浏览器任务不丢，异步视频任务自动轮询（预算 2 小时），画布数据存 SQLite
 - 🔑 **BYOK**：API Key 默认存浏览器本地；自部署时自动镜像到服务端（换浏览器无缝接管）

@@ -82,7 +82,6 @@ function buildDocsTemplates() {
       defaultResponseStructure: [
         { path: 'task_id / request_id / id', type: 'string', description: t('asyncVideo.taskId') },
         { path: 'creations[].url', type: 'string', description: t('asyncVideo.viduUrl') },
-        { path: 'video.url', type: 'string', description: t('asyncVideo.xaiUrl') },
         { path: 'task.content.url', type: 'string', description: t('asyncVideo.minimaxUrl') },
       ],
       codeTemplate: { authHeader: 'Authorization: Bearer <API_KEY>', note: t('asyncVideo.authNote') },

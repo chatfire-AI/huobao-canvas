@@ -12,7 +12,7 @@ import { Readable } from 'node:stream'
 import { HttpError } from '../http.js'
 
 // 与 engine.js GATEWAY_MOUNT_RE / desktopBridge.js 保持一致
-const GATEWAY_MOUNT_RE = /^\/(v1|v1beta|sys|qwen|volcengine|vidu|minimax|xai|zhipu)(\/|$)/
+const GATEWAY_MOUNT_RE = /^\/(v1|v1beta|sys|qwen|volcengine|vidu|minimax|zhipu)(\/|$)/
 const OFFICIAL_RE = /^\/official\/[A-Za-z0-9_-]+(\/|$)/
 const PROXY_METHODS = ['GET', 'POST', 'PUT', 'DELETE', 'PATCH']
 

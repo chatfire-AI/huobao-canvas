@@ -2,7 +2,7 @@
 
 [English](./README.md) | [简体中文](./README.zh-CN.md) | [한국어](./README.ko.md)
 
-オープンソースのノードベース AI 創作キャンバス。無限キャンバス上で 12 社のプロバイダーのテキスト・画像・動画生成モデルを連携できます。API Key を持ってくるだけで利用可能。
+オープンソースのノードベース AI 創作キャンバス。無限キャンバス上で 11 社のプロバイダーのテキスト・画像・動画生成モデルを連携できます。API Key を持ってくるだけで利用可能。
 
 [デモを見る](https://marketing.firemux.com/huobao-canvas/)
 
@@ -11,13 +11,13 @@
 ![Docker](https://img.shields.io/badge/Docker-huobao%2Fhuobao--canvas-2496ED?logo=docker)
 [![License](https://img.shields.io/badge/License-CC%20BY--NC--SA%204.0-lightgrey.svg)](https://creativecommons.org/licenses/by-nc-sa/4.0/)
 
-> **v2.0 全面リライト進行中**：このブランチはリライト版（monorepo + 12 社プロバイダー公式 API 対応）です。v1 の旧コードとドキュメントは [`legacy/v1`](../../tree/legacy/v1) ブランチに残しています。
+> **v2.0 全面リライト進行中**：このブランチはリライト版（monorepo + 11 社プロバイダー公式 API 対応）です。v1 の旧コードとドキュメントは [`legacy/v1`](../../tree/legacy/v1) ブランチに残しています。
 
 ## 機能
 
 - 🎨 **無限キャンバス**：Vue Flow ベース。テキスト / 画像 / 動画 / グループの 4 種ノード + 型付き接続ルール
 - 🔗 **ノード連携**：上流ノードの出力を下流の入力に利用（テキスト → 画像 → 動画）
-- 🧩 **12 社のプロバイダー公式形式を内蔵**：OpenAI、Anthropic、Gemini、Qwen（火山）、DeepSeek、MiniMax、Moonshot、智譜（Zhipu）、xAI、Vidu、Xiaomi MiMo。公式リクエスト / レスポンス形式のアダプター同梱
+- 🧩 **11 社のプロバイダー公式形式を内蔵**：OpenAI、Anthropic、Gemini、Qwen（火山）、DeepSeek、MiniMax、Moonshot、智譜（Zhipu）、Vidu、Xiaomi MiMo。公式リクエスト / レスポンス形式のアダプター同梱
 - ⚙️ **設定ページ**：プロバイダーごとの API Key 設定、接続テスト、モデルの有効化 / 無効化、カスタムモデル
 - 🖥️ **サーバーサイド実行キュー**：モデル呼び出しはサーバー側で実行。リロードやブラウザを変えてもタスクは失われず、非同期の動画タスクは自動ポーリング（最大 2 時間）。キャンバスデータは SQLite に保存
 - 🔑 **BYOK**：API Key はデフォルトでブラウザのローカルに保存。セルフホスト時はサーバーへ自動ミラー（ブラウザを変えてもシームレスに引き継ぎ）

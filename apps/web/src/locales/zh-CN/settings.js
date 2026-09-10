@@ -16,7 +16,7 @@ export default {
     quickSetup: '一键接入',
     pasteKeyRequired: '请粘贴 Huobao API Key',
     keyCheckReturned: 'Key 校验返回 {status}，已保存，请确认 Key 有效',
-    setupSuccess: '已接入 Huobao：12 家厂商已自动配置好 Key 与网关地址，返回画布即可使用',
+    setupSuccess: '已接入 Huobao：11 家厂商已自动配置好 Key 与网关地址，返回画布即可使用',
     connectFailed: '连接失败：{detail}（请检查网络后重试）',
   },
   providers: {

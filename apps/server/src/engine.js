@@ -29,7 +29,7 @@ const applyInputTransform = createInputTransformEngine()
 
 const RETRYABLE_HTTP_STATUSES = new Set([408, 425, 429])
 const NONTERMINAL_TASK_STATUSES = new Set(['PENDING', 'QUEUED', 'PROCESSING', 'RUNNING'])
-const GATEWAY_MOUNT_RE = /^\/(v1|v1beta|sys|qwen|volcengine|vidu|minimax|xai|zhipu)\//
+const GATEWAY_MOUNT_RE = /^\/(v1|v1beta|sys|qwen|volcengine|vidu|minimax|zhipu)\//
 // 部署默认网关：UPSTREAM 环境变量（Docker 单镜像部署注入，对齐原 nginx 反代语义）> 内置公共 API；
 // 设置页「网关地址」仍优先于两者
 const PUBLIC_GATEWAY = process.env.UPSTREAM?.replace(/\/$/, '') || 'https://api.firemux.com'

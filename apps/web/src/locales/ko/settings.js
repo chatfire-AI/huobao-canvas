@@ -16,7 +16,7 @@ export default {
     quickSetup: '원클릭 연결',
     pasteKeyRequired: 'Huobao API Key를 붙여넣으세요',
     keyCheckReturned: 'Key 검증이 {status}를 반환했습니다. 저장되었으니 Key가 유효한지 확인하세요',
-    setupSuccess: 'Huobao에 연결되었습니다: 12개 업체의 Key와 게이트웨이 주소가 자동 설정되었습니다. 캔버스로 돌아가 사용하세요',
+    setupSuccess: 'Huobao에 연결되었습니다: 11개 업체의 Key와 게이트웨이 주소가 자동 설정되었습니다. 캔버스로 돌아가 사용하세요',
     connectFailed: '연결 실패: {detail} (네트워크를 확인한 후 다시 시도하세요)',
   },
   providers: {

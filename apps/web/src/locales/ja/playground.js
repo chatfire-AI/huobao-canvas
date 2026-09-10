@@ -100,7 +100,6 @@ export default {
     asyncVideo: {
       taskId: 'タスク ID（送信時に返却）',
       viduUrl: '完成動画 URL（Vidu、24時間）',
-      xaiUrl: '完成動画 URL（xAI）',
       minimaxUrl: '完成動画 URL（MiniMax）',
       authNote: 'Vidu は Authorization: Token <API_KEY> を使用',
       noteFlow: '非同期 2 ステップ：送信 → ゲートウェイ {path} をポーリング',

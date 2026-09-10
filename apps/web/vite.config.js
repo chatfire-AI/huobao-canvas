@@ -57,7 +57,6 @@ export default defineConfig({
       "/qwen": { target: upstream, changeOrigin: true, ...stripOrigin },
       "/vidu": { target: upstream, changeOrigin: true, ...stripOrigin },
       "/minimax": { target: upstream, changeOrigin: true, ...stripOrigin },
-      "/xai": { target: upstream, changeOrigin: true, ...stripOrigin },
       "/zhipu": { target: upstream, changeOrigin: true, ...stripOrigin },
       // 画布存储服务（apps/server，SQLite；未启动时画布保存/读取不可用）
       "/api": {
@@ -100,10 +99,6 @@ export default defineConfig({
       "/official/zhipu": {
         target: "https://open.bigmodel.cn", changeOrigin: true, ...stripOrigin,
         rewrite: (p) => p.replace(/^\/official\/zhipu/, ""),
-      },
-      "/official/xai": {
-        target: "https://api.x.ai", changeOrigin: true, ...stripOrigin,
-        rewrite: (p) => p.replace(/^\/official\/xai/, ""),
       },
       "/official/vidu": {
         target: "https://api.vidu.cn", changeOrigin: true, ...stripOrigin,

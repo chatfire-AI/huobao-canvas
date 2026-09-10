@@ -100,7 +100,6 @@ export default {
     asyncVideo: {
       taskId: 'Task ID (returned on submit)',
       viduUrl: 'Final video URL (Vidu, 24h)',
-      xaiUrl: 'Final video URL (xAI)',
       minimaxUrl: 'Final video URL (MiniMax)',
       authNote: 'Vidu uses Authorization: Token <API_KEY>',
       noteFlow: 'Async two-step: submit → poll gateway {path}',

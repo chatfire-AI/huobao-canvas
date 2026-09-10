@@ -129,12 +129,6 @@ export default {
     imageFusionDesc: 'Image-to-image / multi-image fusion',
     seedream5ProImageDesc: 'Image-to-image / multi-reference fusion (reference + generated images <= 15)',
   },
-  xai: {
-    reasoningDesc: 'Reasoning cannot be disabled',
-    images3: 'Reference Images (up to 3)',
-    sourceVideo: 'Source Video (up to 8.7s)',
-    qualityDesc: 'Only supported by grok-imagine-image-2.0',
-  },
   xiaomi: {
     label: 'Xiaomi MiMo',
     temperatureDesc: 'Sampling temperature; higher values make output more random; forced to 1.0 in thinking mode',

@@ -100,7 +100,6 @@ export default {
     asyncVideo: {
       taskId: '작업 ID(제출 시 반환)',
       viduUrl: '완성 영상 URL(Vidu, 24시간)',
-      xaiUrl: '완성 영상 URL(xAI)',
       minimaxUrl: '완성 영상 URL(MiniMax)',
       authNote: 'Vidu는 Authorization: Token <API_KEY> 사용',
       noteFlow: '비동기 2단계: 제출 → 게이트웨이 {path} 폴링',

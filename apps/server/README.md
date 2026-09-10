@@ -106,7 +106,7 @@ src/
 
 | 路径 | 说明 |
 |---|---|
-| `/v1/*`、`/v1beta/*`、`/sys/*`、`/qwen/*`、`/volcengine/*`、`/vidu/*`、`/minimax/*`、`/xai/*`、`/zhipu/*` | 透传到网关地址（settings `chatfire_canvas_gateway_base` > 内置公共网关）；调用方未带鉴权头时用服务端 Key 兜底注入 |
+| `/v1/*`、`/v1beta/*`、`/sys/*`、`/qwen/*`、`/volcengine/*`、`/vidu/*`、`/minimax/*`、`/zhipu/*` | 透传到网关地址（settings `chatfire_canvas_gateway_base` > 内置公共网关）；调用方未带鉴权头时用服务端 Key 兜底注入 |
 | `/official/{providerId}/*` | 透传到厂商官方 baseUrl（含 settings baseUrl 覆盖）；同样支持服务端 Key 兜底 |
 | 其余 GET 路径 | `FRONTEND_DIST` 存在时托管前端静态产物，未命中回退 `index.html`（SPA） |
 

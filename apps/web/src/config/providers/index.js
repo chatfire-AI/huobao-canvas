@@ -16,7 +16,6 @@ import deepseek from './deepseek.js'
 import minimax from './minimax.js'
 import moonshot from './moonshot.js'
 import zhipu from './zhipu.js'
-import xai from './xai.js'
 import vidu from './vidu.js'
 import xiaomi from './xiaomi.js'
 // 相对路径导入：本文件会被 Node 校验脚本直接 import（无 vite alias）
@@ -25,7 +24,7 @@ import { t } from './_shared.js'
 
 export const providerPresets = [
   openai, anthropic, gemini, qwen, volcengine, deepseek,
-  minimax, moonshot, zhipu, xai, vidu, xiaomi,
+  minimax, moonshot, zhipu, vidu, xiaomi,
 ]
 
 const byId = new Map(providerPresets.map((p) => [p.id, p]))

@@ -129,12 +129,6 @@ export default {
     imageFusionDesc: '图生图/多图融合',
     seedream5ProImageDesc: '图生图/多参考图融合（参考图+生成图 ≤ 15 张）',
   },
-  xai: {
-    reasoningDesc: '推理不可关闭',
-    images3: '参考图(≤3张)',
-    sourceVideo: '源视频(≤8.7秒)',
-    qualityDesc: '仅 grok-imagine-image-2.0 支持',
-  },
   xiaomi: {
     label: '小米 MiMo',
     temperatureDesc: '采样温度，值越高输出越随机；思考模式下强制 1.0',

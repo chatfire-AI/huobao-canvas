@@ -100,7 +100,6 @@ export default {
     asyncVideo: {
       taskId: '任务 ID（提交返回）',
       viduUrl: '成片 URL（Vidu，24h）',
-      xaiUrl: '成片 URL（xAI）',
       minimaxUrl: '成片 URL（MiniMax）',
       authNote: 'Vidu 用 Authorization: Token <API_KEY>',
       noteFlow: '异步两步：提交 → 轮询网关 {path}',

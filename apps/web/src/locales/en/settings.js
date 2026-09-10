@@ -16,7 +16,7 @@ export default {
     quickSetup: 'One-click Setup',
     pasteKeyRequired: 'Please paste your Huobao API Key',
     keyCheckReturned: 'Key validation returned {status}; the key was saved — please make sure it is valid',
-    setupSuccess: 'Connected to Huobao: keys and gateway URLs for 12 providers were configured automatically. Return to the canvas to start.',
+    setupSuccess: 'Connected to Huobao: keys and gateway URLs for 11 providers were configured automatically. Return to the canvas to start.',
     connectFailed: 'Connection failed: {detail} (check your network and try again)',
   },
   providers: {

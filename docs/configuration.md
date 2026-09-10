@@ -30,7 +30,7 @@ ChatFire Canvas 的所有可变项都通过环境变量 / 运行时配置注入�
 
 | 模式 | 说明 |
 |---|---|
-| `official`（默认） | 厂商官方直连。模型目录来自内置预设（`src/config/providers/`，12 家厂商），按厂商配置 Key（设置页），请求经 `/official/{providerId}/` 同源反代到厂商官方域名 |
+| `official`（默认） | 厂商官方直连。模型目录来自内置预设（`src/config/providers/`，11 家厂商），按厂商配置 Key（设置页），请求经 `/official/{providerId}/` 同源反代到厂商官方域名 |
 | `gateway` | ChatFire 网关。目录来自 `${API_BASE_URL}/sys/model/*`（回退 `/v1/models`），单一全局 Key（Bearer） |
 
 ### 厂商官方预设结构
@@ -44,7 +44,6 @@ ChatFire Canvas 的所有可变项都通过环境变量 / 运行时配置注入�
 
 - `/official/*` 与网关挂载前缀的反代在 dev（vite proxy）与生产（镜像内 Node 服务端 `routes/proxy.js`，与桌面端内嵌同一条代码路径）均已内置；Node fetch/undici 自动处理 SNI 与解压，并剥离 `Origin` 头（对齐原 nginx `proxy_set_header Origin ""`，防严格 CORS 上游 403）
 - 若宿主机有代理工具（Clash fake-ip 等）污染容器 DNS：海外厂商若需走本机代理，可给容器配置 `dns:` 指向宿主机 DNS 或公共 DNS
-- api.x.ai 等域名存在 DNS 污染，无代理环境直连可能失败
 
 
 ## API Key（BYOK）
@@ -55,7 +54,7 @@ ChatFire Canvas 的所有可变项都通过环境变量 / 运行时配置注入�
 
 ## 推理端点约定
 
-画布按模型 schema 动态挂载端点，前缀白名单：`/v1/`、`/v1beta/`、`/qwen/`、`/volcengine/`、`/vidu/`、`/minimax/`、`/xai/`。
+画布按模型 schema 动态挂载端点，前缀白名单：`/v1/`、`/v1beta/`、`/qwen/`、`/volcengine/`、`/vidu/`、`/minimax/`。
 异步任务（视频生成）依赖 ChatFire 网关的 `X-Chatfire-Task-Id` 头与 `/v1/tasks/{id}` 轮询约定；接非 ChatFire 端点时视频类能力可能不可用。
 
 ## 服务端存储与运行引擎（apps/server）

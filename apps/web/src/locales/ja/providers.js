@@ -128,12 +128,6 @@ export default {
     imageFusionDesc: '画像から画像/複数画像融合',
     seedream5ProImageDesc: '画像から画像/複数参照融合（参照+生成画像 ≤ 15 枚）',
   },
-  xai: {
-    reasoningDesc: '推論はオフにできません',
-    images3: '参照画像（≤3枚）',
-    sourceVideo: 'ソース動画（≤8.7秒）',
-    qualityDesc: 'grok-imagine-image-2.0 のみ対応',
-  },
   xiaomi: {
     label: 'Xiaomi MiMo',
     temperatureDesc: 'サンプリング温度。値が高いほどランダム。思考モードでは 1.0 固定',

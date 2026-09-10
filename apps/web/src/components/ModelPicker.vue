@@ -100,7 +100,7 @@ const searchInput = ref(null)
 const FACTORY_LABELS = {
   claude: 'Claude', deepseek: 'DeepSeek', gemini: 'Gemini', minimax: 'MiniMax',
   moonshot: 'Moonshot', openai: 'OpenAI', qwen: 'Qwen', vidu: 'Vidu',
-  volcengine: 'Volcengine', xai: 'xAI', zhipu: 'Zhipu', google: 'Google',
+  volcengine: 'Volcengine', zhipu: 'Zhipu', google: 'Google',
 }
 
 const factoryLabel = (code) => {

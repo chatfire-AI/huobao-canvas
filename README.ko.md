@@ -2,7 +2,7 @@
 
 [English](./README.md) | [简体中文](./README.zh-CN.md) | [日本語](./README.ja.md)
 
-오픈소스 노드 기반 AI 창작 캔버스. 무한 캔버스에서 12개 공급자의 텍스트·이미지·영상 생성 모델을 연결해 사용합니다. API Key만 있으면 바로 시작할 수 있습니다.
+오픈소스 노드 기반 AI 창작 캔버스. 무한 캔버스에서 11개 공급자의 텍스트·이미지·영상 생성 모델을 연결해 사용합니다. API Key만 있으면 바로 시작할 수 있습니다.
 
 [데모 보기](https://marketing.firemux.com/huobao-canvas/)
 
@@ -11,13 +11,13 @@
 ![Docker](https://img.shields.io/badge/Docker-huobao%2Fhuobao--canvas-2496ED?logo=docker)
 [![License](https://img.shields.io/badge/License-CC%20BY--NC--SA%204.0-lightgrey.svg)](https://creativecommons.org/licenses/by-nc-sa/4.0/)
 
-> **v2.0 전면 리라이트 진행 중**: 이 브랜치는 리라이트 버전(monorepo + 12개 공급자 공식 API 대응)입니다. v1 기존 코드와 문서는 [`legacy/v1`](../../tree/legacy/v1) 브랜치에 보존되어 있습니다.
+> **v2.0 전면 리라이트 진행 중**: 이 브랜치는 리라이트 버전(monorepo + 11개 공급자 공식 API 대응)입니다. v1 기존 코드와 문서는 [`legacy/v1`](../../tree/legacy/v1) 브랜치에 보존되어 있습니다.
 
 ## 기능
 
 - 🎨 **무한 캔버스**: Vue Flow 기반. 텍스트 / 이미지 / 영상 / 그룹 4종 노드 + 타입 기반 연결 규칙
 - 🔗 **노드 연결**: 상위 노드의 출력을 하위 노드의 입력으로 사용(텍스트 → 이미지 → 영상)
-- 🧩 **12개 공급자 공식 형식 내장**: OpenAI, Anthropic, Gemini, Qwen(火山), DeepSeek, MiniMax, Moonshot, 智谱(Zhipu), xAI, Vidu, Xiaomi MiMo. 공식 요청/응답 형식 어댑터 포함
+- 🧩 **11개 공급자 공식 형식 내장**: OpenAI, Anthropic, Gemini, Qwen(火山), DeepSeek, MiniMax, Moonshot, 智谱(Zhipu), Vidu, Xiaomi MiMo. 공식 요청/응답 형식 어댑터 포함
 - ⚙️ **설정 페이지**: 공급자별 API Key 설정, 연결 테스트, 모델 활성화/비활성화, 커스텀 모델
 - 🖥️ **서버 측 실행 큐**: 모델 호출이 서버에서 실행됩니다. 새로고침이나 브라우저 변경에도 작업이 유지되고, 비동기 영상 작업은 자동 폴링(최대 2시간). 캔버스 데이터는 SQLite에 저장
 - 🔑 **BYOK**: API Key는 기본적으로 브라우저 로컬에 저장. 자체 호스팅 시 서버로 자동 미러링(브라우저를 바꿔도 매끄럽게 이어받기)

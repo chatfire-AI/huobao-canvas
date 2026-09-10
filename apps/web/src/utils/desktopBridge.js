@@ -10,7 +10,7 @@
 import { getGatewayBaseUrl, PUBLIC_API_BASE_URL } from '../config/index.js'
 
 // 网关挂载前缀（与 endpointPath.js 的 MOUNTED_SUBMIT_PREFIXES、vite/nginx/server proxy 反代项对齐）
-const GATEWAY_MOUNT_RE = /^\/(v1|v1beta|sys|qwen|volcengine|vidu|minimax|xai|zhipu)\//
+const GATEWAY_MOUNT_RE = /^\/(v1|v1beta|sys|qwen|volcengine|vidu|minimax|zhipu)\//
 
 /** 网关绝对地址 → 同源相对路径（相对路径与非网关绝对地址原样返回） */
 const toSameOriginGatewayUrl = (url) => {

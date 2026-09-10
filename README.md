@@ -2,7 +2,7 @@
 
 [简体中文](./README.zh-CN.md) | [日本語](./README.ja.md) | [한국어](./README.ko.md)
 
-An open-source, node-based AI creation canvas. Chain text, image, and video generation models from 12 providers on an infinite canvas — bring your own API key.
+An open-source, node-based AI creation canvas. Chain text, image, and video generation models from 11 providers on an infinite canvas — bring your own API key.
 
 [Live Demo](https://marketing.firemux.com/huobao-canvas/)
 
@@ -11,13 +11,13 @@ An open-source, node-based AI creation canvas. Chain text, image, and video gene
 ![Docker](https://img.shields.io/badge/Docker-huobao%2Fhuobao--canvas-2496ED?logo=docker)
 [![License](https://img.shields.io/badge/License-CC%20BY--NC--SA%204.0-lightgrey.svg)](https://creativecommons.org/licenses/by-nc-sa/4.0/)
 
-> **v2.0 rewrite in progress**: this branch contains the rewritten monorepo version (12 providers with official API adaptation). The v1 code and docs are preserved on the [`legacy/v1`](../../tree/legacy/v1) branch.
+> **v2.0 rewrite in progress**: this branch contains the rewritten monorepo version (11 providers with official API adaptation). The v1 code and docs are preserved on the [`legacy/v1`](../../tree/legacy/v1) branch.
 
 ## Features
 
 - 🎨 **Infinite canvas** powered by Vue Flow — text / image / video / group nodes with typed connection rules
 - 🔗 **Node chaining** — use one node's output as the next node's input (e.g. text → image → video)
-- 🧩 **12 providers built-in, official API formats** — OpenAI, Anthropic, Gemini, Qwen, Volcengine, DeepSeek, MiniMax, Moonshot, Zhipu, xAI, Vidu, Xiaomi MiMo; official request/response adaptation included
+- 🧩 **11 providers built-in, official API formats** — OpenAI, Anthropic, Gemini, Qwen, Volcengine, DeepSeek, MiniMax, Moonshot, Zhipu, Vidu, Xiaomi MiMo; official request/response adaptation included
 - ⚙️ **Settings page** — per-provider API keys, connectivity tests, model enable/disable, custom models
 - 🖥️ **Server-side run queue** — model calls execute on the server; tasks survive refreshes and browser switches, async video tasks are polled automatically (2-hour budget); canvas data persists in SQLite
 - 🔑 **BYOK** — API keys live in your browser by default; when self-hosting they mirror to the server automatically (seamless across browsers)

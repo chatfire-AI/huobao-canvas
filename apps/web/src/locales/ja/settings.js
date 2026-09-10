@@ -16,7 +16,7 @@ export default {
     quickSetup: 'ワンクリック接続',
     pasteKeyRequired: 'Huobao API Key を貼り付けてください',
     keyCheckReturned: 'Key 検証が {status} を返しました。保存済みです。Key が有効か確認してください',
-    setupSuccess: 'Huobao に接続しました：12 社の Key とゲートウェイアドレスが自動設定されました。キャンバスに戻ってご利用ください',
+    setupSuccess: 'Huobao に接続しました：11 社の Key とゲートウェイアドレスが自動設定されました。キャンバスに戻ってご利用ください',
     connectFailed: '接続に失敗しました：{detail}（ネットワークを確認して再試行してください）',
   },
   providers: {
