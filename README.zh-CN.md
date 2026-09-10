@@ -11,7 +11,7 @@
 
 [English](README.md) | **简体中文** | [日本語](README.ja.md) | [한국어](README.ko.md)
 
-[功能特性](#-功能特性) • [快速开始](#-快速开始) • [桌面版](#-桌面应用推荐) • [部署指南](#-部署指南)
+[功能特性](#-功能特性) • [快速开始](#-快速开始) • [图文教程](#-图文教程) • [桌面版](#-桌面应用推荐) • [部署指南](#-部署指南)
 
 <h2>🔑 <a href="https://api.firemux.com">获取 Huobao API Key 👉 立即查看</a></h2>
 
@@ -135,6 +135,52 @@ pnpm install && pnpm dev   # http://localhost:8022
 2. **手动配置**：按厂商逐个填入官方 API Key，支持连通测试
 
 Key 默认保存在浏览器 localStorage；自部署时自动镜像到服务端（换浏览器无缝接管）。
+
+---
+
+## 📖 图文教程
+
+从空画布到文生图、图生视频、参考编辑的完整创作流程，5 步走完。
+
+### 第 1 步 · 搭建创作流水线
+
+左侧拖入文本 / 图像 / 视频节点，从节点边缘的 **+** 拉线连接——上游产出自动成为下游输入。文本 → 图片 → 图片编辑 → 视频，一张画布就是一条生产线。左上角可撤回 / 重做 / 自动布局，右下角小地图导航大图。
+
+<p align="center">
+  <img src="docs/screenshots/01-canvas-pipeline.png" alt="画布工作流全景" width="800">
+</p>
+
+### 第 2 步 · 连线参考自动注入
+
+选中节点后底部弹出 **Prompt Dock**：已连接的素材自动出现在「参考内容」条（图1、图2…），输入 `@` 可在提示词中引用指定素材。连线即生效，无需手动上传。
+
+<p align="center">
+  <img src="docs/screenshots/02-prompt-dock.png" alt="Prompt Dock 参考内容注入" width="800">
+</p>
+
+### 第 3 步 · 配置模型服务（首次）
+
+设置页「火宝快捷配置」粘贴 API Key 一键写入 11 家厂商；或在左侧「厂商官方直连」逐家填入官方 Key，全部支持连通测试。
+
+<p align="center">
+  <img src="docs/screenshots/03-settings.png" alt="设置页与火宝快捷配置" width="800">
+</p>
+
+### 第 4 步 · 图生视频
+
+图片节点连到视频节点，Dock 中写好提示词（如「开心的大笑」），回车生成。异步视频任务由服务端队列执行并自动轮询——刷新页面、关掉浏览器，任务照样跑完。
+
+<p align="center">
+  <img src="docs/screenshots/04-video-node.png" alt="图生视频节点" width="800">
+</p>
+
+### 第 5 步 · 随时切换模型
+
+Dock 底部点模型名即可换模型：按厂商分组、支持搜索。双端点模型（如 GPT Image 的文生图 / 图片编辑）旁边还有「生成模式」切换——连了参考图时运行会自动切到正确的模式。
+
+<p align="center">
+  <img src="docs/screenshots/05-mode-switch.png" alt="模型选择器" width="800">
+</p>
 
 ---
 

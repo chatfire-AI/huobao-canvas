@@ -11,7 +11,7 @@
 
 **English** | [简体中文](README.zh-CN.md) | [日本語](README.ja.md) | [한국어](README.ko.md)
 
-[Features](#-features) • [Quick Start](#-quick-start) • [Desktop App](#-desktop-app-recommended) • [Deployment](#-deployment)
+[Features](#-features) • [Quick Start](#-quick-start) • [Walkthrough](#-visual-walkthrough) • [Desktop App](#-desktop-app-recommended) • [Deployment](#-deployment)
 
 <h2>🔑 <a href="https://api.firemux.com">Get a Huobao API Key 👉 Get started</a></h2>
 
@@ -135,6 +135,52 @@ Open the page → "Settings" (top right):
 2. **Manual setup**: enter each provider's official API key, with connectivity tests
 
 Keys stay in browser localStorage by default; on self-hosted deployments they mirror to the server automatically (switch browsers seamlessly).
+
+---
+
+## 📖 Visual Walkthrough
+
+From an empty canvas to text-to-image, image-to-video, and reference-based editing — five steps.
+
+### Step 1 · Build Your Pipeline
+
+Drag text / image / video nodes in from the left, then wire them from the **+** handle on a node's edge — upstream output becomes downstream input automatically. Text → image → image edit → video: one canvas, one production line. Undo / redo / auto-layout live top-left; the minimap bottom-right navigates large graphs.
+
+<p align="center">
+  <img src="docs/screenshots/01-canvas-pipeline.png" alt="Canvas pipeline overview" width="800">
+</p>
+
+### Step 2 · Connected References Auto-Inject
+
+Select a node and the **Prompt Dock** opens at the bottom: connected assets appear automatically in the reference strip (图1, 图2…), and typing `@` mentions a specific asset in your prompt. Wiring is all it takes — no manual uploads.
+
+<p align="center">
+  <img src="docs/screenshots/02-prompt-dock.png" alt="Prompt Dock reference injection" width="800">
+</p>
+
+### Step 3 · Configure Model Services (first run)
+
+Paste your API Key into "Huobao Quick Setup" to configure all 11 providers in one click; or fill in official keys provider-by-provider under "Official Direct" — every entry supports a connectivity test.
+
+<p align="center">
+  <img src="docs/screenshots/03-settings.png" alt="Settings and Huobao Quick Setup" width="800">
+</p>
+
+### Step 4 · Image-to-Video
+
+Wire an image node into a video node, write the prompt in the Dock (e.g. "laughing happily"), press Enter. Async video tasks run in the server-side queue with automatic polling — refresh the page or close the browser, the task still finishes.
+
+<p align="center">
+  <img src="docs/screenshots/04-video-node.png" alt="Image-to-video node" width="800">
+</p>
+
+### Step 5 · Switch Models Anytime
+
+Click the model name at the bottom of the Dock to switch: grouped by provider, with search. Dual-endpoint models (e.g. GPT Image text-to-image / image-edit) also get a generation-mode chip — when a reference image is connected, the correct mode is selected automatically at run time.
+
+<p align="center">
+  <img src="docs/screenshots/05-mode-switch.png" alt="Model picker" width="800">
+</p>
 
 ---
 
