@@ -291,6 +291,16 @@ cd apps/web && pnpm test    # provider preset validation + four-language message
 
 ---
 
+## ☕ Support
+
+If this project helps you, buy the author a coffee ☕ — your support keeps the updates coming!
+
+<div align="center">
+  <img src="donate.png" alt="Alipay donation QR code" width="240" />
+</div>
+
+---
+
 ## 💬 Contact
 
 Scan to join the WeChat group:

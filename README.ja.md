@@ -291,6 +291,16 @@ cd apps/web && pnpm test    # プロバイダープリセット検証 + 4 言語
 
 ---
 
+## ☕ 支援する
+
+このプロジェクトが役に立ったら、作者にコーヒー 1 杯を ☕ あなたの支援が継続的な更新の原動力です！
+
+<div align="center">
+  <img src="donate.png" alt="Alipay 寄付 QR コード" width="240" />
+</div>
+
+---
+
 ## 💬 連絡先
 
 QR コードをスキャンして WeChat グループに参加：

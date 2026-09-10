@@ -291,6 +291,16 @@ cd apps/web && pnpm test    # 공급자 프리셋 검증 + 4개국어 메시지 
 
 ---
 
+## ☕ 후원하기
+
+이 프로젝트가 도움이 되었다면 개발자에게 커피 한 잔을 ☕ 여러분의 후원이 지속적인 업데이트의 원동력입니다!
+
+<div align="center">
+  <img src="donate.png" alt="Alipay 후원 QR 코드" width="240" />
+</div>
+
+---
+
 ## 💬 연락처
 
 QR 코드를 스캔하여 WeChat 그룹 참여:
