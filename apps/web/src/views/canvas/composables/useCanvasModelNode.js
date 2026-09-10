@@ -52,6 +52,18 @@ const resolveUpstreamImage = async (payload) => {
 export function applyCanvasInputBindings(params, bindings, inputs) {
   if (!bindings || typeof bindings !== 'object') return params
   let next = { ...params }
+  // 首帧与参考图绑定并存（wan3.0 全能模型）：官方接口两字段互斥，
+  // 同传必报 InvalidParameter，按上游图片数量分流——1 张 = 首帧模式（文生图→图生视频），
+  // ≥2 张 = 全部参考图模式，二选一下发
+  if (bindings.sourceImage && bindings.sourceImages && inputs.images.length > 0) {
+    if (inputs.images.length === 1) {
+      next = setBoundValue(next, bindings.sourceImage, inputs.images[0])
+    } else {
+      next = setBoundValue(next, bindings.sourceImages, inputs.images)
+    }
+    next = setBoundValue(next, bindings.sourceVideo, inputs.video)
+    return next
+  }
   next = setBoundValue(next, bindings.sourceImage, inputs.images[0])
   next = setBoundValue(next, bindings.lastFrameImage, inputs.images[1])
   next = setBoundValue(next, bindings.sourceImages, inputs.images)
@@ -113,17 +125,23 @@ function mergeVideoImagesIntoParams(params, images, videoRefInfo) {
   return images.reduce((acc, url) => mergeImageIntoParams(acc, url), params)
 }
 
-// inputBindings 显式声明时的参考图容量:sourceImage=1 + lastFrameImage=1 + sourceImages=images 字段上限
+// inputBindings 显式声明时的参考图容量:sourceImage=1 + lastFrameImage=1 + sourceImages=images 字段上限；
+// sourceImage 与 sourceImages 并存时两者互斥分流(单图→首帧,多图→参考集),取 max 而非相加
 function bindingsImageCapacity(bindings, fields) {
   if (!bindings || typeof bindings !== 'object') return null
-  let capacity = 0
-  if (bindings.sourceImage) capacity += 1
-  if (bindings.lastFrameImage) capacity += 1
-  if (bindings.sourceImages) {
+  const imagesMax = () => {
     const imagesField = (fields || []).find((f) => String(f?.type || '').toLowerCase() === 'images')
     const max = Number(imagesField?.max ?? imagesField?.limit)
-    capacity += Number.isFinite(max) && max > 0 ? Math.floor(max) : DEFAULT_REFERENCE_IMAGE_LIMIT
+    return Number.isFinite(max) && max > 0 ? Math.floor(max) : DEFAULT_REFERENCE_IMAGE_LIMIT
   }
+  let capacity = 0
+  if (bindings.sourceImage && bindings.sourceImages) {
+    capacity = Math.max(1, imagesMax())
+    return capacity
+  }
+  if (bindings.sourceImage) capacity += 1
+  if (bindings.lastFrameImage) capacity += 1
+  if (bindings.sourceImages) capacity += imagesMax()
   return capacity > 0 ? capacity : null
 }
 

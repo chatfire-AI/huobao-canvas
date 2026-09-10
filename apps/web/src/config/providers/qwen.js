@@ -366,8 +366,9 @@ Object.defineProperty(provider, 'models', {
     type: '3', typeName: '视频', icon: provider.icon, launchTime: '2026-08-06',
     endpoints: [videoEp()],
     // 万相 3.0 All-in-One：文生 / 首帧图生 / 参考生视频一体，最长 30 秒；
-    // 官方首帧图与参考图互斥（同传必报错），@conditional 不支持"另一字段为空"的反向条件，
-    // 无法在 inputTransform 层自动互斥，仅在描述中标注，需用户保证只填其一
+    // 官方首帧图与参考图互斥（同传必报错）。画布注入侧按上游图片数自动分流
+    // （1 张→首帧 / ≥2 张→参考集，见 useCanvasModelNode.applyCanvasInputBindings），
+    // 表单手动填写仍互斥，仅在描述中标注
     modelSchema: schema({
       protocolKey: 'dashscope',
       input: [
