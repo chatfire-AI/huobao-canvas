@@ -1,95 +1,258 @@
-# ChatFire Canvas（火宝画布）
+# 🎨 Huobao Canvas - AI クリエイションキャンバス
 
-[English](./README.md) | [简体中文](./README.zh-CN.md) | [한국어](./README.ko.md)
+<div align="center">
 
-オープンソースのノードベース AI 創作キャンバス。無限キャンバス上で 11 社のプロバイダーのテキスト・画像・動画生成モデルを連携できます。API Key を持ってくるだけで利用可能。
+**オープンソースのノードベース AI 創作キャンバス。無限キャンバス上で 11 社のプロバイダーのテキスト・画像・動画生成モデルを連携**
 
-[デモを見る](https://marketing.firemux.com/huobao-canvas/)
-
-![Vue](https://img.shields.io/badge/Vue-3.5-4FC08D?logo=vue.js)
-![Vite](https://img.shields.io/badge/Vite-5-646CFF?logo=vite)
-![Docker](https://img.shields.io/badge/Docker-huobao%2Fhuobao--canvas-2496ED?logo=docker)
+[![Vue Version](https://img.shields.io/badge/Vue-3.5-4FC08D?style=flat&logo=vue.js)](https://vuejs.org)
+[![Vite](https://img.shields.io/badge/Vite-5-646CFF?style=flat&logo=vite)](https://vitejs.dev)
+[![Docker](https://img.shields.io/badge/Docker-huobao%2Fhuobao--canvas-2490ED?style=flat&logo=docker)](https://hub.docker.com/r/huobao/huobao-canvas)
 [![License](https://img.shields.io/badge/License-CC%20BY--NC--SA%204.0-lightgrey.svg)](https://creativecommons.org/licenses/by-nc-sa/4.0/)
 
-> **v2.0 全面リライト進行中**：このブランチはリライト版（monorepo + 11 社プロバイダー公式 API 対応）です。v1 の旧コードとドキュメントは [`legacy/v1`](../../tree/legacy/v1) ブランチに残しています。
+[English](README.md) | [简体中文](README.zh-CN.md) | **日本語** | [한국어](README.ko.md)
 
-## 機能
+[機能](#-機能) • [クイックスタート](#-クイックスタート) • [デスクトップ版](#-デスクトップアプリ推奨) • [デプロイ](#-デプロイ)
 
-- 🎨 **無限キャンバス**：Vue Flow ベース。テキスト / 画像 / 動画 / グループの 4 種ノード + 型付き接続ルール
-- 🔗 **ノード連携**：上流ノードの出力を下流の入力に利用（テキスト → 画像 → 動画）
-- 🧩 **11 社のプロバイダー公式形式を内蔵**：OpenAI、Anthropic、Gemini、Qwen（火山）、DeepSeek、MiniMax、Moonshot、智譜（Zhipu）、Vidu、Xiaomi MiMo。公式リクエスト / レスポンス形式のアダプター同梱
-- ⚙️ **設定ページ**：プロバイダーごとの API Key 設定、接続テスト、モデルの有効化 / 無効化、カスタムモデル
-- 🖥️ **サーバーサイド実行キュー**：モデル呼び出しはサーバー側で実行。リロードやブラウザを変えてもタスクは失われず、非同期の動画タスクは自動ポーリング（最大 2 時間）。キャンバスデータは SQLite に保存
-- 🔑 **BYOK**：API Key はデフォルトでブラウザのローカルに保存。セルフホスト時はサーバーへ自動ミラー（ブラウザを変えてもシームレスに引き継ぎ）
-- 🌍 **4 言語 UI**：简体中文 / English / 日本語 / 한국어。アプリ内でワンクリック切替
-- 🔄 **デュアルカタログモード**：プロバイダー公式ダイレクト接続（デフォルト、単体で利用可）または任意の ChatFire / OpenAI 互換ゲートウェイ
-- 📦 **多彩なデプロイ**：オールインワン Docker イメージ（amd64 / arm64：Linux / Windows / macOS 共通）· Electron デスクトップ版（Windows / macOS）
+<h2>🔑 <a href="https://api.firemux.com">Huobao API Key を取得 👉 今すぐ見る</a></h2>
 
-## クイックスタート
+**テキスト・画像・動画の全 AI 機能、1 つの Key で開通**
 
-**Docker（推奨）**
+「設定 → Huobao クイック設定」に Key を貼るだけで 11 社分の設定を一括書き込み
+
+<h3>📥 <a href="https://github.com/chatfire-AI/huobao-canvas/releases/latest">デスクトップ版をダウンロード（macOS / Windows）</a> · <a href="https://marketing.firemux.com/huobao-canvas/">オンラインデモ</a></h3>
+
+</div>
+
+---
+
+## 📖 プロジェクト概要
+
+Huobao Canvas はオープンソースのノードベース AI 創作キャンバスです。無限キャンバスにテキスト / 画像 / 動画ノードを置き、線を引くだけで上流の出力が下流の入力に——テキストから画像、画像から動画、参照から動画まで自由に連携できます。
+
+### 🎯 コアバリュー
+
+- **🎨 キャンバスがワークフロー**：4 種類のノード + 型付き接続ルールで、創作パイプラインを見たまま構築
+- **🧩 公式フォーマット内蔵**：11 社の公式リクエスト / レスポンスアダプター。Key を入れるだけで使える
+- **🔑 BYOK**：Key はブラウザのローカル保存。セルフホスト時はサーバーへ自動ミラー、ブラウザを変えてもシームレス
+- **📦 3 形態のデプロイ**：Docker 単一イメージ / Electron デスクトップ / 純 Web 開発モード、同一コードベース
+
+### 🛠️ 技術アーキテクチャ
+
+```
+apps/web/     — Vue 3.5 + Vite 5 + Vue Flow + Naive UI + Pinia + vue-i18n + Tailwind
+apps/server/  — 依存ゼロの Node サーバー（node:sqlite + 組み込み fetch）：キャンバス保存 + 実行キュー
+apps/desktop/ — Electron シェル（utilityProcess にサーバー内蔵、esbuild + electron-builder で dmg/exe）
+docker/       — オールインワン単一イメージ（フロントエンド成果物 + サーバー bundle、amd64/arm64）
+```
+
+---
+
+## ✨ 機能
+
+### 🎨 無限キャンバス
+
+- ✅ テキスト / 画像 / 動画 / グループの 4 種ノード、ドラッグで創作パイプラインを構築
+- ✅ 上流の出力を下流へ自動注入：テキスト→画像→動画→参照動画
+- ✅ 型付き接続ルール + ドラッグ時のドロップメニューで無効な接続を防止
+- ✅ 元に戻す / やり直し、自動レイアウト、範囲選択、ズーム——完全な編集体験
+
+### 🧩 11 社の公式アダプター
+
+OpenAI、Anthropic、Gemini、Qwen、火山エンジン、DeepSeek、MiniMax、Moonshot、智譜（Zhipu）、Vidu、Xiaomi MiMo
+
+| タイプ | 代表的なモデル |
+|---|---|
+| **対話** | GPT、Claude、Gemini、Qwen3、DeepSeek、Kimi、GLM、MiMo |
+| **画像** | GPT Image 1.5/2、Gemini 画像、豆包 Seedream、Wan |
+| **動画** | Wan 2.7/3.0（文生 / 図生 / 参照生）、Seedance、Vidu、MiniMax |
+
+- ✅ 各社の公式認証方式（Bearer / x-api-key / x-goog-api-key / Token）と入出力フォーマット
+- ✅ デュアルエンドポイントモデル（GPT Image の文生 / 画像編集など）はキャンバス内で生成モードを切替、接続された参照を自動認識
+- ✅ 設定ページ：プロバイダー別 Key、接続テスト、モデルの有効 / 無効、カスタムモデル
+
+### 🖥️ サーバーサイド実行キュー
+
+- ✅ モデル呼び出しはサーバーで実行——リロードやブラウザ変更でもタスクを失わない
+- ✅ 非同期動画タスクはサーバーが自動ポーリング（2 時間の予算）、長時間レンダリングも安心
+- ✅ キャンバスデータは SQLite に保存——同一デプロイならどのブラウザでも同じキャンバス
+
+### 🌍 4 言語 UI
+
+简体中文 / English / 日本語 / 한국어 — UI 内でワンクリック切替。
+
+### 🔄 2 つのカタログモード
+
+- **公式ダイレクト（デフォルト）**：各社の公式フォーマットで直接通信、単体で動作
+- **ゲートウェイモード**：任意の OpenAI 互換ゲートウェイ（Huobao など）に接続、1 つの Key で全モデル
+
+---
+
+## 🚀 クイックスタート
+
+### 📥 方法 1：デスクトップ版（推奨）
+
+[Releases からダウンロード](https://github.com/chatfire-AI/huobao-canvas/releases/latest)：
+
+| プラットフォーム | ファイル |
+|---|---|
+| macOS Apple Silicon | `HuobaoCanvas-<バージョン>-arm64.dmg` |
+| macOS Intel | `HuobaoCanvas-<バージョン>.dmg` |
+| Windows x64 | `HuobaoCanvas Setup <バージョン>.exe` |
+
+- ダブルクリックでインストール、すぐ使える：サーバー内蔵 + SQLite、データはユーザーディレクトリに保存、アンインストールしてもデータは残る
+- 未署名の macOS パッケージは初回起動時に右クリック → 開く、または `xattr -cr /Applications/HuobaoCanvas.app`
+- 未署名の Windows パッケージは SmartScreen で「詳細情報 → 実行」を選択
+
+### 🐳 方法 2：Docker
 
 ```bash
 docker run -d -p 8080:16812 -v canvas-data:/app/data huobao/huobao-canvas:latest
 # http://localhost:8080 を開く
 ```
 
-イメージは Docker Hub（[huobao/huobao-canvas](https://hub.docker.com/r/huobao/huobao-canvas)）にマルチアーキテクチャ（`linux/amd64` + `linux/arm64`）で公開されており、Linux サーバー / Windows / macOS で利用できます。
-
-または docker compose を利用（Watchtower による毎日の自動更新 + `.env` 設定付き）：
+マルチアーキテクチャイメージ（`linux/amd64` + `linux/arm64`）を [Docker Hub](https://hub.docker.com/r/huobao/huobao-canvas) で公開。compose なら Watchtower が毎日自動更新：
 
 ```bash
-cp .env.example .env       # WATCHTOWER_TOKEN を必要に応じて変更
-docker compose up -d       # http://localhost:8080
+cp .env.example .env       # 必要に応じて WATCHTOWER_TOKEN を変更
+docker compose up -d
 ```
 
-**ローカル開発**
+### 💻 方法 3：ローカル開発
 
 ```bash
-cd apps/web
-pnpm install
-pnpm dev        # http://localhost:8022
+git clone https://github.com/chatfire-AI/huobao-canvas.git
+cd huobao-canvas/apps/web
+pnpm install && pnpm dev   # http://localhost:8022
 ```
 
-ページを開き、右上の**設定**で任意のプロバイダーに API Key を入力すれば創作開始です。Key はデフォルトでブラウザの localStorage に保存されます（セルフホスト時はサーバーへ自動ミラー）。
+> ローカル開発でキャンバス永続化とサーバー実行キューが必要な場合は、別ターミナルで `pnpm -C apps/server dev`（Node ≥ 22.13）。
 
-## 設定
+### 🔑 初回利用：API Key の設定
 
-Docker デプロイ（`docker-compose.yml` / `.env`）：
+ページ右上の「設定」を開く：
 
-| 環境変数 | デフォルト値 | 説明 |
+1. **Huobao クイック設定（推奨）**：Huobao API Key（[api.firemux.com で取得](https://api.firemux.com)）を貼るだけで 11 社分の Key とゲートウェイアドレスを一括設定
+2. **手動設定**：プロバイダーごとに公式 API Key を入力、接続テスト対応
+
+Key はデフォルトでブラウザの localStorage に保存。セルフホスト時はサーバーへ自動ミラー（ブラウザを変えてもシームレス）。
+
+---
+
+## 🖥️ デスクトップアプリ（推奨）
+
+```bash
+cd apps/desktop
+pnpm dist        # macOS dmg（arm64 + Intel）
+pnpm dist:win    # Windows NSIS インストーラー（macOS 上でクロスビルド可能）
+```
+
+成果物は `apps/desktop/release/`。ユーザーデータ：`~/Library/Application Support/HuobaoCanvas/`（SQLite + 生成結果ファイル）。
+
+#### 🔄 アプリ内更新（Apple 署名不要）
+
+デスクトップ版には更新機能を内蔵（macOS はディレクトリ置換 / Windows はサイレントインストール、ローカル sha256 検証）。リリース手順：
+
+```bash
+# 1. apps/desktop/package.json の version を更新してビルド
+pnpm dist && pnpm dist:win
+
+# 2. release/latest.json を生成（全成果物の sha256 入り）
+pnpm feed
+
+# 3. latest.json + インストーラー + zip を GitHub Release にアップロード（v1.0.1 のようなタグ）
+```
+
+クライアントは起動時に自動で更新を確認（`CANVAS_UPDATE_FEED` 環境変数でフィード URL を上書き可能）。
+
+---
+
+## 📦 デプロイ
+
+### Docker 環境変数
+
+| 変数 | デフォルト | 説明 |
 |---|---|---|
-| `UPSTREAM` | `https://api.firemux.com` | 推論ゲートウェイのデフォルトアドレス（任意の OpenAI 互換ゲートウェイ。設定ページでユーザーごとの上書きも可能） |
-| `API_BASE_URL` | 空 | ブラウザ側のリクエストベース URL。空 = 同一オリジン（イメージ内サーバーが直接処理 / プロキシ） |
-| `WATCHTOWER_TOKEN` | `please-change-me` | Watchtower HTTP API トークン。本番環境では必ず変更してください |
+| `UPSTREAM` | `https://api.firemux.com` | 推論ゲートウェイのデフォルトアドレス（設定ページでユーザー上書き可能） |
+| `API_BASE_URL` | 空 | ブラウザ側リクエストのベース URL。空 = 同一オリジン（推奨、CORS 回避） |
+| `WATCHTOWER_TOKEN` | `please-change-me` | Watchtower HTTP API トークン。本番環境では必ず変更 |
 
-ローカル開発（`apps/web`）：
+データ永続化：名前付きボリューム `canvas-data` を `/app/data` にマウント（SQLite + 結果ファイル）、イメージ更新でもデータは保持。
 
-| 環境変数 | デフォルト値 | 説明 |
+### ローカル開発の環境変数（apps/web）
+
+| 変数 | デフォルト | 説明 |
 |---|---|---|
 | `VITE_API_BASE_URL` | `https://api.firemux.com` | 推論エンドポイント（任意の OpenAI 互換ゲートウェイ） |
-| `VITE_UPSTREAM` | `https://api.firemux.com` | dev サーバーのプロキシターゲット |
+| `VITE_UPSTREAM` | `https://api.firemux.com` | dev server のプロキシ先 |
 
-## コントリビュート
+詳細は [docs/configuration.md](docs/configuration.md) と [docs/architecture.md](docs/architecture.md) を参照。
+
+---
+
+## 🎨 技術スタック
+
+- **フロントエンド**：Vue 3.5 + Vite 5 + Vue Flow（無限キャンバス）+ Naive UI + Pinia + vue-i18n + Tailwind
+- **サーバー**：Node ≥ 22.13、npm 依存ゼロ（node:sqlite + 組み込み fetch）——フロントエンドのプロバイダーアダプターを直接再利用
+- **デスクトップ**：Electron（utilityProcess でサーバー実行、BrowserWindow は同一オリジンで読み込み）+ esbuild + electron-builder
+- **デプロイ**：単一のマルチステージ Dockerfile——フロントエンド成果物 + サーバー bundle を一体化
+
+---
+
+## 📋 更新履歴
+
+### v1.0.0 (2026-09)
+
+v2 全面リライト後の最初の安定版（monorepo + 11 社公式アダプター）：
+
+- 🎨 新キャンバス：Vue Flow 無限キャンバス + 4 種ノード + 型付き接続
+- 🖥️ サーバーサイド実行キュー：リロードでもタスク消失なし、非同期動画は自動ポーリング（2 時間予算）
+- 🔑 BYOK：ブラウザローカル保存、セルフホスト時はサーバーへ自動ミラー
+- 🌍 4 言語 UI + Electron デスクトップ（アプリ内更新）+ Docker 単一イメージ（Watchtower 自動更新）
+- 🔧 wan3.0-video のキャンバス接続時「first_frame cannot be combined...」エラーを修正（first frame / 参照の相互排他を分流）
+- 🔧 GPT Image などデュアルエンドポイントモデルで接続参照が静かに捨てられる問題を修正（生成モード切替を追加）
+
+> v1 の旧コードとドキュメントは [`legacy/v1`](../../tree/legacy/v1) ブランチに残しています。
+
+---
+
+## 📄 ライセンス
+
+**[CC BY-NC-SA 4.0](LICENSE)**（表示-非営利-継承 4.0 国際）ライセンスを採用。
+
+- ✅ 個人利用、学習研究、非営利プロジェクトは自由に利用可能
+- ✅ 改変と再配布は、クレジット表示と同一ライセンスでの共有を条件に許可
+- ❌ **商用利用禁止**——書面による許可なく、本プロジェクトの全部または一部を商用目的（有料サービス、商用デプロイ、再販など）に使用することは禁止
+
+全文は [LICENSE](LICENSE) を参照。
+
+---
+
+## 🤝 コントリビューション
 
 Issue と Pull Request を歓迎します！
 
 1. このリポジトリを Fork
-2. 機能ブランチを作成（`git checkout -b feature/amazing-feature`）
-3. 変更をコミット（`git commit -m 'Add some feature'`）
-4. ブランチにプッシュ（`git push origin feature/amazing-feature`）
+2. 機能ブランチを作成（`git checkout -b feature/AmazingFeature`）
+3. 変更をコミット（`git commit -m 'Add some AmazingFeature'`）
+4. ブランチをプッシュ（`git push origin feature/AmazingFeature`）
 5. Pull Request を作成
 
-## お問い合わせ
+便利なチェックコマンド：
 
-WeChat でご交流ください：
+```bash
+cd apps/web && pnpm test    # プロバイダープリセット検証 + 4 言語メッセージコンパイル
+```
 
-<img src="./docs/images/wx-group.jpg" width="200" alt="WeChat グループ QR コード" />
+---
 
-## ライセンス
+## 💬 連絡先
 
-本プロジェクトは **[CC BY-NC-SA 4.0](./LICENSE)**（表示-非営利-継承 4.0 国際）ライセンスで公開しています。
+QR コードをスキャンして WeChat グループに参加：
 
-- 個人利用・学習・非商用プロジェクトを歓迎
-- 同一ライセンスでの改変・再配布を許可（クレジット表記必須）
-- **商用利用は禁止**です（作者の事前の書面許可が必要）
+<div align="center">
+  <img src="docs/images/wx-group.jpg" width="200" alt="WeChat グループ QR コード" />
+</div>
+
+---
+
+> _"AI と一緒に、もっと創造的なことを"_

@@ -1,89 +1,258 @@
-# ChatFire Canvas
+# 🎨 Huobao Canvas - AI Creation Canvas
 
-[简体中文](./README.zh-CN.md) | [日本語](./README.ja.md) | [한국어](./README.ko.md)
+<div align="center">
 
-An open-source, node-based AI creation canvas. Chain text, image, and video generation models from 11 providers on an infinite canvas — bring your own API key.
+**An open-source, node-based AI creation canvas — chain text, image, and video models from 11 providers on an infinite canvas**
 
-[Live Demo](https://marketing.firemux.com/huobao-canvas/)
-
-![Vue](https://img.shields.io/badge/Vue-3.5-4FC08D?logo=vue.js)
-![Vite](https://img.shields.io/badge/Vite-5-646CFF?logo=vite)
-![Docker](https://img.shields.io/badge/Docker-huobao%2Fhuobao--canvas-2496ED?logo=docker)
+[![Vue Version](https://img.shields.io/badge/Vue-3.5-4FC08D?style=flat&logo=vue.js)](https://vuejs.org)
+[![Vite](https://img.shields.io/badge/Vite-5-646CFF?style=flat&logo=vite)](https://vitejs.dev)
+[![Docker](https://img.shields.io/badge/Docker-huobao%2Fhuobao--canvas-2490ED?style=flat&logo=docker)](https://hub.docker.com/r/huobao/huobao-canvas)
 [![License](https://img.shields.io/badge/License-CC%20BY--NC--SA%204.0-lightgrey.svg)](https://creativecommons.org/licenses/by-nc-sa/4.0/)
 
-> **v2.0 rewrite in progress**: this branch contains the rewritten monorepo version (11 providers with official API adaptation). The v1 code and docs are preserved on the [`legacy/v1`](../../tree/legacy/v1) branch.
+**English** | [简体中文](README.zh-CN.md) | [日本語](README.ja.md) | [한국어](README.ko.md)
 
-## Features
+[Features](#-features) • [Quick Start](#-quick-start) • [Desktop App](#-desktop-app-recommended) • [Deployment](#-deployment)
 
-- 🎨 **Infinite canvas** powered by Vue Flow — text / image / video / group nodes with typed connection rules
-- 🔗 **Node chaining** — use one node's output as the next node's input (e.g. text → image → video)
-- 🧩 **11 providers built-in, official API formats** — OpenAI, Anthropic, Gemini, Qwen, Volcengine, DeepSeek, MiniMax, Moonshot, Zhipu, Vidu, Xiaomi MiMo; official request/response adaptation included
-- ⚙️ **Settings page** — per-provider API keys, connectivity tests, model enable/disable, custom models
-- 🖥️ **Server-side run queue** — model calls execute on the server; tasks survive refreshes and browser switches, async video tasks are polled automatically (2-hour budget); canvas data persists in SQLite
-- 🔑 **BYOK** — API keys live in your browser by default; when self-hosting they mirror to the server automatically (seamless across browsers)
-- 🌍 **Four UI languages** — 简体中文 / English / 日本語 / 한국어, switchable in-app with one click
-- 🔄 **Dual catalog mode** — official-direct (default, standalone) or any ChatFire/OpenAI-compatible gateway
-- 📦 **Multiple deployment targets** — single all-in-one Docker image (amd64 / arm64: Linux / Windows / macOS) · Electron desktop app (Windows / macOS)
+<h2>🔑 <a href="https://api.firemux.com">Get a Huobao API Key 👉 Get started</a></h2>
 
-## Quickstart
+**Text, image, and video AI capabilities — one key unlocks everything**
 
-**Docker (recommended)**
+Paste the key in "Settings → Huobao Quick Setup" to configure all 11 providers in one click
+
+<h3>📥 <a href="https://github.com/chatfire-AI/huobao-canvas/releases/latest">Download Desktop App (macOS / Windows)</a> · <a href="https://marketing.firemux.com/huobao-canvas/">Live Demo</a></h3>
+
+</div>
+
+---
+
+## 📖 Overview
+
+Huobao Canvas is an open-source, node-based AI creation canvas. Place text / image / video nodes on an infinite canvas and wire them together — upstream outputs flow into downstream inputs. Text-to-image, image-to-video, reference-to-video: mix and match models freely.
+
+### 🎯 Why Huobao Canvas
+
+- **🎨 Canvas as workflow**: four node types + typed connection rules — your creation pipeline, visualized
+- **🧩 Official formats built-in**: native request/response adapters for 11 providers — just add your key
+- **🔑 BYOK**: keys stay in your browser; on self-hosted deployments they mirror to the server automatically
+- **📦 Three deployment shapes**: single Docker image / Electron desktop / plain web dev — same codebase
+
+### 🛠️ Architecture
+
+```
+apps/web/     — Vue 3.5 + Vite 5 + Vue Flow + Naive UI + Pinia + vue-i18n + Tailwind
+apps/server/  — Zero-dependency Node server (node:sqlite + built-in fetch): canvas storage + run queue
+apps/desktop/ — Electron shell (utilityProcess embeds the server; esbuild + electron-builder → dmg/exe)
+docker/       — All-in-one single image (frontend build + server bundle, amd64/arm64)
+```
+
+---
+
+## ✨ Features
+
+### 🎨 Infinite Canvas
+
+- ✅ Text / image / video / group nodes — wire up your creation pipeline visually
+- ✅ Upstream outputs auto-inject downstream: text-to-image → image-to-video → reference-to-video
+- ✅ Typed connection rules + drop-point menu on drag-out prevents invalid wiring
+- ✅ Undo / redo, auto-layout, box selection, zoom — a complete editing experience
+
+### 🧩 11 Providers, Official Adapters
+
+OpenAI, Anthropic, Gemini, Qwen, Volcengine, DeepSeek, MiniMax, Moonshot, Zhipu, Vidu, Xiaomi MiMo
+
+| Type | Notable Models |
+|---|---|
+| **Chat** | GPT, Claude, Gemini, Qwen3, DeepSeek, Kimi, GLM, MiMo |
+| **Image** | GPT Image 1.5/2, Gemini Image, Doubao Seedream, Wan |
+| **Video** | Wan 2.7/3.0 (t2v/i2v/reference), Seedance, Vidu, MiniMax |
+
+- ✅ Per-provider official auth (Bearer / x-api-key / x-goog-api-key / Token) and payload formats
+- ✅ Dual-endpoint models (e.g. GPT Image text-to-image / image-edit): switch generation mode in-canvas, connected references detected automatically
+- ✅ Settings page: per-provider keys, connectivity tests, model toggles, custom models
+
+### 🖥️ Server-side Run Queue
+
+- ✅ Model calls execute on the server — refresh or switch browsers, tasks survive
+- ✅ Async video tasks polled server-side (2-hour budget) — let long renders run
+- ✅ Canvas data in SQLite — every browser on the same deployment sees the same canvas
+
+### 🌍 Four Languages
+
+简体中文 / English / 日本語 / 한국어 — switch right in the UI.
+
+### 🔄 Two Catalog Modes
+
+- **Official direct (default)**: talk to providers in their native formats, works standalone
+- **Gateway mode**: plug into any OpenAI-compatible gateway (e.g. Huobao) — one key for everything
+
+---
+
+## 🚀 Quick Start
+
+### 📥 Option 1: Desktop App (Recommended)
+
+[Download from Releases](https://github.com/chatfire-AI/huobao-canvas/releases/latest):
+
+| Platform | File |
+|---|---|
+| macOS Apple Silicon | `HuobaoCanvas-<version>-arm64.dmg` |
+| macOS Intel | `HuobaoCanvas-<version>.dmg` |
+| Windows x64 | `HuobaoCanvas Setup <version>.exe` |
+
+- Double-click install, works out of the box: embedded server + SQLite, data lives in the user directory — uninstalling keeps your data
+- Unsigned macOS builds: right-click → Open on first launch, or run `xattr -cr /Applications/HuobaoCanvas.app`
+- Unsigned Windows builds: SmartScreen → "More info → Run anyway"
+
+### 🐳 Option 2: Docker
 
 ```bash
 docker run -d -p 8080:16812 -v canvas-data:/app/data huobao/huobao-canvas:latest
-# open http://localhost:8080
+# Open http://localhost:8080
 ```
 
-The image is published on Docker Hub ([huobao/huobao-canvas](https://hub.docker.com/r/huobao/huobao-canvas)) as a multi-arch manifest (`linux/amd64` + `linux/arm64`) — works on Linux servers, Windows, and macOS.
-
-Or with docker compose (adds a Watchtower service for daily auto-updates + `.env` config):
+Multi-arch image (`linux/amd64` + `linux/arm64`) on [Docker Hub](https://hub.docker.com/r/huobao/huobao-canvas). Or use compose (Watchtower auto-updates daily):
 
 ```bash
 cp .env.example .env       # edit WATCHTOWER_TOKEN as needed
-docker compose up -d       # http://localhost:8080
+docker compose up -d
 ```
 
-**Local development**
+### 💻 Option 3: Local Development
 
 ```bash
-cd apps/web
-pnpm install
-pnpm dev        # http://localhost:8022
+git clone https://github.com/chatfire-AI/huobao-canvas.git
+cd huobao-canvas/apps/web
+pnpm install && pnpm dev   # http://localhost:8022
 ```
 
-Open the app, go to **Settings** (top-right), paste an API key for any provider, and start creating. Keys are stored in your browser's localStorage by default (mirrored to the server automatically when self-hosting).
+> For canvas persistence and the server-side run queue during local dev, run `pnpm -C apps/server dev` in another terminal (Node ≥ 22.13).
 
-## Configuration
+### 🔑 First Run: Add an API Key
 
-Docker deployment (`docker-compose.yml` / `.env`):
+Open the page → "Settings" (top right):
 
-| Env var | Default | Description |
+1. **Huobao Quick Setup (recommended)**: paste a Huobao API Key ([get one at api.firemux.com](https://api.firemux.com)) — one click writes keys and gateway URLs for all 11 providers
+2. **Manual setup**: enter each provider's official API key, with connectivity tests
+
+Keys stay in browser localStorage by default; on self-hosted deployments they mirror to the server automatically (switch browsers seamlessly).
+
+---
+
+## 🖥️ Desktop App (Recommended)
+
+```bash
+cd apps/desktop
+pnpm dist        # macOS dmg (arm64 + Intel)
+pnpm dist:win    # Windows NSIS installer (cross-builds from macOS)
+```
+
+Artifacts land in `apps/desktop/release/`. User data: `~/Library/Application Support/HuobaoCanvas/` (SQLite + generated result files).
+
+#### 🔄 In-app Updates (no Apple signing required)
+
+The desktop app ships with an updater (macOS directory swap / Windows silent install, local sha256 verification). Release flow:
+
+```bash
+# 1. Bump version in apps/desktop/package.json, then build
+pnpm dist && pnpm dist:win
+
+# 2. Generate release/latest.json (sha256 of every artifact)
+pnpm feed
+
+# 3. Upload latest.json + installers + zips to a GitHub Release (tag like v1.0.1)
+```
+
+Clients check for updates on launch (override the feed URL with the `CANVAS_UPDATE_FEED` env var).
+
+---
+
+## 📦 Deployment
+
+### Docker Environment Variables
+
+| Variable | Default | Description |
 |---|---|---|
-| `UPSTREAM` | `https://api.firemux.com` | Default inference gateway (any OpenAI-compatible gateway; users can still override in Settings) |
-| `API_BASE_URL` | empty | Browser-side request base URL; empty = same-origin (served/proxied by the in-image server) |
+| `UPSTREAM` | `https://api.firemux.com` | Default inference gateway (users can still override in Settings) |
+| `API_BASE_URL` | empty | Browser-side request base URL; empty = same origin (recommended, avoids CORS) |
 | `WATCHTOWER_TOKEN` | `please-change-me` | Watchtower HTTP API token — change it in production |
 
-Local development (`apps/web`):
+Data persistence: named volume `canvas-data` mounts `/app/data` (SQLite + result files) — image updates keep your data.
 
-| Env var | Default | Description |
+### Local Dev Environment Variables (apps/web)
+
+| Variable | Default | Description |
 |---|---|---|
 | `VITE_API_BASE_URL` | `https://api.firemux.com` | Inference endpoint (any OpenAI-compatible gateway) |
 | `VITE_UPSTREAM` | `https://api.firemux.com` | Dev-server proxy target |
 
-## Contributing
+See [docs/configuration.md](docs/configuration.md) and [docs/architecture.md](docs/architecture.md) for details.
+
+---
+
+## 🎨 Tech Stack
+
+- **Frontend**: Vue 3.5 + Vite 5 + Vue Flow (infinite canvas) + Naive UI + Pinia + vue-i18n + Tailwind
+- **Server**: Node ≥ 22.13, zero npm dependencies (node:sqlite + built-in fetch) — reuses the frontend's provider adapters directly
+- **Desktop**: Electron (utilityProcess hosts the server, BrowserWindow loads same-origin) + esbuild + electron-builder
+- **Deployment**: single multi-stage Dockerfile — frontend build + server bundle in one image
+
+---
+
+## 📋 Changelog
+
+### v1.0.0 (2026-09)
+
+First stable release after the v2 rewrite (monorepo + 11 official provider adapters):
+
+- 🎨 New canvas: Vue Flow infinite canvas + four node types + typed connections
+- 🖥️ Server-side run queue: tasks survive refresh; async video polled automatically (2h budget)
+- 🔑 BYOK: keys in browser storage, auto-mirrored to server on self-hosted deployments
+- 🌍 Four-language UI + Electron desktop (in-app updates) + single Docker image (Watchtower auto-updates)
+- 🔧 Fixed wan3.0-video "first_frame cannot be combined..." error on canvas (first-frame/reference mutex split)
+- 🔧 Fixed silently dropped reference images on dual-endpoint models like GPT Image (new generation-mode switch)
+
+> The v1 codebase and docs live on the [`legacy/v1`](../../tree/legacy/v1) branch.
+
+---
+
+## 📄 License
+
+Licensed under **[CC BY-NC-SA 4.0](LICENSE)** (Attribution-NonCommercial-ShareAlike 4.0 International).
+
+- ✅ Free for personal use, learning, and non-commercial projects
+- ✅ Modifications and redistribution allowed with attribution under the same license
+- ❌ **No commercial use** — do not use this project, in whole or in part, for any commercial purpose (paid services, commercial deployment, resale) without written permission
+
+Full text in [LICENSE](LICENSE).
+
+---
+
+## 🤝 Contributing
 
 Issues and Pull Requests are welcome!
 
-1. Fork this repo
-2. Create a feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit your changes (`git commit -m 'Add amazing feature'`)
-4. Push to the branch (`git push origin feature/amazing-feature`)
+1. Fork this repository
+2. Create a feature branch (`git checkout -b feature/AmazingFeature`)
+3. Commit your changes (`git commit -m 'Add some AmazingFeature'`)
+4. Push to the branch (`git push origin feature/AmazingFeature`)
 5. Open a Pull Request
 
-## License
+Useful checks:
 
-This project is licensed under **[CC BY-NC-SA 4.0](./LICENSE)** (Attribution-NonCommercial-ShareAlike 4.0 International).
+```bash
+cd apps/web && pnpm test    # provider preset validation + four-language message compilation
+```
 
-- Personal use, learning, and non-commercial projects are welcome
-- Modifications and redistribution allowed under the same license with attribution
-- **Commercial use is prohibited** without prior written permission from the author
+---
+
+## 💬 Contact
+
+Scan to join the WeChat group:
+
+<div align="center">
+  <img src="docs/images/wx-group.jpg" width="200" alt="WeChat group QR code" />
+</div>
+
+---
+
+> _"Let AI do the creative work with us"_
