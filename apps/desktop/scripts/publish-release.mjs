@@ -26,7 +26,7 @@ const DESKTOP = path.resolve(__dirname, '..')
 const RELEASE = path.join(DESKTOP, 'release')
 
 /** 国内下载基址:默认桶默认域名,可被 COS_BASE_URL 覆盖(如 https://dl.chatfire.site/huobao-canvas) */
-const COS_BASE_URL = process.env.COS_BASE_URL || 'https://huobao-installer-1304922933.cos.ap-guangzhou.myqcloud.com/huobao-canvas'
+const COS_BASE_URL = process.env.COS_BASE_URL || 'https://installer.chatfire.site/huobao-canvas'
 const COS_KEY_PREFIX = 'huobao-canvas'
 
 const pkg = JSON.parse(fs.readFileSync(path.join(DESKTOP, 'package.json'), 'utf8'))
