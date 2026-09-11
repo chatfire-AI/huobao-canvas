@@ -19,7 +19,7 @@ const { spawn, execFile } = require('node:child_process')
 const FEED_URLS = process.env.CANVAS_UPDATE_FEED
   ? [process.env.CANVAS_UPDATE_FEED]
   : [
-    'https://drama-1304922933.cos.ap-shanghai.myqcloud.com/huobao-canvas/latest.json',
+    'https://huobao-installer-1304922933.cos.ap-guangzhou.myqcloud.com/huobao-canvas/latest.json',
     'https://github.com/chatfire-AI/huobao-canvas/releases/latest/download/latest.json',
   ]
 

@@ -19,7 +19,7 @@
 
 「설정 → Huobao 빠른 설정」에 Key를 붙여넣으면 11개 공급자 설정이 한 번에 완료
 
-<h3>📥 <a href="https://github.com/chatfire-AI/huobao-canvas/releases/latest">데스크톱 앱 다운로드 (macOS / Windows)</a> · <a href="https://drama-1304922933.cos.ap-shanghai.myqcloud.com/huobao-canvas/v1.0.0/HuobaoCanvas-1.0.0-arm64.dmg">중국 미러 (macOS arm64)</a> · <a href="https://drama-1304922933.cos.ap-shanghai.myqcloud.com/huobao-canvas/v1.0.0/HuobaoCanvas.Setup.1.0.0.exe">중국 미러 (Windows)</a> · <a href="https://marketing.firemux.com/huobao-canvas/">온라인 체험</a></h3>
+<h3>📥 <a href="https://github.com/chatfire-AI/huobao-canvas/releases/latest">데스크톱 앱 다운로드 (macOS / Windows)</a> · <a href="https://huobao-installer-1304922933.cos.ap-guangzhou.myqcloud.com/huobao-canvas/v1.0.0/HuobaoCanvas-1.0.0-arm64.dmg">중국 미러 (macOS arm64)</a> · <a href="https://huobao-installer-1304922933.cos.ap-guangzhou.myqcloud.com/huobao-canvas/v1.0.0/HuobaoCanvas.Setup.1.0.0.exe">중국 미러 (Windows)</a> · <a href="https://marketing.firemux.com/huobao-canvas/">온라인 체험</a></h3>
 
 </div>
 
@@ -93,7 +93,7 @@ OpenAI, Anthropic, Gemini, Qwen, 화산엔진(Volcengine), DeepSeek, MiniMax, Mo
 
 [Releases에서 다운로드](https://github.com/chatfire-AI/huobao-canvas/releases/latest)(해외) · **중국 미러 직접 링크**(Tencent Cloud, 프록시 불필요, 동일 파일):
 
-**[macOS arm64 .dmg](https://drama-1304922933.cos.ap-shanghai.myqcloud.com/huobao-canvas/v1.0.0/HuobaoCanvas-1.0.0-arm64.dmg)** · **[macOS Intel .dmg](https://drama-1304922933.cos.ap-shanghai.myqcloud.com/huobao-canvas/v1.0.0/HuobaoCanvas-1.0.0.dmg)** · **[Windows .exe](https://drama-1304922933.cos.ap-shanghai.myqcloud.com/huobao-canvas/v1.0.0/HuobaoCanvas.Setup.1.0.0.exe)**
+**[macOS arm64 .dmg](https://huobao-installer-1304922933.cos.ap-guangzhou.myqcloud.com/huobao-canvas/v1.0.0/HuobaoCanvas-1.0.0-arm64.dmg)** · **[macOS Intel .dmg](https://huobao-installer-1304922933.cos.ap-guangzhou.myqcloud.com/huobao-canvas/v1.0.0/HuobaoCanvas-1.0.0.dmg)** · **[Windows .exe](https://huobao-installer-1304922933.cos.ap-guangzhou.myqcloud.com/huobao-canvas/v1.0.0/HuobaoCanvas.Setup.1.0.0.exe)**
 
 | 플랫폼 | 파일 |
 |---|---|
