@@ -19,7 +19,7 @@
 
 Paste the key in "Settings → Huobao Quick Setup" to configure all 11 providers in one click
 
-<h3>📥 <a href="https://github.com/chatfire-AI/huobao-canvas/releases/latest">Download Desktop App (macOS / Windows)</a> · <a href="https://marketing.firemux.com/huobao-canvas/">Live Demo</a></h3>
+<h3>📥 <a href="https://github.com/chatfire-AI/huobao-canvas/releases/latest">Download Desktop App (macOS / Windows)</a> · <a href="https://drama-1304922933.cos.ap-shanghai.myqcloud.com/huobao-canvas/v1.0.0/HuobaoCanvas-1.0.0-arm64.dmg">China Mirror (macOS arm64)</a> · <a href="https://drama-1304922933.cos.ap-shanghai.myqcloud.com/huobao-canvas/v1.0.0/HuobaoCanvas.Setup.1.0.0.exe">China Mirror (Windows)</a> · <a href="https://marketing.firemux.com/huobao-canvas/">Live Demo</a></h3>
 
 </div>
 
@@ -91,13 +91,17 @@ OpenAI, Anthropic, Gemini, Qwen, Volcengine, DeepSeek, MiniMax, Moonshot, Zhipu,
 
 ### 📥 Option 1: Desktop App (Recommended)
 
-[Download from Releases](https://github.com/chatfire-AI/huobao-canvas/releases/latest):
+[Download from Releases](https://github.com/chatfire-AI/huobao-canvas/releases/latest) (overseas) · **China mirror direct links** (Tencent Cloud, no proxy needed, same files):
+
+**[macOS arm64 .dmg](https://drama-1304922933.cos.ap-shanghai.myqcloud.com/huobao-canvas/v1.0.0/HuobaoCanvas-1.0.0-arm64.dmg)** · **[macOS Intel .dmg](https://drama-1304922933.cos.ap-shanghai.myqcloud.com/huobao-canvas/v1.0.0/HuobaoCanvas-1.0.0.dmg)** · **[Windows .exe](https://drama-1304922933.cos.ap-shanghai.myqcloud.com/huobao-canvas/v1.0.0/HuobaoCanvas.Setup.1.0.0.exe)**
 
 | Platform | File |
 |---|---|
 | macOS Apple Silicon | `HuobaoCanvas-<version>-arm64.dmg` |
 | macOS Intel | `HuobaoCanvas-<version>.dmg` |
-| Windows x64 | `HuobaoCanvas Setup <version>.exe` |
+| Windows x64 | `HuobaoCanvas.Setup.<version>.exe` |
+
+> Users in China should prefer the mirror; the in-app updater likewise tries the China source (Tencent COS) first, falling back to GitHub.
 
 - Double-click install, works out of the box: embedded server + SQLite, data lives in the user directory — uninstalling keeps your data
 - Unsigned macOS builds: right-click → Open on first launch, or run `xattr -cr /Applications/HuobaoCanvas.app`

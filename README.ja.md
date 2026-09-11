@@ -19,7 +19,7 @@
 
 「設定 → Huobao クイック設定」に Key を貼るだけで 11 社分の設定を一括書き込み
 
-<h3>📥 <a href="https://github.com/chatfire-AI/huobao-canvas/releases/latest">デスクトップ版をダウンロード（macOS / Windows）</a> · <a href="https://marketing.firemux.com/huobao-canvas/">オンラインデモ</a></h3>
+<h3>📥 <a href="https://github.com/chatfire-AI/huobao-canvas/releases/latest">デスクトップ版をダウンロード（macOS / Windows）</a> · <a href="https://drama-1304922933.cos.ap-shanghai.myqcloud.com/huobao-canvas/v1.0.0/HuobaoCanvas-1.0.0-arm64.dmg">中国ミラー (macOS arm64)</a> · <a href="https://drama-1304922933.cos.ap-shanghai.myqcloud.com/huobao-canvas/v1.0.0/HuobaoCanvas.Setup.1.0.0.exe">中国ミラー (Windows)</a> · <a href="https://marketing.firemux.com/huobao-canvas/">オンラインデモ</a></h3>
 
 </div>
 
@@ -91,13 +91,17 @@ OpenAI、Anthropic、Gemini、Qwen、火山エンジン、DeepSeek、MiniMax、M
 
 ### 📥 方法 1：デスクトップ版（推奨）
 
-[Releases からダウンロード](https://github.com/chatfire-AI/huobao-canvas/releases/latest)：
+[Releases からダウンロード](https://github.com/chatfire-AI/huobao-canvas/releases/latest)（海外）· **中国国内ミラー直リンク**（Tencent Cloud、プロキシ不要、同一ファイル）：
+
+**[macOS arm64 .dmg](https://drama-1304922933.cos.ap-shanghai.myqcloud.com/huobao-canvas/v1.0.0/HuobaoCanvas-1.0.0-arm64.dmg)** · **[macOS Intel .dmg](https://drama-1304922933.cos.ap-shanghai.myqcloud.com/huobao-canvas/v1.0.0/HuobaoCanvas-1.0.0.dmg)** · **[Windows .exe](https://drama-1304922933.cos.ap-shanghai.myqcloud.com/huobao-canvas/v1.0.0/HuobaoCanvas.Setup.1.0.0.exe)**
 
 | プラットフォーム | ファイル |
 |---|---|
 | macOS Apple Silicon | `HuobaoCanvas-<バージョン>-arm64.dmg` |
 | macOS Intel | `HuobaoCanvas-<バージョン>.dmg` |
-| Windows x64 | `HuobaoCanvas Setup <バージョン>.exe` |
+| Windows x64 | `HuobaoCanvas.Setup.<バージョン>.exe` |
+
+> 中国国内のユーザーはミラー直リンクの利用を推奨。アプリ内アップデータも同様に中国国内ソース（Tencent COS）を優先し、GitHub にフォールバックします。
 
 - ダブルクリックでインストール、すぐ使える：サーバー内蔵 + SQLite、データはユーザーディレクトリに保存、アンインストールしてもデータは残る
 - 未署名の macOS パッケージは初回起動時に右クリック → 開く、または `xattr -cr /Applications/HuobaoCanvas.app`

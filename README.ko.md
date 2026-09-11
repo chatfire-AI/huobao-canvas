@@ -19,7 +19,7 @@
 
 「설정 → Huobao 빠른 설정」에 Key를 붙여넣으면 11개 공급자 설정이 한 번에 완료
 
-<h3>📥 <a href="https://github.com/chatfire-AI/huobao-canvas/releases/latest">데스크톱 앱 다운로드 (macOS / Windows)</a> · <a href="https://marketing.firemux.com/huobao-canvas/">온라인 체험</a></h3>
+<h3>📥 <a href="https://github.com/chatfire-AI/huobao-canvas/releases/latest">데스크톱 앱 다운로드 (macOS / Windows)</a> · <a href="https://drama-1304922933.cos.ap-shanghai.myqcloud.com/huobao-canvas/v1.0.0/HuobaoCanvas-1.0.0-arm64.dmg">중국 미러 (macOS arm64)</a> · <a href="https://drama-1304922933.cos.ap-shanghai.myqcloud.com/huobao-canvas/v1.0.0/HuobaoCanvas.Setup.1.0.0.exe">중국 미러 (Windows)</a> · <a href="https://marketing.firemux.com/huobao-canvas/">온라인 체험</a></h3>
 
 </div>
 
@@ -91,13 +91,17 @@ OpenAI, Anthropic, Gemini, Qwen, 화산엔진(Volcengine), DeepSeek, MiniMax, Mo
 
 ### 📥 방법 1: 데스크톱 앱(권장)
 
-[Releases에서 다운로드](https://github.com/chatfire-AI/huobao-canvas/releases/latest):
+[Releases에서 다운로드](https://github.com/chatfire-AI/huobao-canvas/releases/latest)(해외) · **중국 미러 직접 링크**(Tencent Cloud, 프록시 불필요, 동일 파일):
+
+**[macOS arm64 .dmg](https://drama-1304922933.cos.ap-shanghai.myqcloud.com/huobao-canvas/v1.0.0/HuobaoCanvas-1.0.0-arm64.dmg)** · **[macOS Intel .dmg](https://drama-1304922933.cos.ap-shanghai.myqcloud.com/huobao-canvas/v1.0.0/HuobaoCanvas-1.0.0.dmg)** · **[Windows .exe](https://drama-1304922933.cos.ap-shanghai.myqcloud.com/huobao-canvas/v1.0.0/HuobaoCanvas.Setup.1.0.0.exe)**
 
 | 플랫폼 | 파일 |
 |---|---|
 | macOS Apple Silicon | `HuobaoCanvas-<버전>-arm64.dmg` |
 | macOS Intel | `HuobaoCanvas-<버전>.dmg` |
-| Windows x64 | `HuobaoCanvas Setup <버전>.exe` |
+| Windows x64 | `HuobaoCanvas.Setup.<버전>.exe` |
+
+> 중국 내 사용자는 미러 직접 링크 사용을 권장. 앱 내 업데이트도 동일하게 중국 소스(텐센트 COS)를 우선 시도하고 GitHub로 폴백합니다.
 
 - 더블클릭 설치, 바로 사용 가능: 서버 내장 + SQLite, 데이터는 사용자 디렉터리에 저장, 삭제핟 데이터는 유지
 - 미서명 macOS 패키지는 첫 실행 시 우클릭 → 열기, 또는 `xattr -cr /Applications/HuobaoCanvas.app`

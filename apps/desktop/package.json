@@ -12,7 +12,8 @@
     "dev": "npm run build:main && electron .",
     "dist": "pnpm --dir ../web build && npm run build:server && npm run build:main && node scripts/prepare-resources.mjs && electron-builder --mac",
     "dist:win": "pnpm --dir ../web build && npm run build:server && npm run build:main && node scripts/prepare-resources.mjs && electron-builder --win",
-    "feed": "node scripts/make-update-feed.mjs"
+    "feed": "node scripts/make-update-feed.mjs",
+    "publish": "node scripts/publish-release.mjs"
   },
   "devDependencies": {
     "electron": "^37.10.3",

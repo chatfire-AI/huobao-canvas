@@ -19,7 +19,7 @@
 
 打开「设置 → 火宝快捷配置」粘贴 Key，一键写入 11 家厂商配置，开箱即用
 
-<h3>📥 <a href="https://github.com/chatfire-AI/huobao-canvas/releases/latest">下载桌面版（macOS / Windows）</a> · <a href="https://marketing.firemux.com/huobao-canvas/">在线体验</a></h3>
+<h3>📥 <a href="https://github.com/chatfire-AI/huobao-canvas/releases/latest">下载桌面版（macOS / Windows）</a> · <a href="https://drama-1304922933.cos.ap-shanghai.myqcloud.com/huobao-canvas/v1.0.0/HuobaoCanvas-1.0.0-arm64.dmg">国内镜像 (macOS arm64)</a> · <a href="https://drama-1304922933.cos.ap-shanghai.myqcloud.com/huobao-canvas/v1.0.0/HuobaoCanvas.Setup.1.0.0.exe">国内镜像 (Windows)</a> · <a href="https://marketing.firemux.com/huobao-canvas/">在线体验</a></h3>
 
 </div>
 
@@ -91,13 +91,17 @@ OpenAI、Anthropic、Gemini、Qwen、火山引擎、DeepSeek、MiniMax、Moonsho
 
 ### 📥 方式一：桌面版（推荐）
 
-[前往 Releases 下载](https://github.com/chatfire-AI/huobao-canvas/releases/latest)：
+[前往 Releases 下载](https://github.com/chatfire-AI/huobao-canvas/releases/latest)（海外）· **国内镜像直链**（腾讯云，免翻墙，同版本同文件）：
+
+**[macOS arm64 .dmg](https://drama-1304922933.cos.ap-shanghai.myqcloud.com/huobao-canvas/v1.0.0/HuobaoCanvas-1.0.0-arm64.dmg)** · **[macOS Intel .dmg](https://drama-1304922933.cos.ap-shanghai.myqcloud.com/huobao-canvas/v1.0.0/HuobaoCanvas-1.0.0.dmg)** · **[Windows .exe](https://drama-1304922933.cos.ap-shanghai.myqcloud.com/huobao-canvas/v1.0.0/HuobaoCanvas.Setup.1.0.0.exe)**
 
 | 平台 | 文件 |
 |---|---|
 | macOS Apple Silicon | `HuobaoCanvas-<版本>-arm64.dmg` |
 | macOS Intel | `HuobaoCanvas-<版本>.dmg` |
-| Windows x64 | `HuobaoCanvas Setup <版本>.exe` |
+| Windows x64 | `HuobaoCanvas.Setup.<版本>.exe` |
+
+> 国内用户建议用镜像直链下载；应用内更新器同样国内源（腾讯 COS）优先、GitHub 兜底。
 
 - 双击安装、开箱即用：内嵌服务端 + SQLite 存储，数据存用户目录，卸载不丢数据
 - macOS 未签名包首次打开需右键 → 打开，或执行 `xattr -cr /Applications/HuobaoCanvas.app`

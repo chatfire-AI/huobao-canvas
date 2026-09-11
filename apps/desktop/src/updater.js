@@ -1,7 +1,8 @@
 /**
  * 应用内更新器（无 Apple 签名方案，与 huobao-drama 同款自实现）
  *
- * - 清单：CANVAS_UPDATE_FEED（默认 GitHub Releases 的 releases/latest/download/latest.json）
+ * - 清单：CANVAS_UPDATE_FEED 单源覆盖；默认双源容灾——国内 COS 优先、GitHub 兜底，
+ *   依次尝试任一成功即用，全失败才报错
  * - macOS：下载 zip（.app 归档）→ sha256 校验 → 解压 → 旧包改名 .old 备胎 → 新包就位
  *   → `open` 拉起新应用 → 当前实例退出；下次启动清理 .old
  * - Windows：下载 Setup.exe → sha256 校验 → detached 静默安装（/S）→ 当前实例退出
@@ -14,8 +15,13 @@ const path = require('node:path')
 const crypto = require('node:crypto')
 const { spawn, execFile } = require('node:child_process')
 
-const FEED_URL = process.env.CANVAS_UPDATE_FEED
-  || 'https://github.com/chatfire-AI/huobao-canvas/releases/latest/download/latest.json'
+// 双源容灾：国内 COS 优先（国内直连快且不被墙），GitHub Releases 兜底（海外用户）
+const FEED_URLS = process.env.CANVAS_UPDATE_FEED
+  ? [process.env.CANVAS_UPDATE_FEED]
+  : [
+    'https://drama-1304922933.cos.ap-shanghai.myqcloud.com/huobao-canvas/latest.json',
+    'https://github.com/chatfire-AI/huobao-canvas/releases/latest/download/latest.json',
+  ]
 
 /** 更新包内的 .app 名称（与 electron-builder productName 一致） */
 const APP_BUNDLE_NAME = 'HuobaoCanvas.app'
@@ -65,11 +71,19 @@ function installedAppBundle() {
 }
 
 async function fetchFeed() {
-  const res = await fetch(FEED_URL, { signal: AbortSignal.timeout(15000) })
-  if (!res.ok) throw new Error(`版本清单请求失败（HTTP ${res.status}）`)
-  const feed = await res.json()
-  if (!feed?.version || !feed?.platforms) throw new Error('版本清单格式不正确')
-  return feed
+  const errors = []
+  for (const url of FEED_URLS) {
+    try {
+      const res = await fetch(url, { signal: AbortSignal.timeout(15000) })
+      if (!res.ok) throw new Error(`HTTP ${res.status}`)
+      const feed = await res.json()
+      if (!feed?.version || !feed?.platforms) throw new Error('版本清单格式不正确')
+      return feed
+    } catch (err) {
+      errors.push(`${url}：${err.message}`)
+    }
+  }
+  throw new Error(`版本清单请求失败（${errors.join('；')}）`)
 }
 
 // ---- 检查 ----
