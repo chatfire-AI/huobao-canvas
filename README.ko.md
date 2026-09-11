@@ -20,6 +20,7 @@
 「설정 → Huobao 빠른 설정」에 Key를 붙여넣으면 11개 공급자 설정이 한 번에 완료
 
 <h3>📥 <a href="https://github.com/chatfire-AI/huobao-canvas/releases/latest">데스크톱 앱 다운로드 (macOS / Windows)</a> · <a href="https://installer.chatfire.site/huobao-canvas/v1.0.0/HuobaoCanvas-1.0.0-arm64.dmg">중국 미러 (macOS arm64)</a> · <a href="https://installer.chatfire.site/huobao-canvas/v1.0.0/HuobaoCanvas.Setup.1.0.0.exe">중국 미러 (Windows)</a> · <a href="https://marketing.firemux.com/huobao-canvas/">온라인 체험</a></h3>
+<h3>🌐 <a href="https://www.chatfire.site">공식 웹사이트</a></h3>
 
 </div>
 
