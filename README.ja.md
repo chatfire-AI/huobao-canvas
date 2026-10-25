@@ -9,17 +9,17 @@
 [![Docker](https://img.shields.io/badge/Docker-huobao%2Fhuobao--canvas-2490ED?style=flat&logo=docker)](https://hub.docker.com/r/huobao/huobao-canvas)
 [![License](https://img.shields.io/badge/License-CC%20BY--NC--SA%204.0-lightgrey.svg)](https://creativecommons.org/licenses/by-nc-sa/4.0/)
 
-[English](README.md) | [简体中文](README.zh-CN.md) | **日本語** | [한국어](README.ko.md)
+[中英双语](README.md) | [English](README.en.md) | [简体中文](README.zh-CN.md) | **日本語** | [한국어](README.ko.md)
 
 [機能](#-機能) • [クイックスタート](#-クイックスタート) • [ビジュアルガイド](#-ビジュアルガイド) • [デスクトップ版](#-デスクトップアプリ推奨) • [デプロイ](#-デプロイ)
 
-<h2>🔑 <a href="https://api.firemux.com">Huobao API Key を取得 👉 今すぐ見る</a></h2>
+<h2>🔑 <a href="https://api.firemux.com">FireMux API Key を取得 👉 今すぐ見る</a></h2>
 
 **テキスト・画像・動画の全 AI 機能、1 つの Key で開通**
 
 「設定 → Huobao クイック設定」に Key を貼るだけで 11 社分の設定を一括書き込み
 
-<h3>📥 <a href="https://github.com/chatfire-AI/huobao-canvas/releases/latest">デスクトップ版をダウンロード（macOS / Windows）</a> · <a href="https://installer.chatfire.site/huobao-canvas/v1.0.1/HuobaoCanvas-1.0.1-arm64.dmg">中国ミラー (macOS arm64)</a> · <a href="https://installer.chatfire.site/huobao-canvas/v1.0.1/HuobaoCanvas.Setup.1.0.1.exe">中国ミラー (Windows)</a> · <a href="https://marketing.firemux.com/huobao-canvas/">オンラインデモ</a></h3>
+<h3>📥 <a href="https://github.com/chatfire-AI/huobao-canvas/releases/latest">デスクトップ版をダウンロード（macOS / Windows）</a> · <a href="https://installer.chatfire.site/huobao-canvas/v1.0.3/HuobaoCanvas-1.0.3-arm64.dmg">中国ミラー (macOS arm64)</a> · <a href="https://installer.chatfire.site/huobao-canvas/v1.0.3/HuobaoCanvas.Setup.1.0.3.exe">中国ミラー (Windows)</a> · <a href="https://marketing.firemux.com/huobao-canvas/">オンラインデモ</a></h3>
 <h3>🌐 <a href="https://firemux.cn">公式サイト</a></h3>
 
 </div>
@@ -94,7 +94,7 @@ OpenAI、Anthropic、Gemini、Qwen、火山エンジン、DeepSeek、MiniMax、M
 
 [Releases からダウンロード](https://github.com/chatfire-AI/huobao-canvas/releases/latest)（海外）· **中国国内ミラー直リンク**（Tencent Cloud、プロキシ不要、同一ファイル）：
 
-**[macOS arm64 .dmg](https://installer.chatfire.site/huobao-canvas/v1.0.1/HuobaoCanvas-1.0.1-arm64.dmg)** · **[macOS Intel .dmg](https://installer.chatfire.site/huobao-canvas/v1.0.1/HuobaoCanvas-1.0.1.dmg)** · **[Windows .exe](https://installer.chatfire.site/huobao-canvas/v1.0.1/HuobaoCanvas.Setup.1.0.1.exe)**
+**[macOS arm64 .dmg](https://installer.chatfire.site/huobao-canvas/v1.0.3/HuobaoCanvas-1.0.3-arm64.dmg)** · **[macOS Intel .dmg](https://installer.chatfire.site/huobao-canvas/v1.0.3/HuobaoCanvas-1.0.3.dmg)** · **[Windows .exe](https://installer.chatfire.site/huobao-canvas/v1.0.3/HuobaoCanvas.Setup.1.0.3.exe)**
 
 | プラットフォーム | ファイル |
 |---|---|
@@ -136,7 +136,7 @@ pnpm install && pnpm dev   # http://localhost:8022
 
 ページ右上の「設定」を開く：
 
-1. **Huobao クイック設定（推奨）**：Huobao API Key（[api.firemux.com で取得](https://api.firemux.com)）を貼るだけで 11 社分の Key とゲートウェイアドレスを一括設定
+1. **Huobao クイック設定（推奨）**：FireMux API Key（[api.firemux.com で取得](https://api.firemux.com)）を貼るだけで 11 社分の Key とゲートウェイアドレスを一括設定
 2. **手動設定**：プロバイダーごとに公式 API Key を入力、接続テスト対応
 
 Key はデフォルトでブラウザの localStorage に保存。セルフホスト時はサーバーへ自動ミラー（ブラウザを変えてもシームレス）。
@@ -331,22 +331,12 @@ cd apps/web && pnpm test    # プロバイダープリセット検証 + 4 言語
 
 ---
 
-## ☕ 支援する
-
-このプロジェクトが役に立ったら、作者にコーヒー 1 杯を ☕ あなたの支援が継続的な更新の原動力です！
-
-<div align="center">
-  <img src="donate.png" alt="Alipay 寄付 QR コード" width="240" />
-</div>
-
----
-
-## 💬 連絡先
+## 💬 WeChat グループ
 
 QR コードをスキャンして WeChat グループに参加：
 
 <div align="center">
-  <img src="docs/images/wx-group.jpg" width="200" alt="WeChat グループ QR コード" />
+  <img src="docs/images/wx-group.png" width="200" alt="WeChat グループ QR コード" />
 </div>
 
 ---

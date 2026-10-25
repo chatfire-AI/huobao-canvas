@@ -5,11 +5,12 @@ apps/web/dist
 apps/desktop/build
 apps/desktop/dist
 apps/desktop/release
+apps/desktop/resources
 
 # 运行时数据（绝不能进镜像：SQLite + 生成的结果文件）
 apps/server/data
 
 # 本地环境
-.env
+**/.env*
 *.log
 .DS_Store

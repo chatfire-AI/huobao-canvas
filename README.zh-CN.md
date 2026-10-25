@@ -9,17 +9,17 @@
 [![Docker](https://img.shields.io/badge/Docker-huobao%2Fhuobao--canvas-2490ED?style=flat&logo=docker)](https://hub.docker.com/r/huobao/huobao-canvas)
 [![License](https://img.shields.io/badge/License-CC%20BY--NC--SA%204.0-lightgrey.svg)](https://creativecommons.org/licenses/by-nc-sa/4.0/)
 
-[English](README.md) | **简体中文** | [日本語](README.ja.md) | [한국어](README.ko.md)
+[中英双语](README.md) | [English](README.en.md) | **简体中文** | [日本語](README.ja.md) | [한국어](README.ko.md)
 
 [功能特性](#-功能特性) • [快速开始](#-快速开始) • [图文教程](#-图文教程) • [桌面版](#-桌面应用推荐) • [部署指南](#-部署指南)
 
-<h2>🔑 <a href="https://api.firemux.cn">获取 Huobao API Key 👉 立即查看</a></h2>
+<h2>🔑 <a href="https://api.firemux.cn">获取 FireMux API Key 👉 立即查看</a></h2>
 
 **文本 · 图片 · 视频全部 AI 能力，一个 Key 即可开通**
 
 打开「设置 → 火宝快捷配置」粘贴 Key，一键写入 11 家厂商配置，开箱即用
 
-<h3>📥 <a href="https://github.com/chatfire-AI/huobao-canvas/releases/latest">下载桌面版（macOS / Windows）</a> · <a href="https://installer.chatfire.site/huobao-canvas/v1.0.1/HuobaoCanvas-1.0.1-arm64.dmg">国内镜像 (macOS arm64)</a> · <a href="https://installer.chatfire.site/huobao-canvas/v1.0.1/HuobaoCanvas.Setup.1.0.1.exe">国内镜像 (Windows)</a> · <a href="https://marketing.firemux.cn/huobao-canvas/">在线体验</a></h3>
+<h3>📥 <a href="https://github.com/chatfire-AI/huobao-canvas/releases/latest">下载桌面版（macOS / Windows）</a> · <a href="https://installer.chatfire.site/huobao-canvas/v1.0.3/HuobaoCanvas-1.0.3-arm64.dmg">国内镜像 (macOS arm64)</a> · <a href="https://installer.chatfire.site/huobao-canvas/v1.0.3/HuobaoCanvas.Setup.1.0.3.exe">国内镜像 (Windows)</a> · <a href="https://marketing.firemux.cn/huobao-canvas/">在线体验</a></h3>
 <h3>🌐 <a href="https://firemux.cn">官方网站</a></h3>
 
 </div>
@@ -94,7 +94,7 @@ OpenAI、Anthropic、Gemini、Qwen、火山引擎、DeepSeek、MiniMax、Moonsho
 
 [前往 Releases 下载](https://github.com/chatfire-AI/huobao-canvas/releases/latest)（海外）· **国内镜像直链**（腾讯云，免翻墙，同版本同文件）：
 
-**[macOS arm64 .dmg](https://installer.chatfire.site/huobao-canvas/v1.0.1/HuobaoCanvas-1.0.1-arm64.dmg)** · **[macOS Intel .dmg](https://installer.chatfire.site/huobao-canvas/v1.0.1/HuobaoCanvas-1.0.1.dmg)** · **[Windows .exe](https://installer.chatfire.site/huobao-canvas/v1.0.1/HuobaoCanvas.Setup.1.0.1.exe)**
+**[macOS arm64 .dmg](https://installer.chatfire.site/huobao-canvas/v1.0.3/HuobaoCanvas-1.0.3-arm64.dmg)** · **[macOS Intel .dmg](https://installer.chatfire.site/huobao-canvas/v1.0.3/HuobaoCanvas-1.0.3.dmg)** · **[Windows .exe](https://installer.chatfire.site/huobao-canvas/v1.0.3/HuobaoCanvas.Setup.1.0.3.exe)**
 
 | 平台 | 文件 |
 |---|---|
@@ -136,7 +136,7 @@ pnpm install && pnpm dev   # http://localhost:8022
 
 打开页面 → 右上角「设置」：
 
-1. **火宝快捷配置**（推荐）：粘贴 Huobao API Key（[前往 api.firemux.cn 获取](https://api.firemux.cn)），一键写入 11 家厂商的 Key 与网关地址
+1. **火宝快捷配置**（推荐）：粘贴 FireMux API Key（[前往 api.firemux.cn 获取](https://api.firemux.cn)），一键写入 11 家厂商的 Key 与网关地址
 2. **手动配置**：按厂商逐个填入官方 API Key，支持连通测试
 
 Key 默认保存在浏览器 localStorage；自部署时自动镜像到服务端（换浏览器无缝接管）。
@@ -331,22 +331,12 @@ cd apps/web && pnpm test    # 厂商预设校验 + 四语消息编译
 
 ---
 
-## ☕ 捐赠支持
+## 💬 微信群
 
-如果这个项目对你有帮助，欢迎扫码请作者喝杯咖啡 ☕，你的支持是持续更新的动力！
-
-<div align="center">
-  <img src="donate.png" alt="支付宝捐赠二维码" width="240" />
-</div>
-
----
-
-## 💬 联系我
-
-扫码添加微信交流：
+扫码加入微信群交流：
 
 <div align="center">
-  <img src="docs/images/wx-group.jpg" width="200" alt="微信群二维码" />
+  <img src="docs/images/wx-group.png" width="200" alt="微信群二维码" />
 </div>
 
 ---

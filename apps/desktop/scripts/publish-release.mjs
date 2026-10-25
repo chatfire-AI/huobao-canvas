@@ -50,8 +50,8 @@ const assets = [
 // URL/COS key 使用的规范化文件名（空格 → 点号，与 GitHub 服务端一致）
 const dotName = (f) => f.replace(/ /g, '.')
 const existing = assets.filter(f => fs.existsSync(path.join(RELEASE, f)))
-if (!existing.length) {
-  console.error(`release/ 下没有版本 ${version} 的产物,请先 pnpm dist / dist:win`)
+if (existing.length !== assets.length) {
+  console.error(`发布需要全部平台产物，缺少: ${assets.filter(f => !existing.includes(f)).join(', ')}`)
   process.exit(1)
 }
 

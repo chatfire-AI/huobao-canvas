@@ -9,17 +9,17 @@
 [![Docker](https://img.shields.io/badge/Docker-huobao%2Fhuobao--canvas-2490ED?style=flat&logo=docker)](https://hub.docker.com/r/huobao/huobao-canvas)
 [![License](https://img.shields.io/badge/License-CC%20BY--NC--SA%204.0-lightgrey.svg)](https://creativecommons.org/licenses/by-nc-sa/4.0/)
 
-[English](README.md) | [简体中文](README.zh-CN.md) | [日本語](README.ja.md) | **한국어**
+[中英双语](README.md) | [English](README.en.md) | [简体中文](README.zh-CN.md) | [日本語](README.ja.md) | **한국어**
 
 [기능](#-기능) • [빠른 시작](#-빠른-시작) • [비주얼 가이드](#-비주얼-가이드) • [데스크톱 앱](#-데스크톱-앱-권장) • [배포](#-배포)
 
-<h2>🔑 <a href="https://api.firemux.com">Huobao API Key 받기 👉 바로 확인</a></h2>
+<h2>🔑 <a href="https://api.firemux.com">FireMux API Key 받기 👉 바로 확인</a></h2>
 
 **텍스트·이미지·영상 전체 AI 기능, 하나의 Key로 개통**
 
 「설정 → Huobao 빠른 설정」에 Key를 붙여넣으면 11개 공급자 설정이 한 번에 완료
 
-<h3>📥 <a href="https://github.com/chatfire-AI/huobao-canvas/releases/latest">데스크톱 앱 다운로드 (macOS / Windows)</a> · <a href="https://installer.chatfire.site/huobao-canvas/v1.0.1/HuobaoCanvas-1.0.1-arm64.dmg">중국 미러 (macOS arm64)</a> · <a href="https://installer.chatfire.site/huobao-canvas/v1.0.1/HuobaoCanvas.Setup.1.0.1.exe">중국 미러 (Windows)</a> · <a href="https://marketing.firemux.com/huobao-canvas/">온라인 체험</a></h3>
+<h3>📥 <a href="https://github.com/chatfire-AI/huobao-canvas/releases/latest">데스크톱 앱 다운로드 (macOS / Windows)</a> · <a href="https://installer.chatfire.site/huobao-canvas/v1.0.3/HuobaoCanvas-1.0.3-arm64.dmg">중국 미러 (macOS arm64)</a> · <a href="https://installer.chatfire.site/huobao-canvas/v1.0.3/HuobaoCanvas.Setup.1.0.3.exe">중국 미러 (Windows)</a> · <a href="https://marketing.firemux.com/huobao-canvas/">온라인 체험</a></h3>
 <h3>🌐 <a href="https://firemux.cn">공식 웹사이트</a></h3>
 
 </div>
@@ -94,7 +94,7 @@ OpenAI, Anthropic, Gemini, Qwen, 화산엔진(Volcengine), DeepSeek, MiniMax, Mo
 
 [Releases에서 다운로드](https://github.com/chatfire-AI/huobao-canvas/releases/latest)(해외) · **중국 미러 직접 링크**(Tencent Cloud, 프록시 불필요, 동일 파일):
 
-**[macOS arm64 .dmg](https://installer.chatfire.site/huobao-canvas/v1.0.1/HuobaoCanvas-1.0.1-arm64.dmg)** · **[macOS Intel .dmg](https://installer.chatfire.site/huobao-canvas/v1.0.1/HuobaoCanvas-1.0.1.dmg)** · **[Windows .exe](https://installer.chatfire.site/huobao-canvas/v1.0.1/HuobaoCanvas.Setup.1.0.1.exe)**
+**[macOS arm64 .dmg](https://installer.chatfire.site/huobao-canvas/v1.0.3/HuobaoCanvas-1.0.3-arm64.dmg)** · **[macOS Intel .dmg](https://installer.chatfire.site/huobao-canvas/v1.0.3/HuobaoCanvas-1.0.3.dmg)** · **[Windows .exe](https://installer.chatfire.site/huobao-canvas/v1.0.3/HuobaoCanvas.Setup.1.0.3.exe)**
 
 | 플랫폼 | 파일 |
 |---|---|
@@ -136,7 +136,7 @@ pnpm install && pnpm dev   # http://localhost:8022
 
 페이지 우상단「설정」열기:
 
-1. **Huobao 빠른 설정(권장)**: Huobao API Key([api.firemux.com에서 발급](https://api.firemux.com))를 붙여넣으면 11개 공급자의 Key와 게이트웨이 주소가 자동 설정
+1. **Huobao 빠른 설정(권장)**: FireMux API Key([api.firemux.com에서 발급](https://api.firemux.com))를 붙여넣으면 11개 공급자의 Key와 게이트웨이 주소가 자동 설정
 2. **수동 설정**: 공급자별로 공식 API Key를 입력, 연결 테스트 지원
 
 Key는 기본적으로 브라우저 localStorage에 저장. 셀프 호스팅 시 서버로 자동 미러링(브라우저 변경 시에도 끊김 없음).
@@ -331,22 +331,12 @@ cd apps/web && pnpm test    # 공급자 프리셋 검증 + 4개국어 메시지 
 
 ---
 
-## ☕ 후원하기
-
-이 프로젝트가 도움이 되었다면 개발자에게 커피 한 잔을 ☕ 여러분의 후원이 지속적인 업데이트의 원동력입니다!
-
-<div align="center">
-  <img src="donate.png" alt="Alipay 후원 QR 코드" width="240" />
-</div>
-
----
-
-## 💬 연락처
+## 💬 WeChat 그룹
 
 QR 코드를 스캔하여 WeChat 그룹 참여:
 
 <div align="center">
-  <img src="docs/images/wx-group.jpg" width="200" alt="WeChat 그룹 QR 코드" />
+  <img src="docs/images/wx-group.png" width="200" alt="WeChat 그룹 QR 코드" />
 </div>
 
 ---
