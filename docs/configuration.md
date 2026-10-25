@@ -10,8 +10,8 @@ ChatFire Canvas 的所有可变项都通过环境变量 / 运行时配置注入�
 
 | 项 | 环境变量 | 默认值 | 说明 |
 |---|---|---|---|
-| 推理基地址 | `VITE_API_BASE_URL` / `apiBaseUrl` | dev: 空串（同源代理）；prod: `https://api.firemux.com` | 模型生成与目录请求基地址，可指向任意 OpenAI 兼容网关 |
-| dev 代理目标 | `VITE_UPSTREAM` | `https://api.firemux.com` | 仅 dev server 使用 |
+| 推理基地址 | `VITE_API_BASE_URL` / `apiBaseUrl` | dev: 空串（同源代理）；prod: `https://api.firemux.cn` | 模型生成与目录请求基地址，可指向任意 OpenAI 兼容网关 |
+| dev 代理目标 | `VITE_UPSTREAM` | `https://api.firemux.cn` | 仅 dev server 使用 |
 
 ## Docker 部署环境变量（docker-compose）
 
@@ -19,7 +19,7 @@ ChatFire Canvas 的所有可变项都通过环境变量 / 运行时配置注入�
 
 | 变量 | 默认值 | 说明 |
 |---|---|---|
-| `UPSTREAM` | `https://api.firemux.com` | 推理网关默认地址（engine 网关兜底；设置页「网关地址」仍优先） |
+| `UPSTREAM` | `https://api.firemux.cn` | 推理网关默认地址（engine 网关兜底；设置页「网关地址」仍优先） |
 | `API_BASE_URL` | 空 | 容器启动时由 `docker/entrypoint.sh` 写入 `config.js` 的 `apiBaseUrl`，留空 = 同源（推荐，规避 CORS） |
 | `WATCHTOWER_TOKEN` | `please-change-me` | Watchtower HTTP API 令牌（app 侧 label 已启用 `--label-enable`） |
 | `HUOBAO_VERSION` | `dev` | 构建时注入的版本号（发布镜像时指定） |

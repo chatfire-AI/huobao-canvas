@@ -116,3 +116,16 @@ export const pollServerRun = async (runId, { signal, interval = 1000 } = {}) => 
 
 export const testProviderOnServer = (providerId) =>
   request(`/api/providers/${encodeURIComponent(providerId)}/test`, { method: 'POST' })
+
+// ── 用户上传素材落盘（画布粘贴/拖入/PromptDock 素材 → /api/files 持久 URL）──
+
+export const uploadFileToServer = async (file) => {
+  const dataUrl = await new Promise((resolve, reject) => {
+    const reader = new FileReader()
+    reader.onload = () => resolve(reader.result)
+    reader.onerror = () => reject(reader.error)
+    reader.readAsDataURL(file)
+  })
+  const { url } = await request('/api/files', { method: 'POST', body: { dataUrl, name: file.name } })
+  return url
+}

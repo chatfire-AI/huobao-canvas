@@ -31,7 +31,7 @@ ENV NODE_ENV=production \
     PORT=16812 \
     DATA_DIR=/app/data \
     FRONTEND_DIST=/app/frontend-dist \
-    UPSTREAM=https://api.firemux.com \
+    UPSTREAM=https://api.firemux.cn \
     API_BASE_URL=
 
 WORKDIR /app

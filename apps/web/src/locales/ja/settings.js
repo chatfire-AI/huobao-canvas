@@ -10,7 +10,7 @@ export default {
   chatfire: {
     connected: '接続済み',
     desc: '1 つの Key で 10+ 社の集約モデルを従量課金で利用でき、プロバイダーごとの登録は不要です。Key を貼ってワンクリック接続すると、11 社分のゲートウェイアドレスと Key が自動設定されます。',
-    registerLink: 'firemux.com で登録して Key を取得 →',
+    registerLink: 'Huobao で登録して Key を取得 →',
     gatewayUrl: 'ゲートウェイアドレス',
     disconnect: '接続を解除',
     quickSetup: 'ワンクリック接続',

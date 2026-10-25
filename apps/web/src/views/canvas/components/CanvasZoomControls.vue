@@ -22,12 +22,22 @@
     >
       <svg-icon :icon="locked ? 'tabler:lock' : 'tabler:lock-open'" />
     </button>
+    <button
+      type="button"
+      class="zoom-btn"
+      :class="{ 'is-locked': minimapVisible }"
+      :title="minimapVisible ? $t('canvas.zoom.minimapHide') : $t('canvas.zoom.minimapShow')"
+      @click="toggleMinimap"
+    >
+      <svg-icon :icon="minimapVisible ? 'tabler:map' : 'tabler:map-off'" />
+    </button>
   </div>
 </template>
 
 <script setup>
 import { computed, ref } from 'vue'
 import { useVueFlow } from '@vue-flow/core'
+import { minimapVisible, toggleMinimap } from '../utils/minimapVisibility'
 
 const { viewport, zoomIn, zoomOut, zoomTo, fitView, setInteractive } = useVueFlow()
 

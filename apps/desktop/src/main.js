@@ -31,6 +31,11 @@ app.setPath('userData', path.join(
   app.isPackaged ? 'HuobaoCanvas' : 'HuobaoCanvas-Dev',
 ))
 
+// 从终端启动时若父进程管道关闭（如 `| head` 退出/终端关闭），转发内嵌服务日志会写出
+// EPIPE 且属于异步回调抛出，try/catch 拦不住，会弹 "write EPIPE" 未捕获异常框
+process.stdout.on('error', () => {})
+process.stderr.on('error', () => {})
+
 if (!app.requestSingleInstanceLock()) {
   // 双开会抢 SQLite 写锁；让已有实例聚焦窗口即可
   app.quit()

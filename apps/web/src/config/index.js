@@ -10,7 +10,7 @@ const appConfig = typeof window !== 'undefined' ? (window.__APP_CONFIG__ || {}) 
 
 /** 推理/目录请求基地址：dev 默认空串走同源 vite proxy；prod 默认 Huobao 公共 API。
  *  注意用 ?? 而非 ||：Docker 部署会显式注入空串（同源走 nginx 反代），空串是有效值。 */
-export const PUBLIC_API_BASE_URL = 'https://api.firemux.com'
+export const PUBLIC_API_BASE_URL = 'https://api.firemux.cn'
 
 export const API_BASE_URL =
   appConfig.apiBaseUrl ??

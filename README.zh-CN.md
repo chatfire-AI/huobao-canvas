@@ -13,13 +13,13 @@
 
 [功能特性](#-功能特性) • [快速开始](#-快速开始) • [图文教程](#-图文教程) • [桌面版](#-桌面应用推荐) • [部署指南](#-部署指南)
 
-<h2>🔑 <a href="https://api.firemux.com">获取 Huobao API Key 👉 立即查看</a></h2>
+<h2>🔑 <a href="https://api.firemux.cn">获取 Huobao API Key 👉 立即查看</a></h2>
 
 **文本 · 图片 · 视频全部 AI 能力，一个 Key 即可开通**
 
 打开「设置 → 火宝快捷配置」粘贴 Key，一键写入 11 家厂商配置，开箱即用
 
-<h3>📥 <a href="https://github.com/chatfire-AI/huobao-canvas/releases/latest">下载桌面版（macOS / Windows）</a> · <a href="https://installer.chatfire.site/huobao-canvas/v1.0.1/HuobaoCanvas-1.0.1-arm64.dmg">国内镜像 (macOS arm64)</a> · <a href="https://installer.chatfire.site/huobao-canvas/v1.0.1/HuobaoCanvas.Setup.1.0.1.exe">国内镜像 (Windows)</a> · <a href="https://marketing.firemux.com/huobao-canvas/">在线体验</a></h3>
+<h3>📥 <a href="https://github.com/chatfire-AI/huobao-canvas/releases/latest">下载桌面版（macOS / Windows）</a> · <a href="https://installer.chatfire.site/huobao-canvas/v1.0.1/HuobaoCanvas-1.0.1-arm64.dmg">国内镜像 (macOS arm64)</a> · <a href="https://installer.chatfire.site/huobao-canvas/v1.0.1/HuobaoCanvas.Setup.1.0.1.exe">国内镜像 (Windows)</a> · <a href="https://marketing.firemux.cn/huobao-canvas/">在线体验</a></h3>
 <h3>🌐 <a href="https://firemux.cn">官方网站</a></h3>
 
 </div>
@@ -136,7 +136,7 @@ pnpm install && pnpm dev   # http://localhost:8022
 
 打开页面 → 右上角「设置」：
 
-1. **火宝快捷配置**（推荐）：粘贴 Huobao API Key（[前往 api.firemux.com 获取](https://api.firemux.com)），一键写入 11 家厂商的 Key 与网关地址
+1. **火宝快捷配置**（推荐）：粘贴 Huobao API Key（[前往 api.firemux.cn 获取](https://api.firemux.cn)），一键写入 11 家厂商的 Key 与网关地址
 2. **手动配置**：按厂商逐个填入官方 API Key，支持连通测试
 
 Key 默认保存在浏览器 localStorage；自部署时自动镜像到服务端（换浏览器无缝接管）。
@@ -258,7 +258,7 @@ Watchtower 每日自检一次，Docker Hub 有新 `latest` 镜像时自动拉取
 
 | 变量 | 默认值 | 说明 |
 |---|---|---|
-| `UPSTREAM` | `https://api.firemux.com` | 推理网关默认地址（设置页仍可按用户覆盖） |
+| `UPSTREAM` | `https://api.firemux.cn` | 推理网关默认地址（设置页仍可按用户覆盖） |
 | `API_BASE_URL` | 空 | 浏览器侧请求基地址，留空 = 同源（推荐，规避 CORS） |
 | `WATCHTOWER_TOKEN` | `please-change-me` | Watchtower HTTP API 令牌，生产环境务必修改 |
 | `HUOBAO_VERSION` | `dev` | 构建时注入的版本号（发布镜像时指定，供「关于更新」比对） |
@@ -268,8 +268,8 @@ Watchtower 每日自检一次，Docker Hub 有新 `latest` 镜像时自动拉取
 
 | 变量 | 默认值 | 说明 |
 |---|---|---|
-| `VITE_API_BASE_URL` | `https://api.firemux.com` | 推理端点（任意 OpenAI 兼容网关） |
-| `VITE_UPSTREAM` | `https://api.firemux.com` | dev server 代理目标 |
+| `VITE_API_BASE_URL` | `https://api.firemux.cn` | 推理端点（任意 OpenAI 兼容网关） |
+| `VITE_UPSTREAM` | `https://api.firemux.cn` | dev server 代理目标 |
 
 更多细节见 [docs/configuration.md](docs/configuration.md) 与 [docs/architecture.md](docs/architecture.md)。
 

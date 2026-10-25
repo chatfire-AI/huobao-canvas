@@ -1,4 +1,4 @@
-// 图标托管在前端本地 public/icons 下（原 CDN ffile.chatfire.site 已停用（域名现归属 firemux.com））
+// 图标托管在前端本地 public/icons 下（原 CDN ffile.chatfire.site 已停用（域名现归属 firemux.cn））
 // dark / light 两套主题变体（清单一致），默认按 <html class="dark"> 现状解析
 const iconBaseUrl = (theme) => `${import.meta.env.BASE_URL}icons/${theme === 'light' ? 'light' : 'dark'}/`
 // 历史数据可能存的是旧 CDN 完整 URL，统一提取文件名走本地

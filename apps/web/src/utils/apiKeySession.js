@@ -19,10 +19,10 @@ const CURRENT_KEY_STORAGE = 'chatfire_canvas_current_key'
 const PROVIDER_KEYS_STORAGE = 'chatfire_canvas_provider_keys'
 const GATEWAY_BASE_STORAGE = 'chatfire_canvas_gateway_base'
 
-// 网关域名迁移：api.chatfire.site → api.firemux.com（本地/服务端旧配置自动改写）
+// 网关域名迁移：api.chatfire.site → api.firemux.cn（本地/服务端旧配置自动改写）
 const HOST_MIGRATIONS = [
-  ['api.chatfire.site', 'api.firemux.com'],
-  ['chatfire.site', 'firemux.com'],
+  ['api.chatfire.site', 'api.firemux.cn'],
+  ['chatfire.site', 'firemux.cn'],
 ]
 
 export const normalizeGatewayHost = (value) => {

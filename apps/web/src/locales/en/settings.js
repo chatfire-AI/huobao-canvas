@@ -10,7 +10,7 @@ export default {
   chatfire: {
     connected: 'Connected',
     desc: 'Use aggregated models from 10+ providers with a single key — pay-as-you-go, no per-provider signup. Paste your key for one-click setup; gateway URLs and keys are configured automatically for 11 providers.',
-    registerLink: 'Sign up at firemux.com to get a key →',
+    registerLink: 'Sign up at Huobao to get a key →',
     gatewayUrl: 'Gateway URL',
     disconnect: 'Disconnect',
     quickSetup: 'One-click Setup',

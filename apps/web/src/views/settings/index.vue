@@ -12,7 +12,7 @@ import {
 } from '@/utils/apiKeySession.js'
 import {
   getCatalogMode, setCatalogMode,
-  setGatewayBaseUrl, PUBLIC_API_BASE_URL,
+  setGatewayBaseUrl,
 } from '@/config'
 import {
   readCatalogOverrides, setModelDisabled, setProviderHidden,
@@ -25,7 +25,7 @@ import { resolveModelIcon } from '@/utils/tools'
 import { useTheme } from '@/composables/useTheme'
 import LocaleSwitcher from '@/components/common/LocaleSwitcher.vue'
 
-const { t } = useI18n()
+const { t, locale } = useI18n()
 const { isDark } = useTheme()
 // 厂商图标主题变体跟随明暗切换
 const iconTheme = computed(() => (isDark.value ? 'dark' : 'light'))
@@ -96,6 +96,9 @@ const catalogMode = ref(getCatalogMode())
 const cfQuickKey = ref('')
 const cfQuickTesting = ref(false)
 const cfCurrentKey = ref(getCurrentApiKey())
+// 网关节点跟随界面语言：中文→国内 .cn，其他→国际 .com；一键接入与注册链接共用
+const gatewayBase = computed(() => `https://api.firemux.${locale.value?.startsWith('zh') ? 'cn' : 'com'}`)
+const registerUrl = computed(() => `https://firemux.${locale.value?.startsWith('zh') ? 'cn' : 'com'}`)
 
 // 一键接入时各厂商 baseUrl 覆盖的网关挂载前缀（'' = 网关根路径 /v1、/v1beta 等）。
 // 以 Huobao 网关适配为主：预设路径经 applyProviderBaseUrl 前缀替换后恰好落在网关挂载点上。
@@ -118,7 +121,7 @@ const chatfireQuickSetup = async () => {
     if (!resp.ok) {
       window.$message?.warning(t('settings.chatfire.keyCheckReturned', { status: resp.status }))
     }
-    setGatewayBaseUrl(PUBLIC_API_BASE_URL)
+    setGatewayBaseUrl(gatewayBase.value)
     addApiKey(key, 'Huobao')
     setCurrentApiKey(key)
     cfCurrentKey.value = key
@@ -126,7 +129,7 @@ const chatfireQuickSetup = async () => {
     // 厂商卡片即刻可用（官方直连语义不变，清空覆盖即恢复厂商官方域名）
     for (const [providerId, prefix] of Object.entries(GATEWAY_PROVIDER_PREFIX)) {
       setProviderApiKey(providerId, key)
-      setProviderBaseUrl(providerId, `${PUBLIC_API_BASE_URL}${prefix}`)
+      setProviderBaseUrl(providerId, `${gatewayBase.value}${prefix}`)
     }
     providerKeys.value = getProviderKeys()
     // 同步刷新厂商卡片的 baseUrl 输入框（baseInputs 是本地态，不随 localStorage 自动更新）
@@ -440,13 +443,13 @@ const modelTypeDisplay = (type) => getLocalModelTypes()[String(type).split(',')[
         </div>
         <p class="pane-desc">
           {{ $t('settings.chatfire.desc') }}
-          <a href="https://firemux.com" target="_blank" rel="noopener">{{ $t('settings.chatfire.registerLink') }}</a>
+          <a :href="registerUrl" target="_blank" rel="noopener">{{ $t('settings.chatfire.registerLink') }}</a>
         </p>
 
         <div class="card">
           <div class="field-row">
             <span class="field-label">{{ $t('settings.chatfire.gatewayUrl') }}</span>
-            <span class="saved-mask">{{ PUBLIC_API_BASE_URL }}</span>
+            <span class="saved-mask">{{ gatewayBase }}</span>
           </div>
           <div class="field-row">
             <span class="field-label">API Key</span>

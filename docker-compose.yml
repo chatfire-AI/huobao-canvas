@@ -19,7 +19,7 @@ services:
       - "8080:16812"
     environment:
       # 推理上游：默认 Huobao 公共 API，可改为任意 OpenAI 兼容网关（设置页仍可按用户覆盖）
-      UPSTREAM: ${UPSTREAM:-https://api.firemux.com}
+      UPSTREAM: ${UPSTREAM:-https://api.firemux.cn}
       # 浏览器侧请求基地址：默认空串（同源，由镜像内服务端直出/反代）
       API_BASE_URL: ${API_BASE_URL:-}
     volumes:

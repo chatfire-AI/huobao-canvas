@@ -51,8 +51,10 @@ export function useCanvasHistory({ nodes, edges, setGraph, isSystemMutation = ()
 
   let baselineSnapshot = null
   let baselineFingerprint = ''
+  let baselineRefs = null
   let coalesceTimer = 0
   let suppressUntil = 0
+  let interacting = false
 
   const takeSnapshot = () => {
     const snapshot = {
@@ -62,9 +64,55 @@ export function useCanvasHistory({ nodes, edges, setGraph, isSystemMutation = ()
     return { snapshot, fingerprint: fingerprintOf(snapshot) }
   }
 
+  const takeRefs = () => ({
+    nodes: toRaw(nodes.value).map((node) => ({
+      id: node.id,
+      type: node.type,
+      x: node.position?.x || 0,
+      y: node.position?.y || 0,
+      parentNode: node.parentNode || '',
+      extent: node.extent || '',
+      style: node.style,
+      data: node.data,
+    })),
+    edges: toRaw(edges.value).map((edge) => ({
+      id: edge.id,
+      source: edge.source,
+      target: edge.target,
+      sourceHandle: edge.sourceHandle || 'right',
+      targetHandle: edge.targetHandle || 'left',
+      data: edge.data,
+    })),
+  })
+
+  // 轻量比对：图内全部走不可变更新，data/style 引用未变即无语义变更。
+  // 命中时跳过一次全图 clone + stringify（选中切换/尺寸回填等高频噪音）
+  const isSemanticNoop = () => {
+    if (!baselineRefs) return false
+    const current = takeRefs()
+    const { nodes: bn, edges: be } = baselineRefs
+    if (current.nodes.length !== bn.length || current.edges.length !== be.length) return false
+    for (let i = 0; i < bn.length; i++) {
+      const a = current.nodes[i]
+      const b = bn[i]
+      if (a.id !== b.id || a.type !== b.type || a.x !== b.x || a.y !== b.y
+        || a.parentNode !== b.parentNode || a.extent !== b.extent
+        || a.style !== b.style || a.data !== b.data) return false
+    }
+    for (let i = 0; i < be.length; i++) {
+      const a = current.edges[i]
+      const b = be[i]
+      if (a.id !== b.id || a.source !== b.source || a.target !== b.target
+        || a.sourceHandle !== b.sourceHandle || a.targetHandle !== b.targetHandle
+        || a.data !== b.data) return false
+    }
+    return true
+  }
+
   const syncBaseline = (snapshot, fingerprint) => {
     baselineSnapshot = snapshot
     baselineFingerprint = fingerprint
+    baselineRefs = takeRefs()
   }
 
   /** 以当前图为新基线并清空历史（切换/新建/删除画布后调用） */
@@ -82,9 +130,10 @@ export function useCanvasHistory({ nodes, edges, setGraph, isSystemMutation = ()
     if (!coalesceTimer) return
     clearTimeout(coalesceTimer)
     coalesceTimer = 0
+    if (isSemanticNoop()) return // 纯选中/尺寸回填等噪音变更（引用级快检）
     // 快照只在结算时做一次：拖拽期间 watcher 每帧触发，仅重置计时器
     const { snapshot, fingerprint } = takeSnapshot()
-    if (fingerprint === baselineFingerprint) return // 纯选中/尺寸回填等噪音变更
+    if (fingerprint === baselineFingerprint) return
     past.value.push(baselineSnapshot)
     if (past.value.length > HISTORY_LIMIT) past.value.shift()
     syncBaseline(snapshot, fingerprint)
@@ -96,18 +145,40 @@ export function useCanvasHistory({ nodes, edges, setGraph, isSystemMutation = ()
     if (!coalesceTimer) return
     clearTimeout(coalesceTimer)
     coalesceTimer = 0
+    if (isSemanticNoop()) return
     const { snapshot, fingerprint } = takeSnapshot()
     syncBaseline(snapshot, fingerprint)
   }
 
+  const schedule = () => {
+    clearTimeout(coalesceTimer)
+    coalesceTimer = setTimeout(isSystemMutation() ? settleSystem : settle, COALESCE_MS)
+  }
+
+  /**
+   * 拖拽等连续交互期间置 true：watcher 不再每帧重建计时器，
+   * 也不会在拖拽中途结算出中间态历史；交互结束自动重新调度一次结算
+   */
+  const setInteracting = (flag) => {
+    const next = Boolean(flag)
+    if (next === interacting) return
+    interacting = next
+    if (next) {
+      clearTimeout(coalesceTimer)
+      coalesceTimer = 0
+    } else if (!isSemanticNoop()) {
+      schedule()
+    }
+  }
+
   watch([nodes, edges], () => {
+    if (interacting) return
     if (Date.now() < suppressUntil) {
       clearTimeout(coalesceTimer)
       coalesceTimer = setTimeout(settleSystem, COALESCE_MS)
       return
     }
-    clearTimeout(coalesceTimer)
-    coalesceTimer = setTimeout(isSystemMutation() ? settleSystem : settle, COALESCE_MS)
+    schedule()
   })
 
   const applySnapshot = (snapshot) => {
@@ -140,5 +211,5 @@ export function useCanvasHistory({ nodes, edges, setGraph, isSystemMutation = ()
     return true
   }
 
-  return { canUndo, canRedo, undo, redo, reset }
+  return { canUndo, canRedo, undo, redo, reset, setInteracting }
 }

@@ -348,6 +348,36 @@ export function useCanvasGraph() {
     }
   }
 
+  /** 按 id 删除单个节点及其连线（分组则先剥离子节点），Agent op / 程序化删除用 */
+  const deleteNodeById = (nodeId) => {
+    const target = nodes.value.find((node) => node.id === nodeId)
+    if (!target) return false
+    const removedEdges = edges.value.filter((edge) => edge.source === nodeId || edge.target === nodeId)
+    for (const edge of removedEdges) {
+      if (edge.source !== nodeId) detachResultOwnership(edge.source)
+      if (edge.target !== nodeId) detachResultOwnership(edge.target)
+    }
+    nodes.value = nodes.value.map((node) => (
+      node.id !== nodeId && node.data?.payload?.resultOwnerNodeId === nodeId
+        ? { ...node, data: { ...node.data, payload: stripCanvasResultOwnership(node.data.payload) } }
+        : node
+    ))
+    if (target.type === CANVAS_NODE_TYPES.GROUP) detachGroupChildren(target)
+    nodes.value = nodes.value.filter((node) => node.id !== nodeId)
+    edges.value = edges.value.filter((edge) => edge.source !== nodeId && edge.target !== nodeId)
+    if (selectedNodeId.value === nodeId) selectedNodeId.value = ''
+    return true
+  }
+
+  /** 按 edgeId 断开一条连线 */
+  const deleteEdgeById = (edgeId) => {
+    const edge = edges.value.find((item) => item.id === edgeId)
+    if (!edge) return false
+    edges.value = edges.value.filter((item) => item.id !== edgeId)
+    if (selectedEdgeId.value === edgeId) selectedEdgeId.value = ''
+    return true
+  }
+
   const groupSelectedNodes = () => {
     const children = selectedNodes.value.filter((node) => node.type !== CANVAS_NODE_TYPES.GROUP)
     if (children.length < 2 || children.some((node) => node.parentNode)) return ''
@@ -965,6 +995,8 @@ export function useCanvasGraph() {
     selectAllNodes,
     deleteSelected: deleteSelectedGraphItems,
     deleteSelectedGraphItems,
+    deleteNodeById,
+    deleteEdgeById,
     groupSelectedNodes,
     ungroupNode,
     layoutGroup,

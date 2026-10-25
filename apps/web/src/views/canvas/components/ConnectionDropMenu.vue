@@ -114,6 +114,8 @@ onUnmounted(() => {
   position: fixed;
   z-index: 3000;
   width: 240px;
+  max-height: 70vh;
+  overflow-y: auto;
   padding: 8px;
   border: 1px solid var(--cf-border);
   border-radius: 14px;

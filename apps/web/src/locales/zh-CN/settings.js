@@ -10,7 +10,7 @@ export default {
   chatfire: {
     connected: '已接入',
     desc: '一个 Key 使用全部 10+ 厂商的聚合模型，按量计费，无需逐厂商注册。粘贴 Key 一键接入，自动为 11 家厂商配置好网关地址与 Key。',
-    registerLink: '前往 firemux.com 注册获取 Key →',
+    registerLink: '前往火宝注册获取 Key →',
     gatewayUrl: '网关地址',
     disconnect: '断开接入',
     quickSetup: '一键接入',

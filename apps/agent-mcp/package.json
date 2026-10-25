@@ -1,0 +1,13 @@
+{
+  "name": "@huobao/canvas-agent-mcp",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "火宝画布 MCP 桥：stdio MCP server，把画布工具暴露给 Claude Code / Codex 等 MCP 客户端（零依赖，经 HTTP 转发到 canvas-server）",
+  "bin": {
+    "huobao-canvas-mcp": "./index.mjs"
+  },
+  "engines": {
+    "node": ">=22.13"
+  }
+}

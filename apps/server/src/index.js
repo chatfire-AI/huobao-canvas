@@ -18,6 +18,7 @@ import { canvasRoutes } from './routes/canvas.js'
 import { settingsRoutes } from './routes/settings.js'
 import { runsRoutes } from './routes/runs.js'
 import { filesRoutes } from './routes/files.js'
+import { agentRoutes } from './routes/agent.js'
 import { proxyRoutes } from './routes/proxy.js'
 import { staticRoutes } from './routes/static.js'
 
@@ -35,6 +36,7 @@ const routes = [
   ...settingsRoutes({ statements, transaction }),
   ...runsRoutes({ engine }),
   ...filesRoutes({ engine }),
+  ...agentRoutes(),
   ...proxyRoutes({ engine }),
   ...staticRoutes({ frontendDist: FRONTEND_DIST }),
 ]

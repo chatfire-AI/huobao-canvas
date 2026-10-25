@@ -99,6 +99,22 @@ src/
 | 方法 | 路径 | 说明 |
 |---|---|---|
 | GET | `/api/files/:name` | Veo 鉴权视频 / base64 结果落盘后的持久访问（7 天缓存头） |
+| POST | `/api/files` | 用户上传素材落盘（body `{dataUrl, name?}`，MIME 白名单 image/video/audio，body ≤25MB），返回 `{url}` |
+
+### Agent 通道（外部 AI 操控画布）
+
+状态主权在浏览器：画布页推送快照、经 SSE 接收 op 批次并执行；工具调用（MCP/HTTP 客户端，如 `apps/agent-mcp`）由本服务编译为 op 后下发。
+
+| 方法 | 路径 | 说明 |
+|---|---|---|
+| PUT | `/api/agent/state` | 画布页推送快照（节点/连线/视口/选中），内存缓存 |
+| GET | `/api/agent/state` | 读取最新快照（未推送过 → 404） |
+| GET | `/api/agent/events` | SSE 长连接（画布页专用，op 下发通道） |
+| GET | `/api/agent/tools` | 工具清单 + `connected`（是否有画布页在线） |
+| POST | `/api/agent/tools` | 调用工具 `{tool, args}` → op 批次下发 → 等待回执（60s）；无画布页连接 → 503 |
+| POST | `/api/agent/result` | 画布页执行回执 `{requestId, applied, error}` |
+
+工具集（定义在 `apps/web/src/views/canvas/agent/tools.js`，前后端/MCP 共享）：`canvas_get_state / canvas_create_node / canvas_update_node / canvas_delete_node / canvas_connect / canvas_disconnect / canvas_select / canvas_set_viewport / canvas_run_generation`。
 
 ### 反代与静态托管（Electron 内嵌模式）
 

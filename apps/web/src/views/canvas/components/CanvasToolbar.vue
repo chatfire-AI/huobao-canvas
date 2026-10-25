@@ -115,6 +115,16 @@
         <svg-icon icon="tabler:focus-centered" />
         <span>{{ $t('canvas.toolbar.fitCanvas') }}</span>
       </button>
+      <button
+        type="button"
+        class="agent-entry"
+        :title="$t('canvas.agent.entryTitle')"
+        @click="$emit('open-agent-guide')"
+      >
+        <span class="agent-dot" :class="{ on: agentConnected }" aria-hidden="true"></span>
+        <svg-icon icon="tabler:robot" />
+        <span>{{ $t('canvas.agent.entry') }}</span>
+      </button>
     </div>
 
     <div class="toolbar-right">
@@ -196,6 +206,7 @@ const props = defineProps({
   showApiKeyControl: { type: Boolean, default: true },
   canUndo: { type: Boolean, default: false },
   canRedo: { type: Boolean, default: false },
+  agentConnected: { type: Boolean, default: false },
 })
 
 const emit = defineEmits([
@@ -206,6 +217,7 @@ const emit = defineEmits([
   'open-settings',
   'auto-layout',
   'fit-canvas',
+  'open-agent-guide',
   'rename-project',
   'delete-project',
   'undo',
@@ -294,6 +306,18 @@ function formatProjectMeta(item) {
 </script>
 
 <style scoped lang="scss">
+.agent-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--cf-text-tertiary);
+  flex-shrink: 0;
+
+  &.on {
+    background: var(--cf-success, #34d399);
+    box-shadow: 0 0 6px color-mix(in srgb, var(--cf-success, #34d399) 60%, transparent);
+  }
+}
 // ── 现代工作台顶部栏：玻璃拟态 + 统一 32px 控件 ──
 .canvas-toolbar {
   position: relative;

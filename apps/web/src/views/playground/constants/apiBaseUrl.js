@@ -6,7 +6,7 @@
  *   - dev：空串走同源，由 vite proxy 转发（VITE_UPSTREAM 控制目标）
  *   - prod：Huobao 公共 API（可用 VITE_API_BASE_URL 或 window.__APP_CONFIG__ 覆盖）
  */
-export const PUBLIC_API_BASE_URL = 'https://api.firemux.com'
+export const PUBLIC_API_BASE_URL = 'https://api.firemux.cn'
 
 const viteEnv = typeof import.meta !== 'undefined' ? import.meta.env : undefined
 const appConfig = typeof window !== 'undefined' ? (window.__APP_CONFIG__ || {}) : {}

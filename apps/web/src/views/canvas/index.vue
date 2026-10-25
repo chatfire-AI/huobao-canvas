@@ -1,6 +1,12 @@
 <template>
   <div class="ai-canvas-page">
-    <section class="canvas-workspace" @pointerdown.capture="handleSelectionAreaPointerDown" @click.capture="handleWorkspaceClickCapture">
+    <section
+      class="canvas-workspace"
+      @pointerdown.capture="handleSelectionAreaPointerDown"
+      @click.capture="handleWorkspaceClickCapture"
+      @drop="handlePaneDrop"
+      @dragover.prevent
+    >
       <CanvasToolbar
         :project-id="projectId"
         :project-name="project?.name || $t('canvas.project.defaultName')"
@@ -14,6 +20,7 @@
         :controls-locked="taskPersistenceLocked"
         :can-undo="canvasHistory.canUndo.value"
         :can-redo="canvasHistory.canRedo.value"
+        :agent-connected="agentConnected"
         @select-project="handleProjectSelect"
         @create-project="handleCreateProject"
         @select-api-key="handleApiKeySelect"
@@ -21,6 +28,7 @@
         @open-settings="router.push('/settings')"
         @auto-layout="handleAutoLayout"
         @fit-canvas="fitCanvas"
+        @open-agent-guide="agentGuideVisible = true"
         @undo="performUndo"
         @redo="performRedo"
         @rename-project="handleRenameProject"
@@ -85,7 +93,13 @@
       >
         <Background :pattern-color="backgroundPatternColor" :gap="18" />
         <CanvasZoomControls />
-        <MiniMap pannable zoomable :node-color="minimapNodeColor" :mask-color="minimapMaskColor" />
+        <MiniMap
+          v-if="showMinimap"
+          pannable
+          zoomable
+          :node-color="minimapNodeColor"
+          :mask-color="minimapMaskColor"
+        />
       </VueFlow>
 
       <CanvasMediaPreview
@@ -93,6 +107,8 @@
         :type="mediaPreview.type"
         @close="mediaPreview.url = ''"
       />
+
+      <AgentGuide v-model:show="agentGuideVisible" :connected="agentConnected" />
 
       <ConnectionDropMenu
         v-if="connectionMenu"
@@ -194,7 +210,8 @@ import { VueFlow, useVueFlow } from '@vue-flow/core'
 import { Background } from '@vue-flow/background'
 import CanvasZoomControls from './components/CanvasZoomControls.vue'
 import CanvasMediaPreview from './components/CanvasMediaPreview.vue'
-import { pollServerRun } from '@/api/canvasServer.js'
+import AgentGuide from './components/AgentGuide.vue'
+import { pollServerRun, uploadFileToServer } from '@/api/canvasServer.js'
 import { MiniMap } from '@vue-flow/minimap'
 import '@vue-flow/core/dist/style.css'
 import '@vue-flow/core/dist/theme-default.css'
@@ -219,6 +236,8 @@ import {
 } from './constants/nodeTypes'
 import { getCanvasQuickAddAnchorPoint, isConnectionAllowed } from './utils/connectionRules'
 import { repairCanvasGraphForLoad } from './utils/graphSerialization'
+import { minimapUserSet, minimapVisible } from './utils/minimapVisibility'
+import { useAgentBridge } from './composables/useAgentBridge'
 import {
   areCanvasModelEndpointsUnavailable,
   isCanvasSubmitEndpointMounted,
@@ -262,6 +281,10 @@ const CANVAS_NODE_ACCENTS = {
 }
 const minimapNodeColor = (node) => CANVAS_NODE_ACCENTS[node?.type] || 'var(--cf-text-tertiary)'
 const minimapMaskColor = 'transparent'
+// 用户未显式选择时，大画布（>150 节点）默认收起 MiniMap 减少全量 SVG 同步开销
+const showMinimap = computed(
+  () => minimapVisible.value && (minimapUserSet.value || nodes.value.length <= 150)
+)
 
 function syncCanvasThemeColors() {
   const rootStyles = getComputedStyle(document.documentElement)
@@ -307,7 +330,7 @@ const connectionMenu = ref(null)
 const pendingConnection = ref(null)
 const dragTick = ref(0)
 const isDragging = ref(false)
-const { screenToFlowCoordinate, viewport, findNode, updateNodePositions } = useVueFlow()
+const { screenToFlowCoordinate, viewport, findNode, updateNodePositions, setViewport } = useVueFlow()
 let removeFallbackConnectionListeners = null
 let promptDockPositionFrame = 0
 let promptDockResizeObserver = null
@@ -337,6 +360,8 @@ const {
   clearSelection,
   selectAllNodes,
   deleteSelectedGraphItems,
+  deleteNodeById,
+  deleteEdgeById,
   groupSelectedNodes,
   ungroupNode,
   layoutGroup,
@@ -376,6 +401,26 @@ function performUndo() {
 function performRedo() {
   if (canvasHistory.redo()) nextTick(scheduleGraphSave)
 }
+
+// Agent 桥：外部 AI（MCP/HTTP）经服务端通道操控画布（详见 docs/infinite-canvas-benchmark-and-roadmap.md Phase 4）
+const agentBridge = useAgentBridge({
+  nodes,
+  edges,
+  viewport,
+  projectId,
+  selectedNodeId,
+  addNode,
+  getNodeById,
+  updateNodeData,
+  deleteNodeById,
+  deleteEdgeById,
+  onConnect,
+  setViewport,
+  selectNode,
+  clearSelection,
+  runNode: (node) => runNodeFromDock(node),
+  history: canvasHistory,
+})
 
 const {
   getSaveState,
@@ -463,6 +508,8 @@ const {
 // 官方直连模式下 Key 按厂商在设置页管理，此弹窗仅网关模式使用
 const isGatewayMode = getCatalogMode() === 'gateway'
 const showApiKeyManager = ref(false)
+const agentGuideVisible = ref(false)
+const agentConnected = computed(() => agentBridge.connected.value)
 const storedApiKeys = ref(listApiKeys())
 
 function handleApiKeySave({ key, name }) {
@@ -851,9 +898,11 @@ function recoverWaitingTasks() {
 onMounted(async () => {
   const epoch = ++pageEpoch
   window.addEventListener('keydown', handleCanvasKeydown)
+  window.addEventListener('paste', handlePanePaste)
   window.addEventListener('resize', requestPromptDockPositionUpdate)
   document.addEventListener('visibilitychange', handleVisibilitySave)
   attachFallbackConnectionListeners()
+  agentBridge.start()
   const workspace = document.querySelector('.canvas-workspace')
   if (workspace && window.ResizeObserver) {
     promptDockResizeObserver = new window.ResizeObserver(requestPromptDockPositionUpdate)
@@ -887,10 +936,12 @@ onMounted(async () => {
 onBeforeUnmount(() => {
   pageEpoch += 1
   projectRequestToken += 1
+  agentBridge.stop()
   for (const nodeId of [...taskControllers.keys()]) abortNodeTask(nodeId)
   for (const url of assetObjectUrls.values()) URL.revokeObjectURL(url)
   assetObjectUrls.clear()
   window.removeEventListener('keydown', handleCanvasKeydown)
+  window.removeEventListener('paste', handlePanePaste)
   window.removeEventListener('pointermove', handleSelectionAreaMove)
   window.removeEventListener('resize', requestPromptDockPositionUpdate)
   document.removeEventListener('visibilitychange', handleVisibilitySave)
@@ -1487,6 +1538,7 @@ function handleWorkspaceClickCapture(event) {
 function handleNodeDrag(event) {
   if (!isDragging.value) {
     isDragging.value = true
+    canvasHistory.setInteracting(true)
     // 拖拽开始：点亮连接边的渐变流光
     const dragged = event?.nodes?.length ? event.nodes : (event?.node ? [event.node] : [])
     const ids = dragged.map((n) => n.id).filter(Boolean)
@@ -1496,6 +1548,7 @@ function handleNodeDrag(event) {
 
 function handleNodeDragStop() {
   isDragging.value = false
+  canvasHistory.setInteracting(false)
   dragTick.value += 1
   schedulePromptDockPositionUpdate()
   scheduleGraphSave() // 拖拽结束一次性保存
@@ -1822,6 +1875,7 @@ function handleSelectionAreaMove(event) {
   if (!drag.moved) {
     drag.moved = true
     isDragging.value = true
+    canvasHistory.setInteracting(true)
     setEdgeGlow(selectedNodeIds.value)
   }
   const ids = new Set(selectedNodeIds.value)
@@ -1851,6 +1905,7 @@ function handleSelectionAreaUp() {
   if (!drag?.moved) return
   suppressNextPaneClick = true // 拖拽结束后的 click 不能清空选区
   isDragging.value = false
+  canvasHistory.setInteracting(false)
   dragTick.value += 1
   scheduleGraphSave()
   if (pulsingEdgeIds.value.size) scheduleEdgeGlowClear()
@@ -2120,7 +2175,17 @@ function releaseAssetUrl(nodeId) {
   }
 }
 
-// 上传图片本地 blob 预览 + localFile 兜底（运行时转 dataURL 注入，仅当前会话有效，刷新需重新上传）
+// 上传图片本地 blob 预览 + localFile 兜底，同时后台落盘服务端换取持久 URL（刷新不丢）
+async function persistUploadedAsset(nodeId, file) {
+  try {
+    const url = await uploadFileToServer(file)
+    if (!findNode(nodeId)) return
+    updateNodePayload(nodeId, { url, sourceType: 'upload' }, { userMutation: true })
+  } catch {
+    // 上传失败保留本地预览（仅当前会话有效，刷新需重新上传）
+  }
+}
+
 async function handleAssetUpload(file) {
   const node = selectedNode.value
   if (!node || node.type !== CANVAS_NODE_TYPES.IMAGE || !file) return
@@ -2132,6 +2197,42 @@ async function handleAssetUpload(file) {
     name: file.name,
     sourceType: 'local',
   }, { userMutation: true })
+  void persistUploadedAsset(node.id, file)
+}
+
+// 画布级粘贴/拖入图片：落点直接创建图片节点，走同一上传链路
+const extractMediaFiles = (fileList) =>
+  [...(fileList || [])].filter((f) => f && /^image\//.test(f.type || ''))
+
+function createImageNodeFromFile(file, flowPosition) {
+  const node = addNode(CANVAS_NODE_TYPES.IMAGE, flowPosition, { select: false })
+  const previewUrl = URL.createObjectURL(file)
+  trackAssetUrl(node.id, previewUrl)
+  updateNodePayload(node.id, {
+    url: previewUrl,
+    localFile: file,
+    name: file.name,
+    sourceType: 'local',
+  }, { userMutation: true })
+  void persistUploadedAsset(node.id, file)
+  return node
+}
+
+function handlePanePaste(event) {
+  if (event.target?.closest?.('input, textarea, [contenteditable="true"]')) return
+  const files = extractMediaFiles(event.clipboardData?.files)
+  if (!files.length) return
+  event.preventDefault()
+  const flow = screenToFlowCoordinate({ x: event.clientX || window.innerWidth / 2, y: event.clientY || window.innerHeight / 2 })
+  files.forEach((file, index) => createImageNodeFromFile(file, { x: flow.x + index * 32, y: flow.y + index * 32 }))
+}
+
+function handlePaneDrop(event) {
+  const files = extractMediaFiles(event.dataTransfer?.files)
+  if (!files.length) return
+  event.preventDefault()
+  const flow = screenToFlowCoordinate({ x: event.clientX, y: event.clientY })
+  files.forEach((file, index) => createImageNodeFromFile(file, { x: flow.x + index * 32, y: flow.y + index * 32 }))
 }
 
 </script>

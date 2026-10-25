@@ -10,7 +10,7 @@ export default {
   chatfire: {
     connected: '연결됨',
     desc: '하나의 Key로 10+ 개사의 통합 모델을 종량제로 사용할 수 있으며, 업체별 가입이 필요 없습니다. Key를 붙여넣어 원클릭 연결하면 11개 업체의 게이트웨이 주소와 Key가 자동 설정됩니다.',
-    registerLink: 'firemux.com에서 가입하고 Key 받기 →',
+    registerLink: 'Huobao에서 가입하고 Key 받기 →',
     gatewayUrl: '게이트웨이 주소',
     disconnect: '연결 해제',
     quickSetup: '원클릭 연결',
