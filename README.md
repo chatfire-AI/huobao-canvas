@@ -430,3 +430,13 @@ Scan the QR code to join the WeChat group:
 
 > _"让 AI 帮我们做更有创造力的事"_<br>
 > _"Let AI do the creative work with us"_
+
+## Star History
+
+<a href="https://www.star-history.com/?repos=chatfire-ai%2Fhuobao-canvas&type=date&legend=top-left">
+ <picture>
+   <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/chart?repos=chatfire-ai/huobao-canvas&type=date&theme=dark&legend=top-left" />
+   <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/chart?repos=chatfire-ai/huobao-canvas&type=date&legend=top-left" />
+   <img alt="Star History Chart" src="https://api.star-history.com/chart?repos=chatfire-ai/huobao-canvas&type=date&legend=top-left" />
+ </picture>
+</a>
