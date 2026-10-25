@@ -20,7 +20,7 @@
 Paste the key in "Settings → Huobao Quick Setup" to configure all 11 providers in one click
 
 <h3>📥 <a href="https://github.com/chatfire-AI/huobao-canvas/releases/latest">Download Desktop App (macOS / Windows)</a> · <a href="https://installer.chatfire.site/huobao-canvas/v1.0.1/HuobaoCanvas-1.0.1-arm64.dmg">China Mirror (macOS arm64)</a> · <a href="https://installer.chatfire.site/huobao-canvas/v1.0.1/HuobaoCanvas.Setup.1.0.1.exe">China Mirror (Windows)</a> · <a href="https://marketing.firemux.com/huobao-canvas/">Live Demo</a></h3>
-<h3>🌐 <a href="https://www.chatfire.site">Official Website</a></h3>
+<h3>🌐 <a href="https://firemux.cn">Official Website</a></h3>
 
 </div>
 
