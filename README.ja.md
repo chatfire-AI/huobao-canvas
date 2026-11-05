@@ -19,7 +19,7 @@
 
 「設定 → Huobao クイック設定」に Key を貼るだけで 11 社分の設定を一括書き込み
 
-<h3>📥 <a href="https://github.com/chatfire-AI/huobao-canvas/releases/latest">デスクトップ版をダウンロード（macOS / Windows）</a> · <a href="https://installer.chatfire.site/huobao-canvas/v1.0.3/HuobaoCanvas-1.0.3-arm64.dmg">中国ミラー (macOS arm64)</a> · <a href="https://installer.chatfire.site/huobao-canvas/v1.0.3/HuobaoCanvas.Setup.1.0.3.exe">中国ミラー (Windows)</a> · <a href="https://marketing.firemux.com/huobao-canvas/">オンラインデモ</a></h3>
+<h3>📥 <a href="https://github.com/chatfire-AI/huobao-canvas/releases/latest">デスクトップ版をダウンロード（macOS / Windows）</a> · <a href="https://installer.firemux.site/huobao-canvas/v1.0.4/HuobaoCanvas-1.0.4-arm64.dmg">中国ミラー (macOS arm64)</a> · <a href="https://installer.firemux.site/huobao-canvas/v1.0.4/HuobaoCanvas.Setup.1.0.4.exe">中国ミラー (Windows)</a> · <a href="https://marketing.firemux.com/huobao-canvas/">オンラインデモ</a></h3>
 <h3>🌐 <a href="https://firemux.cn">公式サイト</a></h3>
 
 </div>
@@ -94,7 +94,7 @@ OpenAI、Anthropic、Gemini、Qwen、火山エンジン、DeepSeek、MiniMax、M
 
 [Releases からダウンロード](https://github.com/chatfire-AI/huobao-canvas/releases/latest)（海外）· **中国国内ミラー直リンク**（Tencent Cloud、プロキシ不要、同一ファイル）：
 
-**[macOS arm64 .dmg](https://installer.chatfire.site/huobao-canvas/v1.0.3/HuobaoCanvas-1.0.3-arm64.dmg)** · **[macOS Intel .dmg](https://installer.chatfire.site/huobao-canvas/v1.0.3/HuobaoCanvas-1.0.3.dmg)** · **[Windows .exe](https://installer.chatfire.site/huobao-canvas/v1.0.3/HuobaoCanvas.Setup.1.0.3.exe)**
+**[macOS arm64 .dmg](https://installer.firemux.site/huobao-canvas/v1.0.4/HuobaoCanvas-1.0.4-arm64.dmg)** · **[macOS Intel .dmg](https://installer.firemux.site/huobao-canvas/v1.0.4/HuobaoCanvas-1.0.4.dmg)** · **[Windows .exe](https://installer.firemux.site/huobao-canvas/v1.0.4/HuobaoCanvas.Setup.1.0.4.exe)**
 
 | プラットフォーム | ファイル |
 |---|---|

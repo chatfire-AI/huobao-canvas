@@ -45,6 +45,7 @@ npm run feed       # 扫描 release/ 生成 latest.json（随安装包上传 Git
 产物在 `release/`。mac 未签名：首次打开需「右键 → 打开」；正式分发需 Apple 签名 + notarize
 （`electron-builder.yml` 已留配置位）。Windows 未签名会触发 SmartScreen 提示。
 
-应用内更新：打包版启动 20s 后静默检查 `CANVAS_UPDATE_FEED`
-（默认 `https://github.com/chatfire-AI/huobao-canvas/releases/latest/download/latest.json`），
-设置页「应用更新」可手动检查/下载/安装。
+应用内更新：打包版启动 20s 后静默检查版本，默认优先读取
+`https://installer.firemux.site/huobao-canvas/latest.json`，失败时回退至
+`https://github.com/chatfire-AI/huobao-canvas/releases/latest/download/latest.json`。
+设置 `CANVAS_UPDATE_FEED` 可覆盖更新源；设置页「应用更新」可手动检查/下载/安装。

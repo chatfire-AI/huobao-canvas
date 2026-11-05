@@ -19,7 +19,7 @@
 
 「설정 → Huobao 빠른 설정」에 Key를 붙여넣으면 11개 공급자 설정이 한 번에 완료
 
-<h3>📥 <a href="https://github.com/chatfire-AI/huobao-canvas/releases/latest">데스크톱 앱 다운로드 (macOS / Windows)</a> · <a href="https://installer.chatfire.site/huobao-canvas/v1.0.3/HuobaoCanvas-1.0.3-arm64.dmg">중국 미러 (macOS arm64)</a> · <a href="https://installer.chatfire.site/huobao-canvas/v1.0.3/HuobaoCanvas.Setup.1.0.3.exe">중국 미러 (Windows)</a> · <a href="https://marketing.firemux.com/huobao-canvas/">온라인 체험</a></h3>
+<h3>📥 <a href="https://github.com/chatfire-AI/huobao-canvas/releases/latest">데스크톱 앱 다운로드 (macOS / Windows)</a> · <a href="https://installer.firemux.site/huobao-canvas/v1.0.4/HuobaoCanvas-1.0.4-arm64.dmg">중국 미러 (macOS arm64)</a> · <a href="https://installer.firemux.site/huobao-canvas/v1.0.4/HuobaoCanvas.Setup.1.0.4.exe">중국 미러 (Windows)</a> · <a href="https://marketing.firemux.com/huobao-canvas/">온라인 체험</a></h3>
 <h3>🌐 <a href="https://firemux.cn">공식 웹사이트</a></h3>
 
 </div>
@@ -94,7 +94,7 @@ OpenAI, Anthropic, Gemini, Qwen, 화산엔진(Volcengine), DeepSeek, MiniMax, Mo
 
 [Releases에서 다운로드](https://github.com/chatfire-AI/huobao-canvas/releases/latest)(해외) · **중국 미러 직접 링크**(Tencent Cloud, 프록시 불필요, 동일 파일):
 
-**[macOS arm64 .dmg](https://installer.chatfire.site/huobao-canvas/v1.0.3/HuobaoCanvas-1.0.3-arm64.dmg)** · **[macOS Intel .dmg](https://installer.chatfire.site/huobao-canvas/v1.0.3/HuobaoCanvas-1.0.3.dmg)** · **[Windows .exe](https://installer.chatfire.site/huobao-canvas/v1.0.3/HuobaoCanvas.Setup.1.0.3.exe)**
+**[macOS arm64 .dmg](https://installer.firemux.site/huobao-canvas/v1.0.4/HuobaoCanvas-1.0.4-arm64.dmg)** · **[macOS Intel .dmg](https://installer.firemux.site/huobao-canvas/v1.0.4/HuobaoCanvas-1.0.4.dmg)** · **[Windows .exe](https://installer.firemux.site/huobao-canvas/v1.0.4/HuobaoCanvas.Setup.1.0.4.exe)**
 
 | 플랫폼 | 파일 |
 |---|---|

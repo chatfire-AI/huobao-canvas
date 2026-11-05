@@ -19,7 +19,7 @@
 
 打开「设置 → 火宝快捷配置」粘贴 Key，一键写入 11 家厂商配置，开箱即用
 
-<h3>📥 <a href="https://github.com/chatfire-AI/huobao-canvas/releases/latest">下载桌面版（macOS / Windows）</a> · <a href="https://installer.chatfire.site/huobao-canvas/v1.0.3/HuobaoCanvas-1.0.3-arm64.dmg">国内镜像 (macOS arm64)</a> · <a href="https://installer.chatfire.site/huobao-canvas/v1.0.3/HuobaoCanvas.Setup.1.0.3.exe">国内镜像 (Windows)</a> · <a href="https://marketing.firemux.cn/huobao-canvas/">在线体验</a></h3>
+<h3>📥 <a href="https://github.com/chatfire-AI/huobao-canvas/releases/latest">下载桌面版（macOS / Windows）</a> · <a href="https://installer.firemux.site/huobao-canvas/v1.0.4/HuobaoCanvas-1.0.4-arm64.dmg">国内镜像 (macOS arm64)</a> · <a href="https://installer.firemux.site/huobao-canvas/v1.0.4/HuobaoCanvas.Setup.1.0.4.exe">国内镜像 (Windows)</a> · <a href="https://marketing.firemux.cn/huobao-canvas/">在线体验</a></h3>
 <h3>🌐 <a href="https://firemux.cn">官方网站</a></h3>
 
 </div>
@@ -94,7 +94,7 @@ OpenAI、Anthropic、Gemini、Qwen、火山引擎、DeepSeek、MiniMax、Moonsho
 
 [前往 Releases 下载](https://github.com/chatfire-AI/huobao-canvas/releases/latest)（海外）· **国内镜像直链**（腾讯云，免翻墙，同版本同文件）：
 
-**[macOS arm64 .dmg](https://installer.chatfire.site/huobao-canvas/v1.0.3/HuobaoCanvas-1.0.3-arm64.dmg)** · **[macOS Intel .dmg](https://installer.chatfire.site/huobao-canvas/v1.0.3/HuobaoCanvas-1.0.3.dmg)** · **[Windows .exe](https://installer.chatfire.site/huobao-canvas/v1.0.3/HuobaoCanvas.Setup.1.0.3.exe)**
+**[macOS arm64 .dmg](https://installer.firemux.site/huobao-canvas/v1.0.4/HuobaoCanvas-1.0.4-arm64.dmg)** · **[macOS Intel .dmg](https://installer.firemux.site/huobao-canvas/v1.0.4/HuobaoCanvas-1.0.4.dmg)** · **[Windows .exe](https://installer.firemux.site/huobao-canvas/v1.0.4/HuobaoCanvas.Setup.1.0.4.exe)**
 
 | 平台 | 文件 |
 |---|---|

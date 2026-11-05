@@ -19,7 +19,7 @@
 
 Paste the key in "Settings → Huobao Quick Setup" to configure all 11 providers in one click
 
-<h3>📥 <a href="https://github.com/chatfire-AI/huobao-canvas/releases/latest">Download Desktop App (macOS / Windows)</a> · <a href="https://installer.chatfire.site/huobao-canvas/v1.0.3/HuobaoCanvas-1.0.3-arm64.dmg">China Mirror (macOS arm64)</a> · <a href="https://installer.chatfire.site/huobao-canvas/v1.0.3/HuobaoCanvas.Setup.1.0.3.exe">China Mirror (Windows)</a> · <a href="https://marketing.firemux.com/huobao-canvas/">Live Demo</a></h3>
+<h3>📥 <a href="https://github.com/chatfire-AI/huobao-canvas/releases/latest">Download Desktop App (macOS / Windows)</a> · <a href="https://installer.firemux.site/huobao-canvas/v1.0.4/HuobaoCanvas-1.0.4-arm64.dmg">China Mirror (macOS arm64)</a> · <a href="https://installer.firemux.site/huobao-canvas/v1.0.4/HuobaoCanvas.Setup.1.0.4.exe">China Mirror (Windows)</a> · <a href="https://marketing.firemux.com/huobao-canvas/">Live Demo</a></h3>
 <h3>🌐 <a href="https://firemux.cn">Official Website</a></h3>
 
 </div>
@@ -94,7 +94,7 @@ OpenAI, Anthropic, Gemini, Qwen, Volcengine, DeepSeek, MiniMax, Moonshot, Zhipu,
 
 [Download from Releases](https://github.com/chatfire-AI/huobao-canvas/releases/latest) (overseas) · **China mirror direct links** (Tencent Cloud, no proxy needed, same files):
 
-**[macOS arm64 .dmg](https://installer.chatfire.site/huobao-canvas/v1.0.3/HuobaoCanvas-1.0.3-arm64.dmg)** · **[macOS Intel .dmg](https://installer.chatfire.site/huobao-canvas/v1.0.3/HuobaoCanvas-1.0.3.dmg)** · **[Windows .exe](https://installer.chatfire.site/huobao-canvas/v1.0.3/HuobaoCanvas.Setup.1.0.3.exe)**
+**[macOS arm64 .dmg](https://installer.firemux.site/huobao-canvas/v1.0.4/HuobaoCanvas-1.0.4-arm64.dmg)** · **[macOS Intel .dmg](https://installer.firemux.site/huobao-canvas/v1.0.4/HuobaoCanvas-1.0.4.dmg)** · **[Windows .exe](https://installer.firemux.site/huobao-canvas/v1.0.4/HuobaoCanvas.Setup.1.0.4.exe)**
 
 | Platform | File |
 |---|---|
