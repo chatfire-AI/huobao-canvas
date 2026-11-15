@@ -26,7 +26,6 @@
   </a>
 </p>
 
-<p><a href="https://installer.firemux.site/huobao-canvas/v1.0.4/HuobaoCanvas-1.0.4-arm64.dmg">国内镜像 / China Mirror (macOS arm64)</a> · <a href="https://installer.firemux.site/huobao-canvas/v1.0.4/HuobaoCanvas.Setup.1.0.4.exe">国内镜像 / China Mirror (Windows)</a> · <a href="https://marketing.firemux.cn/huobao-canvas/">在线体验 / Live Demo</a></p>
 <p>
   <a href="https://firemux.cn">
     <img src="docs/images/website-cta.svg" width="320" alt="访问 FireMux 官网 / Visit the official website" />

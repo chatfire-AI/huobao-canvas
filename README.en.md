@@ -27,7 +27,6 @@ Sign in to create images, videos, novels, and short dramas in the AI workspace.
   </a>
 </p>
 
-<p><a href="https://installer.firemux.site/huobao-canvas/v1.0.4/HuobaoCanvas-1.0.4-arm64.dmg">China Mirror (macOS arm64)</a> · <a href="https://installer.firemux.site/huobao-canvas/v1.0.4/HuobaoCanvas.Setup.1.0.4.exe">China Mirror (Windows)</a> · <a href="https://marketing.firemux.com/huobao-canvas/">Live Demo</a></p>
 
 <p>
   <a href="https://firemux.cn">

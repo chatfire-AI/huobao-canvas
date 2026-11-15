@@ -27,7 +27,6 @@
   </a>
 </p>
 
-<p><a href="https://installer.firemux.site/huobao-canvas/v1.0.4/HuobaoCanvas-1.0.4-arm64.dmg">国内镜像 (macOS arm64)</a> · <a href="https://installer.firemux.site/huobao-canvas/v1.0.4/HuobaoCanvas.Setup.1.0.4.exe">国内镜像 (Windows)</a> · <a href="https://marketing.firemux.cn/huobao-canvas/">在线体验</a></p>
 
 <p>
   <a href="https://firemux.cn">
