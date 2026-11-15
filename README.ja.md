@@ -21,8 +21,6 @@
 
 ログインすると、AI キャンバスで画像や動画を作り、小説やショートドラマも制作できます。
 
-<p><a href="https://firemux.cn/#firelumi-downloads">FireLumi デスクトップベータ版をダウンロード（Windows / macOS）</a></p>
-
 <p>
   <a href="https://github.com/chatfire-AI/huobao-canvas/releases/latest">
     <img src="docs/images/desktop-download-cta-ja.svg" width="380" alt="オープンソース版を入手" />

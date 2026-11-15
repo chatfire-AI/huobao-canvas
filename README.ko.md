@@ -21,8 +21,6 @@
 
 로그인하면 AI 캔버스에서 이미지와 영상을 만들고 소설과 숏드라마를 제작할 수 있습니다.
 
-<p><a href="https://firemux.cn/#firelumi-downloads">FireLumi 데스크톱 베타 다운로드 (Windows / macOS)</a></p>
-
 <p>
   <a href="https://github.com/chatfire-AI/huobao-canvas/releases/latest">
     <img src="docs/images/desktop-download-cta-ko.svg" width="380" alt="오픈소스 데스크톱 앱 받기" />

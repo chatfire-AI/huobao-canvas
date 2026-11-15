@@ -21,8 +21,6 @@
 
 Sign in to create images, videos, novels, and short dramas in the AI workspace.
 
-<p><a href="https://firemux.cn/#firelumi-downloads">Download the FireLumi desktop beta (Windows / macOS)</a></p>
-
 <p>
   <a href="https://github.com/chatfire-AI/huobao-canvas/releases/latest">
     <img src="docs/images/desktop-download-cta-en.svg" width="380" alt="Download open-source app" />
