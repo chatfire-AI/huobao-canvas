@@ -13,14 +13,29 @@
 
 [功能特性](#-功能特性) • [快速开始](#-快速开始) • [图文教程](#-图文教程) • [桌面版](#-桌面应用推荐) • [部署指南](#-部署指南)
 
-<h2>🔑 <a href="https://api.firemux.cn">获取 FireMux API Key 👉 立即查看</a></h2>
+<p>
+  <a href="https://firelumi.com/">
+    <img src="docs/images/firelumi-commercial-zh-CN.png" width="760" alt="FireLumi 商业版 · 打开网页版" />
+  </a>
+</p>
 
-**文本 · 图片 · 视频全部 AI 能力，一个 Key 即可开通**
+登录即可使用 AI 画布，创作图像、视频、小说和短剧。
 
-打开「设置 → 火宝快捷配置」粘贴 Key，一键写入 11 家厂商配置，开箱即用
+<p><a href="https://firemux.cn/#firelumi-downloads">下载 FireLumi 桌面测试版（Windows / macOS）</a></p>
 
-<h3>📥 <a href="https://github.com/chatfire-AI/huobao-canvas/releases/latest">下载桌面版（macOS / Windows）</a> · <a href="https://installer.firemux.site/huobao-canvas/v1.0.4/HuobaoCanvas-1.0.4-arm64.dmg">国内镜像 (macOS arm64)</a> · <a href="https://installer.firemux.site/huobao-canvas/v1.0.4/HuobaoCanvas.Setup.1.0.4.exe">国内镜像 (Windows)</a> · <a href="https://marketing.firemux.cn/huobao-canvas/">在线体验</a></h3>
-<h3>🌐 <a href="https://firemux.cn">官方网站</a></h3>
+<p>
+  <a href="https://github.com/chatfire-AI/huobao-canvas/releases/latest">
+    <img src="docs/images/desktop-download-cta-zh-CN.svg" width="380" alt="下载开源桌面版" />
+  </a>
+</p>
+
+<p><a href="https://installer.firemux.site/huobao-canvas/v1.0.4/HuobaoCanvas-1.0.4-arm64.dmg">国内镜像 (macOS arm64)</a> · <a href="https://installer.firemux.site/huobao-canvas/v1.0.4/HuobaoCanvas.Setup.1.0.4.exe">国内镜像 (Windows)</a> · <a href="https://marketing.firemux.cn/huobao-canvas/">在线体验</a></p>
+
+<p>
+  <a href="https://firemux.cn">
+    <img src="docs/images/website-cta-zh-CN.svg" width="320" alt="访问 FireMux 官网" />
+  </a>
+</p>
 
 </div>
 

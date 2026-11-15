@@ -13,14 +13,29 @@
 
 [機能](#-機能) • [クイックスタート](#-クイックスタート) • [ビジュアルガイド](#-ビジュアルガイド) • [デスクトップ版](#-デスクトップアプリ推奨) • [デプロイ](#-デプロイ)
 
-<h2>🔑 <a href="https://api.firemux.com">FireMux API Key を取得 👉 今すぐ見る</a></h2>
+<p>
+  <a href="https://firelumi.com/">
+    <img src="docs/images/firelumi-commercial-ja.webp" width="760" alt="FireLumi 商用版 · Web版を開く" />
+  </a>
+</p>
 
-**テキスト・画像・動画の全 AI 機能、1 つの Key で開通**
+ログインすると、AI キャンバスで画像や動画を作り、小説やショートドラマも制作できます。
 
-「設定 → Huobao クイック設定」に Key を貼るだけで 11 社分の設定を一括書き込み
+<p><a href="https://firemux.cn/#firelumi-downloads">FireLumi デスクトップベータ版をダウンロード（Windows / macOS）</a></p>
 
-<h3>📥 <a href="https://github.com/chatfire-AI/huobao-canvas/releases/latest">デスクトップ版をダウンロード（macOS / Windows）</a> · <a href="https://installer.firemux.site/huobao-canvas/v1.0.4/HuobaoCanvas-1.0.4-arm64.dmg">中国ミラー (macOS arm64)</a> · <a href="https://installer.firemux.site/huobao-canvas/v1.0.4/HuobaoCanvas.Setup.1.0.4.exe">中国ミラー (Windows)</a> · <a href="https://marketing.firemux.com/huobao-canvas/">オンラインデモ</a></h3>
-<h3>🌐 <a href="https://firemux.cn">公式サイト</a></h3>
+<p>
+  <a href="https://github.com/chatfire-AI/huobao-canvas/releases/latest">
+    <img src="docs/images/desktop-download-cta-ja.svg" width="380" alt="オープンソース版を入手" />
+  </a>
+</p>
+
+<p><a href="https://installer.firemux.site/huobao-canvas/v1.0.4/HuobaoCanvas-1.0.4-arm64.dmg">中国ミラー (macOS arm64)</a> · <a href="https://installer.firemux.site/huobao-canvas/v1.0.4/HuobaoCanvas.Setup.1.0.4.exe">中国ミラー (Windows)</a> · <a href="https://marketing.firemux.com/huobao-canvas/">オンラインデモ</a></p>
+
+<p>
+  <a href="https://firemux.cn">
+    <img src="docs/images/website-cta-ja.svg" width="320" alt="FireMux 公式サイト" />
+  </a>
+</p>
 
 </div>
 

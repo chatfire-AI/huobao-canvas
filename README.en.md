@@ -13,14 +13,29 @@
 
 [Features](#-features) • [Quick Start](#-quick-start) • [Walkthrough](#-visual-walkthrough) • [Desktop App](#-desktop-app-recommended) • [Deployment](#-deployment)
 
-<h2>🔑 <a href="https://api.firemux.com">Get a FireMux API Key 👉 Get started</a></h2>
+<p>
+  <a href="https://firelumi.com/">
+    <img src="docs/images/firelumi-commercial-en.webp" width="760" alt="FireLumi Commercial Edition · Open web app" />
+  </a>
+</p>
 
-**Text, image, and video AI capabilities — one key unlocks everything**
+Sign in to create images, videos, novels, and short dramas in the AI workspace.
 
-Paste the key in "Settings → Huobao Quick Setup" to configure all 11 providers in one click
+<p><a href="https://firemux.cn/#firelumi-downloads">Download the FireLumi desktop beta (Windows / macOS)</a></p>
 
-<h3>📥 <a href="https://github.com/chatfire-AI/huobao-canvas/releases/latest">Download Desktop App (macOS / Windows)</a> · <a href="https://installer.firemux.site/huobao-canvas/v1.0.4/HuobaoCanvas-1.0.4-arm64.dmg">China Mirror (macOS arm64)</a> · <a href="https://installer.firemux.site/huobao-canvas/v1.0.4/HuobaoCanvas.Setup.1.0.4.exe">China Mirror (Windows)</a> · <a href="https://marketing.firemux.com/huobao-canvas/">Live Demo</a></h3>
-<h3>🌐 <a href="https://firemux.cn">Official Website</a></h3>
+<p>
+  <a href="https://github.com/chatfire-AI/huobao-canvas/releases/latest">
+    <img src="docs/images/desktop-download-cta-en.svg" width="380" alt="Download open-source app" />
+  </a>
+</p>
+
+<p><a href="https://installer.firemux.site/huobao-canvas/v1.0.4/HuobaoCanvas-1.0.4-arm64.dmg">China Mirror (macOS arm64)</a> · <a href="https://installer.firemux.site/huobao-canvas/v1.0.4/HuobaoCanvas.Setup.1.0.4.exe">China Mirror (Windows)</a> · <a href="https://marketing.firemux.com/huobao-canvas/">Live Demo</a></p>
+
+<p>
+  <a href="https://firemux.cn">
+    <img src="docs/images/website-cta-en.svg" width="320" alt="Visit the FireMux website" />
+  </a>
+</p>
 
 </div>
 
