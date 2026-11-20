@@ -13,22 +13,8 @@
 **中英双语 / Bilingual** | [简体中文](README.zh-CN.md) | [English](README.en.md) | [日本語](README.ja.md) | [한국어](README.ko.md)
 
 <p>
-  <a href="https://firelumi.com/">
-    <img src="docs/images/firelumi-commercial-zh-CN.png" width="760" alt="FireLumi 商业版 · 打开网页版" />
-  </a>
-</p>
-
-登录即可使用 AI 画布，创作图像、视频、小说和短剧。
-
-<p>
-  <a href="https://github.com/chatfire-AI/huobao-canvas/releases/latest">
-    <img src="docs/images/desktop-download-cta.svg" width="380" alt="立即下载桌面版 / Download Desktop App (macOS / Windows)" />
-  </a>
-</p>
-
-<p>
-  <a href="https://firemux.cn">
-    <img src="docs/images/website-cta.svg" width="320" alt="访问 FireMux 官网 / Visit the official website" />
+  <a href="https://api.firemux.cn">
+    <img src="docs/images/api-key-cta.svg" width="380" alt="获取 FireMux API Key" />
   </a>
 </p>
 

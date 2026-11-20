@@ -14,23 +14,8 @@
 [機能](#-機能) • [クイックスタート](#-クイックスタート) • [ビジュアルガイド](#-ビジュアルガイド) • [デスクトップ版](#-デスクトップアプリ推奨) • [デプロイ](#-デプロイ)
 
 <p>
-  <a href="https://firelumi.com/">
-    <img src="docs/images/firelumi-commercial-ja.webp" width="760" alt="FireLumi 商用版 · Web版を開く" />
-  </a>
-</p>
-
-ログインすると、AI キャンバスで画像や動画を作り、小説やショートドラマも制作できます。
-
-<p>
-  <a href="https://github.com/chatfire-AI/huobao-canvas/releases/latest">
-    <img src="docs/images/desktop-download-cta-ja.svg" width="380" alt="オープンソース版を入手" />
-  </a>
-</p>
-
-
-<p>
-  <a href="https://firemux.cn">
-    <img src="docs/images/website-cta-ja.svg" width="320" alt="FireMux 公式サイト" />
+  <a href="https://api.firemux.com">
+    <img src="docs/images/api-key-cta-ja.svg" width="380" alt="FireMux API キーを取得" />
   </a>
 </p>
 
